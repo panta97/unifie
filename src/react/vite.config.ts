@@ -13,6 +13,7 @@ export default defineConfig({
       input: {
         'sales': 'web/k_sales/index.jsx',
         'barcode': 'web/barcode/index.jsx',
+        'purchase_order_sheet': 'web/purchase_order_sheet/index.tsx',
         'default': 'web/default/main.tsx'
       },
     }

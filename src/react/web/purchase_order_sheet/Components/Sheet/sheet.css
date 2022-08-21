@@ -1,0 +1,34 @@
+@page {
+  size: A4;
+  margin: 0;
+}
+@media print {
+  body {
+    margin: 0;
+    padding: 0;
+  }
+
+  html,
+  body {
+    width: 210mm;
+    height: 297mm;
+  }
+
+  .no-print {
+    display: none;
+  }
+
+  .sheet-page {
+    margin: 0;
+    -webkit-print-color-adjust: exact;
+    border: initial;
+    border-radius: initial;
+    width: initial;
+    /* min-height: initial; */
+    /* height: initial; */
+    box-shadow: initial;
+    background: initial;
+    background-color: initial;
+    page-break-after: always;
+  }
+}
