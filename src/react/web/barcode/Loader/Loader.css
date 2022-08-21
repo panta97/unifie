@@ -1,0 +1,14 @@
+.loader-type-1,
+.loader-type-2 {
+  background-color: white;
+  margin-bottom: 5px;
+}
+.loader-type-1 {
+  width: 225px;
+  height: 225px;
+}
+
+.loader-type-2 {
+  width: 5cm;
+  height: 2.5cm;
+}

@@ -1,0 +1,44 @@
+.btn-group {
+  display: flex;
+  position: relative;
+}
+
+.btn-bctype {
+  width: 80px;
+  height: 80px;
+  border: 1px dashed #8D99AE;
+  background: #edf2f4;
+  position: relative;
+  transition: background-color .5s;
+  cursor: pointer;
+  outline: none;
+}
+
+.btn-bctype:nth-child(2) {
+  right: 1px;
+}
+
+.btn-bctype:nth-child(3) {
+  right: calc(1px * 2);
+}
+
+.btn-bctype:nth-child(4) {
+  right: calc(1px * 3);
+}
+
+.btn-bctype > img {
+  width: 100%;
+}
+
+.btn-bctype:hover,
+.btn-bctype:focus {
+  border-color: #2B2D42;
+  background-color: #8D99AE;
+  z-index: 2;
+}
+
+.active {
+  border-color: #2B2D42;
+  background-color: #8D99AE;
+  z-index: 1;
+}

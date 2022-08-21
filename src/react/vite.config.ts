@@ -12,6 +12,7 @@ export default defineConfig({
     rollupOptions: {
       input: {
         'sales': 'web/k_sales/index.jsx',
+        'barcode': 'web/barcode/index.jsx',
         'default': 'web/default/main.tsx'
       },
     }
