@@ -13,6 +13,7 @@ $sync-text-font-size: 12px;
     display: inline-block;
     width: $icon-size;
     height: $icon-size;
+    -webkit-mask: url('./icons/sync.svg');
     mask: url('./icons/sync.svg');
     background-color: var(--font-color);
     cursor: pointer;
