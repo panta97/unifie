@@ -18,7 +18,7 @@ def index(request):
         # fd = open(f"./static/manifest.json", "r")
         url = f"https://{settings.ALLOWED_HOSTS[0]}/static/manifest.json"
         resp = requests.get(url=url)
-        manifest = json.load(resp)
+        manifest = resp.json()
     except Exception as e:
         raise Exception(
             f"{url}"
