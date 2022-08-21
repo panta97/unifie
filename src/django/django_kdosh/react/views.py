@@ -1,7 +1,9 @@
 import re
 import os
 import json
+import requests
 
+from django.conf import settings
 from django.shortcuts import render
 from django.http import HttpResponse
 
@@ -12,11 +14,15 @@ def index(request):
     app_name = "default"
 
     try:
-        fd = open(f"./static/manifest.json", "r")
-        manifest = json.load(fd)
-    except:
+
+        # fd = open(f"./static/manifest.json", "r")
+        url = f"https://{settings.DJANGO_ALLOWED_HOSTS}/static/manifest.json"
+        resp = requests.get(url=url)
+        manifest = json.load(resp)
+    except Exception as e:
         raise Exception(
-            f"Vite manifest file not found or invalid. Maybe your/dist/manifest.json file is empty?"
+            f"{url}"
+            f"{e}"
         )
 
     context = {
