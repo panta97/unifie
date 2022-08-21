@@ -1,0 +1,39 @@
+@import '../styles/variables';
+
+$icon-size: 36px;
+$sync-icon-text-gap: 5px;
+$sync-text-font-size: 12px;
+
+.sync-section {
+  margin-top: var(--body-padding-top);
+  margin-right: var(--body-padding-right);
+  text-align: right;
+
+  .sync-icon {
+    display: inline-block;
+    width: $icon-size;
+    height: $icon-size;
+    mask: url('./icons/sync.svg');
+    background-color: var(--font-color);
+    cursor: pointer;
+  }
+
+  .sync-details {
+    margin: 0;
+    margin-top: $sync-icon-text-gap;
+    font-size: $sync-text-font-size;
+  }
+}
+
+@keyframes rotating {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.rotating {
+  animation: rotating 2s linear infinite;
+}

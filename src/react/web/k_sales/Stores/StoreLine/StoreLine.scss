@@ -1,0 +1,28 @@
+@import '../../styles/variables';
+
+// vars
+$store-line-gap: 10px;
+$store-line-top-space: 30px;
+$store-line-font-size: 25px;
+$store-line-font-weight: 700;
+
+
+.store-line {
+    // border: 1px dashed magenta;
+    font-size: $store-line-font-size;
+    font-weight: $store-line-font-weight;
+    display: flex;
+    justify-content: space-between;
+    padding-top: $store-line-top-space;
+    padding-left: var(--line-deco-width);
+    padding-right: var(--body-padding-right);
+    margin-bottom: $store-line-gap;
+
+    p {
+        margin: 0;
+    }
+
+    .store-line-name {
+        text-transform: uppercase;
+    }
+}

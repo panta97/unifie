@@ -1,0 +1,36 @@
+@import '../styles/variables';
+
+$view-btn-size: 35px;
+$view-btn-gap: 5px;
+$bottom-gap: 10px;
+$view-btn-title-sep: 3px;
+
+.view-group {
+    margin-left: var(--line-deco-width);
+    margin-bottom: $bottom-gap;
+
+    .view-group-title {
+        margin: 0;
+        margin-bottom: $view-btn-title-sep;
+    }
+
+    .view-group-btns {
+        display: flex;
+
+        .view-btn {
+          margin-right: $view-btn-gap;
+          width: $view-btn-size;
+          height: $view-btn-size;
+          background-color: var(--view-sq-bg-color);
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          cursor: pointer;
+        }
+
+        .view-btn-active {
+          background-color: var(--font-color);
+          color: var(--view-sq-bg-color);
+        }
+    }
+}

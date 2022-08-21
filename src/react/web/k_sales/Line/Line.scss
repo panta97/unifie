@@ -1,0 +1,44 @@
+@import "../styles/variables";
+
+$line-height: 6px;
+$line-width: 260px;
+$line-border-radius: 5px;
+$line-bottom-space: 35px;
+
+.line-percentage {
+  // border: 1px solid magenta;
+  border-radius: $line-border-radius;
+  width: $line-width;
+  height: $line-height;
+  background-color: var(--view-sq-bg-color);
+  position: absolute;
+  bottom: $line-bottom-space;
+  right: var(--body-padding-right);
+  display: flex;
+
+  div {
+    height: $line-height;
+  }
+
+  div:first-child {
+    border-top-left-radius: $line-border-radius;
+    border-bottom-left-radius: $line-border-radius;
+  }
+
+  div:last-child {
+    border-top-right-radius: $line-border-radius;
+    border-bottom-right-radius: $line-border-radius;
+  }
+
+  .ab-store {
+    background-color: var(--ab-bg-color);
+  }
+
+  .sm-store {
+    background-color: var(--sm-bg-color);
+  }
+
+  .tg-store {
+    background-color: var(--tg-bg-color);
+  }
+}

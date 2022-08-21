@@ -1,0 +1,22 @@
+@import './styles/variables';
+
+$main-title-font-weight: 400;
+$title-sync-separation: 100px;
+$line-deco-border-width: .5px;
+
+.main-title {
+  margin-left: var(--line-deco-width);
+  margin-top: $title-sync-separation;
+  font-weight: $main-title-font-weight;
+}
+
+.line-deco {
+  border: 0;
+  border-left: $line-deco-border-width;
+  border-color: var(--line-deco-color);
+  border-style: solid;
+  position: absolute;
+  height: 100vh;
+  left: var(--line-deco-width) - 5px;
+  top: 0;
+}

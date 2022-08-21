@@ -1,0 +1,11 @@
+@import './styles/variables';
+
+
+body {
+  margin: 0;
+  font-family: 'Roboto', sans-serif;
+  color: var(--font-color);
+  background-color: var(--background-color);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
