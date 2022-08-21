@@ -8,7 +8,6 @@ export default defineConfig({
   build: {
     sourcemap: true,
     manifest: true,
-    outDir: '../django/django_kdosh/static',
     emptyOutDir: true,
     rollupOptions: {
       input: {
