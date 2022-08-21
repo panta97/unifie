@@ -16,7 +16,7 @@ def index(request):
     try:
 
         # fd = open(f"./static/manifest.json", "r")
-        url = f"https://{settings.DJANGO_ALLOWED_HOSTS}/static/manifest.json"
+        url = f"https://{settings.ALLOWED_HOSTS[0]}/static/manifest.json"
         resp = requests.get(url=url)
         manifest = json.load(resp)
     except Exception as e:
