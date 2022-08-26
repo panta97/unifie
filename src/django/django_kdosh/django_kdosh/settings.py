@@ -13,8 +13,7 @@ from django.core.management.utils import get_random_secret_key
 from pathlib import Path
 import os
 import sys
-from urllib.parse import urlparse
-
+import dj_database_url
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -90,17 +89,8 @@ elif len(sys.argv) > 0 and sys.argv[1] != 'collectstatic':
     if os.getenv("DATABASE_URL", None) is None:
         raise Exception("DATABASE_URL environment variable not defined")
 
-    db_info = urlparse(os.environ.get("DATABASE_URL"))
     DATABASES = {
-        "default": {
-            "ENGINE": "django.db.backends.postgresql_psycopg2",
-            "NAME": db_info.scheme,
-            "USER": db_info.username,
-            "PASSWORD": db_info.password,
-            "HOST": db_info.hostname,
-            "PORT": db_info.port,
-            "OPTIONS": {"sslmode": "require"},
-        }
+        "default": dj_database_url.parse(os.environ.get("DATABASE_URL"))
     }
 
 
