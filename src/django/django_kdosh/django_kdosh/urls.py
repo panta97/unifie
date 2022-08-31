@@ -19,6 +19,7 @@ from django.urls import path, include
 
 
 urlpatterns = [
+    path("", include("barcode.urls")),
     path("admin/", admin.site.urls),
     path('apps/', include('react.urls')),
     path('accounts/login/', LoginView.as_view(template_name='admin/login.html')),
