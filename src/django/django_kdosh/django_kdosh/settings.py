@@ -140,3 +140,9 @@ STATICFILES_DIRS = (
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# ODOO_CONFIG
+ODOO_URL = os.getenv("ODOO_URL", "https://oxe360-ooc-kdosh1-pre-prd11-0-5734166.dev.odoo.com")
+ODOO_DB = os.getenv("ODOO_DB", "oxe360-ooc-kdosh1-pre-prd11-0-5734166")
+ODOO_PWD = os.getenv("ODOO_PWD", "kdosh")
+ODOO_UID = os.getenv("ODOO_UID", "1")
