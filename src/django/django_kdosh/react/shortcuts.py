@@ -6,10 +6,13 @@ from django.shortcuts import render
 
 
 # Create your views here.
-def render_react_app(request, app_name):
+def render_react_app(request, app_name, display_name):
     try:
-        # fd = open(f"./static/manifest.json", "r")
-        url = f"https://{settings.ALLOWED_HOSTS[0]}/static/manifest.json"
+        print(settings.DEVELOPMENT_MODE)
+        if settings.DEVELOPMENT_MODE or settings.DEVELOPMENT_MODE == 'True':
+            url = f"http://{settings.ALLOWED_HOSTS[0]}:8000/static/manifest.json"
+        else:
+            url = f"https://{settings.ALLOWED_HOSTS[0]}/static/manifest.json"
         resp = requests.get(url=url)
         manifest = resp.json()
     except Exception as e:
@@ -19,7 +22,7 @@ def render_react_app(request, app_name):
         )
 
     context = {
-        "test" : "Roosevelt"
+        "display_name" : display_name
     }
 
     for key in manifest:
