@@ -8,7 +8,6 @@ from django.shortcuts import render
 # Create your views here.
 def render_react_app(request, app_name, display_name):
     try:
-        print(settings.DEVELOPMENT_MODE)
         if settings.DEVELOPMENT_MODE or settings.DEVELOPMENT_MODE == 'True':
             url = f"http://{settings.ALLOWED_HOSTS[0]}:8000/static/manifest.json"
         else:
