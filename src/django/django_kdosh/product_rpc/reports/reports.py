@@ -163,6 +163,8 @@ def get_fc_report(date_from, date_to):
     sql = """
         select numero_odoo,
                 proveedor,
+                referencia_proveedor,
+                numero_op,
                 numero_factura,
                 fecha_factura,
                 fecha_vencimiento,
@@ -174,17 +176,21 @@ def get_fc_report(date_from, date_to):
                     when estado = 'paid' then 'pagado'
                     else estado end estado
         from (
-                    select number                        numero_odoo,
+                    select ai.number                        numero_odoo,
                         rp.name                       proveedor,
+                        po.partner_ref               referencia_proveedor,
+                        po.name                      numero_op,
                         concat('F', right(ai.l10n_pe_doc_serie, length(ai.l10n_pe_doc_serie) - 1), '-',
                                 ai.l10n_pe_doc_number) numero_factura,
-                        date_invoice                  fecha_factura,
-                        date_due                      fecha_vencimiento,
-                        amount_untaxed                venta,
-                        amount_tax                    igv,
-                        amount_total                  importe,
+                        ai.date_invoice                  fecha_factura,
+                        ai.date_due                      fecha_vencimiento,
+                        ai.amount_untaxed                venta,
+                        ai.amount_tax                    igv,
+                        ai.amount_total                  importe,
                         ai.state                      estado
                     from account_invoice ai
+                            left join purchase_order po
+                                    on ai.origin = po.name
                             left join res_partner rp
                                     on ai.partner_filtered_id = rp.id
                     where ai.type = 'in_invoice'
