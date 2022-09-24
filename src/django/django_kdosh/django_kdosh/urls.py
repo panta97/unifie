@@ -26,3 +26,7 @@ urlpatterns = [
     path('accounts/login/', LoginView.as_view(template_name='admin/login.html')),
     path('accounts/logout/', LogoutView.as_view(template_name='admin/logout.html')),
 ]
+
+
+admin.site.site_header = "Kdosh Administration"
+admin.site.index_title = "Kdosh Administration"
