@@ -9,7 +9,6 @@ https://docs.djangoproject.com/en/4.1/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.1/ref/settings/
 """
-from django.core.management.utils import get_random_secret_key
 from pathlib import Path
 import os
 import sys
@@ -23,7 +22,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", get_random_secret_key ())
+SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "LKJAS(8sj8SH*HW&*7356f3gilh8s793h963tg8s3g8s#GH*63gs36")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv("DEBUG", "True") != "False"
