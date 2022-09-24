@@ -207,7 +207,13 @@ def get_fc_report(date_from, date_to):
     output = BytesIO()
     filename = "COMPRAS_KDOSH_{}_{}.xlsx".format(date_from, date_to)
     writer = pd.ExcelWriter(output, engine="xlsxwriter")
-    invoice_all.to_excel(writer, sheet_name="COMPRAS", index=False)
+    sheet_name = "COMPRAS"
+    invoice_all.to_excel(writer, sheet_name=sheet_name, index=False)
+
+    for column in invoice_all:
+        column_length = max(invoice_all[column].astype(str).map(len).max(), len(column))
+        col_idx = invoice_all.columns.get_loc(column)
+        writer.sheets[sheet_name].set_column(col_idx, col_idx, column_length)
 
     writer.save()
     output.seek(0)
