@@ -42,7 +42,7 @@ export const CreateButton = () => {
           order_list: orderList,
         }),
       };
-      const response = await fetch("api/purchase_order", params);
+      const response = await fetch("/api/product-rpc/purchase_order", params);
       const json = await response.json();
       if (json.result === fetchResult.SUCCESS) {
         batch(() => {

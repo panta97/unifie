@@ -39,7 +39,7 @@ export const EQReport = () => {
           date_to: dateTo,
         }),
       };
-      const response = await fetch("api/reports/eq", requestOptions);
+      const response = await fetch("/api/product-rpc/report/eq", requestOptions);
       if (
         response.headers.get("Content-Type") ===
         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"

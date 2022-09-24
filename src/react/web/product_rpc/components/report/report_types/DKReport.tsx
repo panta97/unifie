@@ -60,7 +60,7 @@ export const DKReport = () => {
           categ_ids,
         }),
       };
-      const response = await fetch("api/reports/dk", requestOptions);
+      const response = await fetch("/api/product-rpc/report/dk", requestOptions);
       const json = await response.json();
       if (json.result === fetchResult.SUCCESS) {
         const products: Product[] = json.message.products;

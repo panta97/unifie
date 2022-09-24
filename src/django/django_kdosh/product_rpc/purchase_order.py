@@ -1,8 +1,11 @@
-from .utils import utils, rpc, sql
 # import core.db.sqlite.purchase_order as po
+import datetime as dt
+
 from xmlrpc import client as xmlrpclib
 from datetime import datetime
 from django.conf import settings
+from .utils import utils, rpc, sql
+from .models import OrderStats
 
 def search_product_by_name(name):
     pp_table = "product.product"
@@ -219,3 +222,99 @@ def get_order_item(product_id, type):
         raise Exception("producto tiene más de 2 atributos")
 
     return order_item
+
+
+# create_order
+
+class Order():
+    def __init__(self):
+        self.currency_id = 164
+        self.date_order = None
+        self.company_id = 1
+        self.partner_id = None
+        self.partner_ref = None
+        self.origin = False
+        self.order_line = []
+        self.amount_tax_bolsa_plastico = 0
+        self.amount_tax_otros = None
+        self.notes = False
+        self.date_planned = None
+        self.dest_address_id = False
+        self.incoterm_id = False
+        self.payment_term_id = False
+        self.fiscal_position_id = False
+        pass
+
+    def __set_lines(self, order_lines):
+        virtual_count = 1110
+        for line in order_lines:
+            virtual = 'virtual_{}'.format(virtual_count)
+            self.order_line.append(
+                [
+                    0,
+                    virtual,
+                    {
+                        "sequence": 10,
+                        "product_id": line['product_id'],
+                        "name": line['name'],
+                        "date_planned": line['date_planned'],
+                        "account_analytic_id": False,
+                        "analytic_tag_ids": [
+                            [
+                                6,
+                                False,
+                                []
+                            ]
+                        ],
+                        "product_qty": line['product_qty'],
+                        "product_uom": 1,
+                        "price_unit": line['price_unit'],
+                        "taxes_id": [
+                            [
+                                6,
+                                False,
+                                [
+                                    line['tax_id']
+                                ]
+                            ]
+                        ]
+                    }
+                ]
+            )
+            virtual_count += 10
+
+    def set_order_dict(self, dict):
+        self.date_order = dict['date_order']
+        self.partner_id = dict['partner_id']
+        self.partner_ref = dict['partner_ref']
+        self.amount_tax_otros = dict['amount_tax_otros']
+        self.date_planned = dict['date_order']
+        self.__set_lines(dict['order_lines'])
+
+
+def create_order(order):
+    url = settings.ODOO_URL
+    db = settings.ODOO_DB
+    uid = int(settings.ODOO_UID)
+    password = utils.get_user_password(uid)
+    models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(url))
+    order_template = Order()
+    order_template.set_order_dict(order)
+    kwargs = {
+        "context": {
+            "lang": "es_PE",
+            "tz": "America/Lima",
+            "uid": uid,
+            "search_default_todo": 1,
+            "show_purchase": False,
+            "params": {
+                "action": 377
+            }
+        }
+    }
+
+    order_id = models.execute_kw(db, uid, password, 'purchase.order', 'create', [order_template.__dict__], kwargs)
+    # SAVE ORDER ODOO ID INTO DB
+    OrderStats.objects.create(odoo_id=order_id, user_id=uid, created=dt.datetime.now())
+
+    return order_id

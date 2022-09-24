@@ -1,3 +1,5 @@
+import datetime as dt
+
 from django.conf import settings
 from .utils.sql import select
 
@@ -61,3 +63,45 @@ def product_client_result(product_tmpl_ids):
             "client_id": result[1],
         })
     return product_results
+
+
+
+def transform_order_json(data):
+    order_lines = []
+    total_price = 0
+    TAX_ID = 4
+    UNTAX_ID = 3
+    PERUVIAN_TAX = 0.18
+
+    for order_item in data['order_list']:
+        for product_row in order_item['product_matrix']:
+            for product_item in product_row['product_items']:
+                if product_item['qty'] == 0 or product_item['price'] == 0:
+                    continue
+                order_lines.append({
+                    "product_id": product_item['id'],
+                    "name": product_item['name'],
+                    "date_planned": order_item['date'],
+                    "product_qty": product_item['qty'],
+                    "price_unit": product_item['price'],
+                    "tax_id": TAX_ID if data['order_details']['is_taxed'] else UNTAX_ID
+                })
+                total_price += product_item['price'] * product_item['qty']
+
+    transf_obj = {
+        "date_order": dt.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"),
+        "partner_id": data['order_details']['partner_id'],
+        "partner_ref": data['order_details']['partner_ref'],
+        "amount_tax_otros": total_price * PERUVIAN_TAX,
+        "order_lines": order_lines,
+    }
+
+    return transf_obj
+
+def order_client_result(order_id):
+    result = {
+        "odoo_link": "{}/web#id={}&view_type=form&model=purchase.order&menu_id=243&action=377"
+            .format(settings.ODOO_URL, order_id),
+        "odoo_id": order_id
+    }
+    return result

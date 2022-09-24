@@ -39,7 +39,7 @@ export const CPEReport = () => {
           date_to: dateTo,
         }),
       };
-      const response = await fetch("api/reports/cpe", requestOptions);
+      const response = await fetch("/api/product-rpc/report/cpe", requestOptions);
       if (
         response.headers.get("Content-Type") ===
         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"

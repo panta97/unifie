@@ -36,7 +36,7 @@ export const FCReport = () => {
           date_to: dateTo,
         }),
       };
-      const response = await fetch("api/reports/fc", requestOptions);
+      const response = await fetch("/api/product-rpc/report/fc", requestOptions);
       if (
         response.headers.get("Content-Type") ===
         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
