@@ -25,7 +25,7 @@ def render_react_app(request, app_name, display_name):
     }
 
     for key in manifest:
-        if re.match(r"web\/" + app_name + r"\/\w+\.(jsx|tsx)", key):
+        if re.match(r"web\/" + app_name + r"\/index\.(jsx|tsx)", key):
             context["js_filename"] = manifest[key]["file"]
             context["css_filename"] = manifest[key]["css"][0]
 

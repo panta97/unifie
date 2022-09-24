@@ -14,3 +14,8 @@ def purchase_order_sheet_view(request):
 @login_required
 def k_sales_view(request):
     return render_react_app(request, 'k_sales', 'Sales')
+
+
+@login_required
+def product_rpc_view(request):
+    return render_react_app(request, 'product_rpc', 'Almacen')

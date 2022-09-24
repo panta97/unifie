@@ -1,0 +1,4 @@
+.order-item-input::-webkit-inner-spin-button,
+.order-item-input::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+}
