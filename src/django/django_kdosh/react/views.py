@@ -17,5 +17,6 @@ def k_sales_view(request):
 
 
 @login_required
-def product_rpc_view(request):
+def product_rpc_view(request, param):
+    # don't know what the second argument holds
     return render_react_app(request, 'product_rpc', 'Almacen')

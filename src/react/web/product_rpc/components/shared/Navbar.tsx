@@ -11,6 +11,7 @@ import { Refund } from "../refund/Refund";
 import { Report } from "../report/Report";
 
 export const Navbar = () => {
+  const basePath = "/apps/product-rpc";
   return (
     <Router>
       <div>
@@ -19,7 +20,7 @@ export const Navbar = () => {
             <li>
               <NavLink
                 exact
-                to="/"
+                to={basePath}
                 className="inline-block px-2 py-1 "
                 activeClassName="bg-gray-100 text-gray-900"
                 tabIndex={-1}
@@ -29,7 +30,7 @@ export const Navbar = () => {
             </li>
             <li>
               <NavLink
-                to="/product-product"
+                to={`${basePath}/product-product`}
                 className="inline-block px-2 py-1"
                 activeClassName="bg-gray-100 text-gray-900"
                 tabIndex={-1}
@@ -39,7 +40,7 @@ export const Navbar = () => {
             </li>
             <li>
               <NavLink
-                to="/purchase-order"
+                to={`${basePath}/purchase-order`}
                 className="inline-block px-2 py-1"
                 activeClassName="bg-gray-100 text-gray-900"
                 tabIndex={-1}
@@ -49,7 +50,7 @@ export const Navbar = () => {
             </li>
             <li>
               <NavLink
-                to="/reports"
+                to={`${basePath}/reports`}
                 className="inline-block px-2 py-1"
                 activeClassName="bg-gray-100 text-gray-900"
                 tabIndex={-1}
@@ -59,7 +60,7 @@ export const Navbar = () => {
             </li>
             <li>
               <NavLink
-                to="/refunds"
+                to={`${basePath}/refunds`}
                 className="inline-block px-2 py-1"
                 activeClassName="bg-gray-100 text-gray-900"
                 tabIndex={-1}
@@ -70,19 +71,19 @@ export const Navbar = () => {
           </ul>
         </nav>
         <Switch>
-          <Route exact path="/">
+          <Route exact path={basePath}>
             <Home />
           </Route>
-          <Route path="/product-product">
+          <Route path={`${basePath}/product-product`}>
             <ProductProduct />
           </Route>
-          <Route path="/purchase-order">
+          <Route path={`${basePath}/purchase-order`}>
             <PurchaseOrder />
           </Route>
-          <Route path="/reports">
+          <Route path={`${basePath}/reports`}>
             <Report />
           </Route>
-          <Route path="/refunds">
+          <Route path={`${basePath}/refunds`}>
             <Refund />
           </Route>
         </Switch>
