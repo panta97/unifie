@@ -31,7 +31,7 @@ export const PurchaseOrder = () => {
 
   useEffect(() => {
     downloadCatalogs();
-  }, [downloadCatalogs]);
+  }, []);
 
   return (
     <div>

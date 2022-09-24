@@ -30,7 +30,7 @@ export const ProductProduct = () => {
 
   useEffect(() => {
     downloadCatalogs();
-  }, [downloadCatalogs]);
+  }, []);
 
   return (
     <div>

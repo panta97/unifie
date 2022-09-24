@@ -30,11 +30,10 @@ export const CreateButton = () => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${window.localStorage.getItem("token")}`,
         },
         body: JSON.stringify(products),
       };
-      const response = await fetch("api/product_product", params);
+      const response = await fetch("/api/product-rpc/product_product", params);
       const json = await response.json();
       if (json.result === fetchResult.SUCCESS) {
         const productResults: ProductResult[] = json.products;

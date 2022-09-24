@@ -14,7 +14,7 @@ export const useFetchOrderItem = () => {
     try {
       dispatch(updateItemStatus({ itemStatus: FetchStatus.LOADING }));
       const response = await fetch(
-        `api/purchase_order/order_item?productId=${productId}&type=${type}`
+        `/api/product-rpc/purchase_order/order_item?productId=${productId}&type=${type}`
       );
       const json = await response.json();
       if (json.result === fetchResult.SUCCESS)
@@ -31,10 +31,10 @@ export const useFetchOrderItem = () => {
 };
 
 export const getCatalogs = async () => {
-  const response = await fetch(`api/catalogs?catType=${CatalogType.order}`, {
-    headers: {
-      Authorization: `Bearer ${window.localStorage.getItem("token")}`,
-    },
+  const response = await fetch(`/api/product-rpc/catalogs/${CatalogType.order}`, {
+    // headers: {
+    //   Authorization: `Bearer ${window.localStorage.getItem("token")}`,
+    // },
   });
   const result: OrderCatalogs = await response.json();
   return result;

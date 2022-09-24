@@ -6,7 +6,7 @@ import { DataList } from "../../../shared/DataList";
 import { useFetchOrderItem } from "../../shared";
 
 const searchProductsAsync = async (name: string) => {
-  return (await fetch(`api/purchase_order/product?name=${name}`)).json();
+  return (await fetch(`/api/product-rpc/purchase_order/product?name=${name}`)).json();
 };
 const useSearchProducts = () =>
   useDebouncedSearch((name) => searchProductsAsync(name));

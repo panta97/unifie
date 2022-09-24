@@ -25,7 +25,7 @@ export const POOptions = () => {
         },
       };
       const response = await fetch(
-        `update/cats?catType=${CatalogType.order}`,
+        `/api/product-rpc/update/cats/${CatalogType.order}`,
         params
       );
       const json = await response.json();

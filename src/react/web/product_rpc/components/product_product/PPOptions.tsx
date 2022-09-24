@@ -17,11 +17,10 @@ export const PPOptions = () => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${window.localStorage.getItem("token")}`,
         },
       };
       const response = await fetch(
-        `update/cats?catType=${CatalogType.product}`,
+        `/api/product-rpc/update/cats/${CatalogType.product}`,
         params
       );
       const json = await response.json();
