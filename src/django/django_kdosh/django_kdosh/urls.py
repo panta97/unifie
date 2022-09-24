@@ -23,8 +23,7 @@ urlpatterns = [
     path("", include("product_rpc.urls")),
     path("admin/", admin.site.urls),
     path('apps/', include('react.urls')),
-    path('accounts/login/', LoginView.as_view(template_name='admin/login.html')),
-    path('accounts/logout/', LogoutView.as_view(template_name='admin/logout.html')),
+    path('accounts/', include("django.contrib.auth.urls")),
 ]
 
 
