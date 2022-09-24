@@ -5,7 +5,10 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    {% if not DEV %}
     <link rel="stylesheet" href="/static/{{ css_filename }}">
+    {% endif %}
     <title>{{ display_name }}</title>
 </head>
 
@@ -14,7 +17,19 @@
     <div id="portal"></div>
     <div id="print"></div>
 
-    <script type="module" src="/static/{{ js_filename }}"></script>
+    {% if DEV %}
+    <script type="module">
+        import RefreshRuntime from "http://localhost:9000/react-static/@react-refresh"
+        RefreshRuntime.injectIntoGlobalHook(window)
+        window.$RefreshReg$ = () => { }
+        window.$RefreshSig$ = () => (type) => type
+        window.__vite_plugin_react_preamble_installed__ = true
+    </script>
+    <script type="module" src="http://localhost:9000/react-static/web/{{ js_filename }}/index.tsx"></script>
+    {% else %}
+    <script type="module" src="/react-static/{{ js_filename }}"></script>
+    {% endif %}
+
 </body>
 
 

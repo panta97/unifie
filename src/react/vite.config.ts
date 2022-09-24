@@ -3,8 +3,12 @@ import { defineConfig } from 'vite'
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  server: {
+    host: '0.0.0.0',
+    port: 9000,
+  },
   plugins: [react()],
-  base: '/static/',
+  base: '/react-static/',
   build: {
     sourcemap: true,
     manifest: true,
@@ -12,8 +16,8 @@ export default defineConfig({
     emptyOutDir: true,
     rollupOptions: {
       input: {
-        'sales': 'web/k_sales/index.jsx',
-        'barcode': 'web/barcode/index.jsx',
+        'sales': 'web/k_sales/index.tsx',
+        'barcode': 'web/barcode/index.tsx',
         'purchase_order_sheet': 'web/purchase_order_sheet/index.tsx',
         'product_rpc': 'web/product_rpc/index.tsx',
         'default': 'web/default/main.tsx'

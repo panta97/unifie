@@ -1,4 +1,6 @@
+import requests
 from .shortcuts import render_react_app
+from django.http import HttpResponse
 from django.contrib.auth.decorators import login_required
 
 @login_required
@@ -20,3 +22,8 @@ def k_sales_view(request):
 def product_rpc_view(request, param):
     # don't know what the second argument holds
     return render_react_app(request, 'product_rpc', 'Almacen')
+
+
+def forward_static_files_view(request):
+    response = requests.get(f"http://localhost:9000{request.path}")
+    return HttpResponse(response, content_type=response.headers['Content-Type'])

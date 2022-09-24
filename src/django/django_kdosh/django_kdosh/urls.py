@@ -22,7 +22,7 @@ urlpatterns = [
     path("", include("barcode.urls")),
     path("", include("product_rpc.urls")),
     path("admin/", admin.site.urls),
-    path('apps/', include('react.urls')),
+    path("", include('react.urls')),
     path('accounts/', include("django.contrib.auth.urls")),
 ]
 
