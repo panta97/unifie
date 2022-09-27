@@ -26,11 +26,9 @@ export const ProductAttributeSort = ({
   const dispatch = useAppDispatch();
 
   const fetchAttributeVals = useCallback(async () => {
-    const response = await fetch(`api/attribute/list?attrId=${attr.id}`, {
-      headers: {
-        Authorization: `Bearer ${window.localStorage.getItem("token")}`,
-      },
-    });
+    const response = await fetch(
+      `/api/product-rpc/attribute/list?attrId=${attr.id}`
+    );
     const result = await response.json();
     setAttributeVals(result.attribute_vals as AttributeVal[]);
   }, [attr.id]);
@@ -38,16 +36,15 @@ export const ProductAttributeSort = ({
   const updateAttributeVals = async () => {
     try {
       setStatus(FetchStatus.LOADING);
-      const response = await fetch(`api/attribute/sort?attrId=${attr.id}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${window.localStorage.getItem("token")}`,
-        },
-        body: JSON.stringify({
-          new_attrs_sort: attributeVals,
-        }),
-      });
+      const response = await fetch(
+        `/api/product-rpc/attribute/sort?attrId=${attr.id}`,
+        {
+          method: "POST",
+          body: JSON.stringify({
+            new_attrs_sort: attributeVals,
+          }),
+        }
+      );
       const json = await response.json();
       if (json.result === fetchResult.SUCCESS) {
         dispatch(reorderCols({ attributeVals: attributeVals }));

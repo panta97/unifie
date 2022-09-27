@@ -3,6 +3,7 @@ import json
 from django.http import HttpResponse, JsonResponse
 from django.views.decorators.http import require_http_methods
 
+from .attribute import get_attribute_vals as get_attr_vals, update_attribute_vals
 from .reports.reports import get_cpe_report, get_eq_report, get_fc_report
 from .parser import transform_order_json, order_client_result
 from .purchase_order import search_product_by_name, get_order_item, create_order
@@ -105,3 +106,17 @@ def get_report(request, type):
         return response
     except Exception as e:
         return JsonResponse({'result': 'ERROR', 'message' : str(e)}, status=400)
+
+
+def get_attribute_vals(request):
+    attribute_vals = get_attr_vals(request.GET.get('attrId'))
+    response = JsonResponse({'result': 'SUCCESS', 'attribute_vals': attribute_vals}, status=200)
+    return response
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def sort_attribute_vals(request):
+    raw_json = json.loads(request.body)
+    update_attribute_vals(request.GET.get('attrId'), raw_json['new_attrs_sort'])
+    response = JsonResponse({'result': 'SUCCESS', 'message': 'attributo actualizado'}, status=200)
+    return response
