@@ -42,6 +42,8 @@ def search_product_by_name(name):
     return products
 
 def get_attrs(attr_val_ids):
+    if len(attr_val_ids) == 0:
+        return []
     raw_sql = """
     with attribute_sorted as
     (
