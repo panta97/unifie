@@ -53,7 +53,7 @@ export const InvoiceSearch = () => {
         setInvoiceNumber(invoiceNumberSearch);
       }
       const response = await fetch(
-        `api/refund/invoice?number=${invoiceNumberSearch}`,
+        `/api/product-rpc/refund/invoice?number=${invoiceNumberSearch}`,
         params
       );
       const json = await response.json();

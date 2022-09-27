@@ -94,7 +94,7 @@ export const RefundLine = () => {
           stock_location: stockLocation,
         }),
       };
-      const response = await fetch(`api/refund/create`, params);
+      const response = await fetch(`/api/product-rpc/refund/create`, params);
       const json = await response.json();
       if (json.result === fetchResult.SUCCESS) {
         dispatch(

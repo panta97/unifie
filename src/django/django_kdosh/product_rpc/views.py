@@ -3,6 +3,7 @@ import json
 from django.http import HttpResponse, JsonResponse
 from django.views.decorators.http import require_http_methods
 
+from .refund import get_invoice, invoice_refund
 from .attribute import get_attribute_vals as get_attr_vals, update_attribute_vals
 from .reports.reports import get_cpe_report, get_eq_report, get_fc_report
 from .parser import transform_order_json, order_client_result
@@ -119,4 +120,40 @@ def sort_attribute_vals(request):
     raw_json = json.loads(request.body)
     update_attribute_vals(request.GET.get('attrId'), raw_json['new_attrs_sort'])
     response = JsonResponse({'result': 'SUCCESS', 'message': 'attributo actualizado'}, status=200)
+    return response
+
+
+def get_invoice_details(request):
+    try:
+        invoice_details = get_invoice(request.GET.get('number'))
+        response = JsonResponse(
+                    {'result': 'SUCCESS', 'invoice_details': invoice_details},
+                    status=200
+                )
+    except Exception as e:
+        response = JsonResponse(
+                    {'result': 'ERROR', 'message': str(e)},
+                    status=400
+                )
+    return response
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def create_refund_invoice(request):
+    try:
+        raw_json = json.loads(request.body)
+        invoice_summaries = invoice_refund(raw_json['invoice_details'], raw_json['stock_location'])
+        response = JsonResponse(
+                    {
+                        'result': 'SUCCESS',
+                        'refund_invoice': invoice_summaries['refund_invoice'],
+                        'stock_move': invoice_summaries['stock_move'],
+                    },
+                    status=200
+                )
+    except Exception as e:
+        response = JsonResponse(
+                    {'result': 'ERROR', 'message': str(e)},
+                    status=400
+                )
     return response
