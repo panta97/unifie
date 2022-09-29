@@ -1,14 +1,20 @@
+import React, { Suspense } from "react";
 import {
   BrowserRouter as Router,
-  Switch,
   Route,
   NavLink,
+  Routes,
 } from "react-router-dom";
-import { Home } from "../home/Home";
-import { ProductProduct } from "../product_product/ProductProduct";
-import { PurchaseOrder } from "../purchase_order/PurchaseOrder";
-import { Refund } from "../refund/Refund";
-import { Report } from "../report/Report";
+
+const Home = React.lazy(() => import("../home/Home"));
+const ProductProduct = React.lazy(
+  () => import("../product_product/ProductProduct")
+);
+const PurchaseOrder = React.lazy(
+  () => import("../purchase_order/PurchaseOrder")
+);
+const Refund = React.lazy(() => import("../refund/Refund"));
+const Report = React.lazy(() => import("../report/Report"));
 
 export const Navbar = () => {
   const basePath = "/apps/product-rpc";
@@ -19,10 +25,13 @@ export const Navbar = () => {
           <ul className="flex px-3">
             <li>
               <NavLink
-                exact
+                end
                 to={basePath}
-                className="inline-block px-2 py-1 "
-                activeClassName="bg-gray-100 text-gray-900"
+                className={(navData) =>
+                  `inline-block px-2 py-1 ${
+                    navData.isActive ? "bg-gray-100 text-gray-900" : ""
+                  }`
+                }
                 tabIndex={-1}
               >
                 Home
@@ -31,8 +40,11 @@ export const Navbar = () => {
             <li>
               <NavLink
                 to={`${basePath}/product-product`}
-                className="inline-block px-2 py-1"
-                activeClassName="bg-gray-100 text-gray-900"
+                className={(navData) =>
+                  `inline-block px-2 py-1 ${
+                    navData.isActive ? "bg-gray-100 text-gray-900" : ""
+                  }`
+                }
                 tabIndex={-1}
               >
                 Productos
@@ -41,8 +53,11 @@ export const Navbar = () => {
             <li>
               <NavLink
                 to={`${basePath}/purchase-order`}
-                className="inline-block px-2 py-1"
-                activeClassName="bg-gray-100 text-gray-900"
+                className={(navData) =>
+                  `inline-block px-2 py-1 ${
+                    navData.isActive ? "bg-gray-100 text-gray-900" : ""
+                  }`
+                }
                 tabIndex={-1}
               >
                 Ordenes de Compra
@@ -51,8 +66,11 @@ export const Navbar = () => {
             <li>
               <NavLink
                 to={`${basePath}/reports`}
-                className="inline-block px-2 py-1"
-                activeClassName="bg-gray-100 text-gray-900"
+                className={(navData) =>
+                  `inline-block px-2 py-1 ${
+                    navData.isActive ? "bg-gray-100 text-gray-900" : ""
+                  }`
+                }
                 tabIndex={-1}
               >
                 Reportes
@@ -61,8 +79,11 @@ export const Navbar = () => {
             <li>
               <NavLink
                 to={`${basePath}/refunds`}
-                className="inline-block px-2 py-1"
-                activeClassName="bg-gray-100 text-gray-900"
+                className={(navData) =>
+                  `inline-block px-2 py-1 ${
+                    navData.isActive ? "bg-gray-100 text-gray-900" : ""
+                  }`
+                }
                 tabIndex={-1}
               >
                 Cambios
@@ -70,23 +91,21 @@ export const Navbar = () => {
             </li>
           </ul>
         </nav>
-        <Switch>
-          <Route exact path={basePath}>
-            <Home />
-          </Route>
-          <Route path={`${basePath}/product-product`}>
-            <ProductProduct />
-          </Route>
-          <Route path={`${basePath}/purchase-order`}>
-            <PurchaseOrder />
-          </Route>
-          <Route path={`${basePath}/reports`}>
-            <Report />
-          </Route>
-          <Route path={`${basePath}/refunds`}>
-            <Refund />
-          </Route>
-        </Switch>
+        <Suspense fallback={<div />}>
+          <Routes>
+            <Route path={basePath} element={<Home />} />
+            <Route
+              path={`${basePath}/product-product`}
+              element={<ProductProduct />}
+            />
+            <Route
+              path={`${basePath}/purchase-order`}
+              element={<PurchaseOrder />}
+            />
+            <Route path={`${basePath}/reports`} element={<Report />} />
+            <Route path={`${basePath}/refunds`} element={<Refund />} />
+          </Routes>
+        </Suspense>
       </div>
     </Router>
   );

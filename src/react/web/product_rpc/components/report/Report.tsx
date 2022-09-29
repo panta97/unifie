@@ -3,7 +3,7 @@ import { selectReportState } from "../../app/slice/report/reportSlice";
 import { Loader } from "../shared/Loader";
 import { ReportForm } from "./ReportForm";
 
-export const Report = () => {
+const Report = () => {
   const { status } = useAppSelector(selectReportState);
   return (
     <>
@@ -12,3 +12,5 @@ export const Report = () => {
     </>
   );
 };
+
+export default Report;

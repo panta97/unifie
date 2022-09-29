@@ -3,7 +3,7 @@ import { InvoiceSearch } from "./InvoiceSearch";
 import { InvoiceTicketPrint } from "./InvoiceTicketPrint";
 import { RefundLine } from "./RefundLine";
 
-export const Refund = () => {
+const Refund = () => {
   return (
     <Wrapper>
       <div className="w-[620px] mx-auto">
@@ -16,3 +16,5 @@ export const Refund = () => {
     </Wrapper>
   );
 };
+
+export default Refund;

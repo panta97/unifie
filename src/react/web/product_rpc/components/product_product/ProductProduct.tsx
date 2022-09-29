@@ -12,7 +12,7 @@ import {
 import { selectFormState } from "../../app/slice/product/formSlice";
 import { getCatalogs } from "./shared";
 
-export const ProductProduct = () => {
+const ProductProduct = () => {
   const formState = useAppSelector(selectFormState);
   const catalogs = useAppSelector(selectCatalogs);
   const dispatch = useAppDispatch();
@@ -45,3 +45,5 @@ export const ProductProduct = () => {
     </div>
   );
 };
+
+export default ProductProduct;

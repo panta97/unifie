@@ -16,7 +16,7 @@ import { OrderList } from "./order_list/OrderList";
 import { OrderProductList } from "./order_product_list/OrderProductList";
 import { getCatalogs } from "./shared";
 
-export const PurchaseOrder = () => {
+const PurchaseOrder = () => {
   const formState = useAppSelector(selectFormOrderState);
   const formStatus = useAppSelector(selectFormOrderStatus);
   const catalog = useAppSelector(selectPartnerCatalog);
@@ -47,3 +47,5 @@ export const PurchaseOrder = () => {
     </div>
   );
 };
+
+export default PurchaseOrder;
