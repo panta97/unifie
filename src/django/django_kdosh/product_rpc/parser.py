@@ -58,7 +58,7 @@ def product_client_result(product_tmpl_ids):
         # RESULT TUPLE (odoo_id, client_id)
         product_results.append({
             "odoo_id": result[0],
-            "odoo_link": "{}/web#id={}&view_type=form&model=product.template&action=277&menu_id=145"
+            "odoo_link": "{}/web#id={}&menu_id=193&cids=1&action=321&model=product.template&view_type=form"
                 .format(settings.ODOO_URL, result[0]),
             "client_id": result[1],
         })
@@ -69,8 +69,8 @@ def product_client_result(product_tmpl_ids):
 def transform_order_json(data):
     order_lines = []
     total_price = 0
-    TAX_ID = 4
-    UNTAX_ID = 3
+    TAX_ID = 7
+    UNTAX_ID = 6
     PERUVIAN_TAX = 0.18
 
     for order_item in data['order_list']:
@@ -100,7 +100,7 @@ def transform_order_json(data):
 
 def order_client_result(order_id):
     result = {
-        "odoo_link": "{}/web#id={}&view_type=form&model=purchase.order&menu_id=243&action=377"
+        "odoo_link": "{}/web#id={}&menu_id=260&cids=1&action=401&model=purchase.order&view_type=form"
             .format(settings.ODOO_URL, order_id),
         "odoo_id": order_id
     }

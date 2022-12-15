@@ -15,55 +15,57 @@ class ProductResult(Enum):
 class Product():
 
     def __init__(self):
-        # DEFAULTS
-        self.active = True
-        self.sale_ok = True
-        self.purchase_ok = True
-        self.type = "product"
-        self.property_cost_method = False
-        self.company_id = 1
-        self.uom_id = 1
-        self.uom_po_id = 1
-        self.available_in_pos = True
-        self.sale_delay = 0
-        self.tracking = "none"
-        self.property_stock_production = 7
-        self.property_stock_inventory = 5
-        self.property_account_income_id = False
-        self.property_account_expense_id = False
-        self.property_account_creditor_price_difference = False
-        self.property_valuation = False
-        self.property_stock_account_input = False
-        self.property_stock_account_output = False
-        self.purchase_method = "receive"
-        self.invoice_policy = "order"
-        self.service_type = "manual"
-        self.sale_line_warn = "no-message"
-        self.purchase_line_warn = "no-message"
-        self.website_published = False
-        self.image_medium = False
-        self.__last_update = False
-        self.barcode = False
-        self.cod_sunat = False
-        self.cod_detraction_sunat = False
-        self.standard_price = 0
-        self.to_weight = False
-        self.weight = 0
-        self.volume = 0
-        self.description = False
-        self.description_sale = False
-        self.description_purchase = False
-        self.description_pickingout = False
-        self.description_pickingin = False
-        self.description_picking = False
+        self.type =  "product"
+        self.image_1920 =  False
+        # self.__last_update =  False
+        self.priority =  "0"
+        self.sale_ok =  True
+        self.purchase_ok =  True
+        self.active =  True
+        self.detailed_type =  "product"
+        self.uom_id =  1
+        self.uom_po_id =  1
+        self.taxes_id =  [ [ 6, False, [ 1 ] ] ]
+        self.l10n_pe_withhold_code =  False
+        self.l10n_pe_withhold_percentage =  0
+        self.standard_price =  0
+        self.barcode =  False
+        self.company_id =  False
+        self.description =  "<p><br></p>"
+        self.available_in_pos =  True
+        self.to_weight =  False
+        self.description_sale =  False
+        self.seller_ids =  []
+        self.supplier_taxes_id =  [ [ 6, False, [ 6 ] ] ]
+        self.purchase_method =  "receive"
+        self.description_purchase =  False
+        self.purchase_line_warn =  "no-message"
+        self.route_ids =  [ [ 6, False, [ 5 ] ] ]
+        self.weight =  0
+        self.volume =  0
+        self.sale_delay =  0
+        self.tracking =  "none"
+        self.property_stock_production =  15
+        self.property_stock_inventory =  14
+        self.packaging_ids =  []
+        self.description_pickingin =  False
+        self.description_pickingout =  False
+        self.description_picking =  False
+        self.property_account_income_id =  False
+        self.property_account_expense_id =  809
+        self.property_account_creditor_price_difference =  False
+        self.unspsc_code_id =  False
+        self.message_follower_ids =  []
+        self.activity_ids =  []
+        self.message_ids =  []
 
         # UNIQUE PROPERTIES
-        self.responsible_id = None
 
+        self.responsible_id =  None
         self.name = None
         self.default_code = None
         self.list_price = None
-        self.categ_id = None
+        self.categ_id =  None
         self.pos_categ_id = None
         self.attribute_line_ids = []
 
@@ -115,7 +117,7 @@ def edit_product_default_code(df_map, product_product_list, product_template, ui
         default_code_by_prod_ids = {}
         for product_product in product_product_list:
             for df_map_item in df_map:
-                if(set(df_map_item['ids']).issubset(set(product_product['attribute_value_ids']))):
+                if(set(df_map_item['ids']).issubset(set(product_product['product_attribute_value_ids']))):
                     # default_code_by_prod_ids
                     if df_map_item['default_code'] in default_code_by_prod_ids:
                         default_code_by_prod_ids[df_map_item['default_code']].append(product_product['id'])
@@ -145,15 +147,34 @@ def edit_product_list_price(lp_map, tmpl_id, uid, proxy):
             else:
                 list_price_by_prod_ids[lp_map_item['list_price']] = [lp_map_item['ids'][0]]
         for list_price, ids in list_price_by_prod_ids.items():
-            rpc.update_model('product.attribute.value', ids,
-            {'price_extra': list_price}, uid, context=context, proxy=proxy)
+            rpc.update_model('product.template.attribute.value', ids,
+                {'price_extra': list_price}, uid, context=context, proxy=proxy)
 
 def create_product_new(product_template, default_code_map, list_price_map, client_id, uid, proxy):
     # CREATE PRODUCT
     tmpl_id = rpc.create_model('product.template', product_template, uid, proxy=proxy)
     # GET PRODUCT.PRODUCT IDS
+    product_template_attribute_value_list = rpc.get_model('product.template.attribute.value',
+        [[['product_tmpl_id', '=', tmpl_id]]], ['product_attribute_value_id'], proxy=proxy)
+
     product_product_list = rpc.get_model('product.product', [[['product_tmpl_id', '=', tmpl_id]]],
-                            ['attribute_value_ids'], proxy=proxy)
+                            ['product_template_attribute_value_ids'], proxy=proxy)
+
+    # FOR v15 WE NOW HAVE AN INTERMEDIARY MODEL 'product.template.attribute.value'
+    for pp_item in product_product_list:
+        product_attribute_value_ids = []
+        for ptav_id in pp_item['product_template_attribute_value_ids']:
+            for ptav_item in product_template_attribute_value_list:
+                if ptav_id == ptav_item['id']:
+                    product_attribute_value_ids.append(ptav_item['product_attribute_value_id'][0])
+                    break
+        pp_item['product_attribute_value_ids'] = product_attribute_value_ids
+
+    for lp_item in list_price_map:
+        for ptav_item in product_template_attribute_value_list:
+            if lp_item['ids'][0] == ptav_item['product_attribute_value_id'][0]:
+                lp_item['ids'][0] = ptav_item['id']
+                break
 
     edit_product_default_code(default_code_map, product_product_list, product_template, uid, proxy)
     edit_product_list_price(list_price_map, tmpl_id, uid, proxy)

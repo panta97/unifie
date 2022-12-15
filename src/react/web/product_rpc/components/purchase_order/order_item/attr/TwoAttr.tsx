@@ -2,12 +2,7 @@ import { OrderItem, ProductItem } from "../../../../types/purchaseOrder";
 import { ItemTableType } from "./OrderItemAttr";
 import { TableAttr as TA } from "../../../shared/table/TableAttr";
 import { Svg } from "../../../shared/Svg";
-import {
-  DragDropContext,
-  Droppable,
-  Draggable,
-  DropResult,
-} from "react-beautiful-dnd";
+import { DragDropContext, Draggable, DropResult } from "react-beautiful-dnd";
 import { useRef } from "react";
 import { useAppDispatch } from "../../../../app/hooks";
 import {
@@ -18,6 +13,7 @@ import {
 import { useModal } from "../../../../hooks/useModal";
 import { ProductAttributeSort } from "../../../product_attribute/ProductAttributeSort";
 import { OrderItemInput } from "./OrderItemInput";
+import { StrictModeDroppable } from "../../../shared/StrictModeDroppable";
 
 interface TwoAttrProps {
   title: string;
@@ -123,7 +119,7 @@ export const TwoAttr = ({
           </TA.Tr>
         </thead>
         <DragDropContext onDragEnd={handleOnDragEnd}>
-          <Droppable droppableId="ddr">
+          <StrictModeDroppable droppableId="ddr">
             {(provided, snapshot) => (
               <tbody {...provided.droppableProps} ref={provided.innerRef}>
                 {order_item.product_matrix.map((productRow, idxRow) => (
@@ -208,7 +204,7 @@ export const TwoAttr = ({
                 {provided.placeholder}
               </tbody>
             )}
-          </Droppable>
+          </StrictModeDroppable>
         </DragDropContext>
       </TA.Table>
       {isShowing && (

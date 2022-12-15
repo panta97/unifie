@@ -107,17 +107,29 @@ def get_order_item(product_id, type):
     pp_table = "product.product"
     pp_filter = [[["product_tmpl_id", "=", product_tmpl_id]]]
     pp_fields = [
-        "attribute_value_ids",
+        "product_template_attribute_value_ids",
         "display_name",
     ]
 
     # ----------------- CREATE ATTRS OBJECT -----------------
     # GET PRODUCTS WITH FILTERED PRODUCT IDS
     product_product = rpc.get_model(pp_table, pp_filter, pp_fields, proxy=proxy)
+    product_template_attribute_value_list = rpc.get_model('product.template.attribute.value',
+        [[['product_tmpl_id', '=', product_tmpl_id]]], ['product_attribute_value_id'], proxy=proxy)
+
+    # FOR v15 WE NOW HAVE AN INTERMEDIARY MODEL 'product.template.attribute.value'
+    for pp_item in product_product:
+        product_attribute_value_ids = []
+        for ptav_id in pp_item['product_template_attribute_value_ids']:
+            for ptav_item in product_template_attribute_value_list:
+                if ptav_id == ptav_item['id']:
+                    product_attribute_value_ids.append(ptav_item['product_attribute_value_id'][0])
+                    break
+        pp_item['product_attribute_value_ids'] = product_attribute_value_ids
 
     attr_val_ids = []
     for product in product_product:
-        attr_val_ids.extend(product["attribute_value_ids"])
+        attr_val_ids.extend(product["product_attribute_value_ids"])
     distinct_attr_val_ids = list(set(attr_val_ids))
 
     db_attrs = get_attrs(distinct_attr_val_ids)
@@ -181,11 +193,11 @@ def get_order_item(product_id, type):
         product_items = []
         for attr_col in attr_cols:
             for product in product_product:
-                if set([attr_col['id']]).issubset(set(product['attribute_value_ids'])):
+                if set([attr_col['id']]).issubset(set(product['product_attribute_value_ids'])):
                     product_items.append({
                         "id": product['id'],
                         "name": product['display_name'],
-                        "attrs": product['attribute_value_ids'],
+                        "attrs": product['product_attribute_value_ids'],
                         "qty": 0,
                         "price": 0,
                     })
@@ -204,11 +216,11 @@ def get_order_item(product_id, type):
             for attr_col in attr_cols:
                 for product in product_product:
                     attr_cell = [attr_row['id'], attr_col['id']]
-                    if set(attr_cell).issubset(set(product['attribute_value_ids'])):
+                    if set(attr_cell).issubset(set(product['product_attribute_value_ids'])):
                         product_items.append({
                         "id": product['id'],
                         "name": product['display_name'],
-                        "attrs": product['attribute_value_ids'],
+                        "attrs": product['product_attribute_value_ids'],
                         "qty": 0,
                         "price": 0,
                     })
@@ -230,22 +242,27 @@ def get_order_item(product_id, type):
 
 class Order():
     def __init__(self):
-        self.currency_id = 164
-        self.date_order = None
-        self.company_id = 1
+        self.priority = "0"
         self.partner_id = None
         self.partner_ref = None
-        self.origin = False
-        self.order_line = []
-        self.amount_tax_bolsa_plastico = 0
-        self.amount_tax_otros = None
-        self.notes = False
+        self.currency_id = 154
+        self.date_order = None
         self.date_planned = None
+        self.receipt_reminder_email = False
+        self.reminder_date_before_receipt = 1
+        self.picking_type_id = 1
         self.dest_address_id = False
+        self.order_line = []
+        self.notes = "<p><br></p>"
+        self.user_id = None
+        self.company_id = 1
+        self.origin = False
         self.incoterm_id = False
         self.payment_term_id = False
-        self.fiscal_position_id = False
-        pass
+        self.fiscal_position_id = 1
+        self.message_follower_ids = []
+        self.activity_ids = []
+        self.message_ids = []
 
     def __set_lines(self, order_lines):
         virtual_count = 1110
@@ -256,10 +273,12 @@ class Order():
                     0,
                     virtual,
                     {
+                        "display_type": False,
                         "sequence": 10,
                         "product_id": line['product_id'],
                         "name": line['name'],
                         "date_planned": line['date_planned'],
+                        "move_dest_ids": [],
                         "account_analytic_id": False,
                         "analytic_tag_ids": [
                             [
@@ -269,7 +288,10 @@ class Order():
                             ]
                         ],
                         "product_qty": line['product_qty'],
+                        "qty_received_manual": 0,
                         "product_uom": 1,
+                        "product_packaging_qty": 0,
+                        "product_packaging_id": False,
                         "price_unit": line['price_unit'],
                         "taxes_id": [
                             [
@@ -279,17 +301,26 @@ class Order():
                                     line['tax_id']
                                 ]
                             ]
-                        ]
+                        ],
+                        "move_ids": [
+                            [
+                                5,
+                                0,
+                                0
+                            ]
+                        ],
+                        "propagate_cancel": True
                     }
                 ]
             )
             virtual_count += 10
 
-    def set_order_dict(self, dict):
+    def set_order_dict(self, dict, uid):
+        self.user_id = uid
         self.date_order = dict['date_order']
         self.partner_id = dict['partner_id']
         self.partner_ref = dict['partner_ref']
-        self.amount_tax_otros = dict['amount_tax_otros']
+        # self.amount_tax_otros = dict['amount_tax_otros']
         self.date_planned = dict['date_order']
         self.__set_lines(dict['order_lines'])
 
@@ -301,17 +332,21 @@ def create_order(order):
     password = utils.get_user_password(uid)
     models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(url))
     order_template = Order()
-    order_template.set_order_dict(order)
+    order_template.set_order_dict(order, uid)
     kwargs = {
         "context": {
             "lang": "es_PE",
             "tz": "America/Lima",
             "uid": uid,
-            "search_default_todo": 1,
-            "show_purchase": False,
+            "allowed_company_ids": [1],
             "params": {
-                "action": 377
-            }
+                "menu_id": 260,
+                "cids": 1,
+                "action": 401,
+                "model": "purchase.order",
+                "view_type": "form"
+            },
+            "quotation_only": True
         }
     }
 

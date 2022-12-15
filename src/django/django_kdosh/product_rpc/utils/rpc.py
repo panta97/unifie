@@ -96,7 +96,7 @@ def create_model(obj_table, obj_to_create, uid, proxy=None):
 def update_model(obj_table, ids, fields, uid, context={}, proxy=None):
     if proxy is None: proxy = get_proxy()
     result = proxy.execute_kw(settings.ODOO_DB, uid, get_user_password(uid),
-            obj_table, 'write', [ids, fields, context])
+            obj_table, 'write', [ids, fields])
     return result
 
 def execute_json_model(dict_model, uid, proxy=None):

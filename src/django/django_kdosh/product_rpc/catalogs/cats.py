@@ -188,7 +188,7 @@ def update_order_catalogs():
     # RES PARTNER
     res_partner_list = models.execute_kw(db, uid, password,
         'res.partner', 'search_read',
-        [[["supplier", "=", True]]],
+        [[["supplier_rank", ">", 0]]],
         {'fields': ['id', 'name', 'vat'],
             'context': {'lang': "es_PE"}})
 
