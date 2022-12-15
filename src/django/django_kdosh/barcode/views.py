@@ -19,23 +19,39 @@ def get_product_product(request, pp_id):
         "default_code",
         "categ_id",
         "lst_price",
-        "attribute_value_ids",
+        "product_template_attribute_value_ids",
         "product_tmpl_id",
     ]
     # GET PRODUCTS WITH FILTERED PRODUCT IDS
     products = get_model(proxy, pp_table, pp_filter, pp_fields)
+    tmpl_id = products[0]['product_tmpl_id'][0]
+
+    ptav_table = "product.template.attribute.value"
+    ptav_filter = [[["product_tmpl_id", "=", tmpl_id]]]
+    ptav_fields = ["product_attribute_value_id"]
+    product_template_attribute_value_list = get_model(proxy, ptav_table, ptav_filter, ptav_fields)
+
+    # FOR v15 WE NOW HAVE AN INTERMEDIARY MODEL 'product.template.attribute.value'
+    for pp_item in products:
+        product_attribute_value_ids = []
+        for ptav_id in pp_item['product_template_attribute_value_ids']:
+            for ptav_item in product_template_attribute_value_list:
+                if ptav_id == ptav_item['id']:
+                    product_attribute_value_ids.append(ptav_item['product_attribute_value_id'][0])
+                    break
+        pp_item['product_attribute_value_ids'] = product_attribute_value_ids
 
     # FILTER ATTRIBUTE IDS
     # [[12,23], [232,23]]
-    attribute_value_ids = list(map(lambda e: e["attribute_value_ids"], products))
+    product_attribute_value_ids = list(map(lambda e: e["product_attribute_value_ids"], products))
     # [12,23,232,23]
-    attribute_value_ids = reduce(list.__add__, attribute_value_ids)
+    product_attribute_value_ids = reduce(list.__add__, product_attribute_value_ids)
     # [12,23,232]
-    attribute_value_ids = list(set(attribute_value_ids))
+    product_attribute_value_ids = list(set(product_attribute_value_ids))
 
     # pav = product.attribute.value
     pav_table = "product.attribute.value"
-    pav_filter = [[["id", "in", attribute_value_ids]]]
+    pav_filter = [[["id", "in", product_attribute_value_ids]]]
     pav_fields = ["display_name"]
     attribute_values = get_model(proxy, pav_table, pav_filter, pav_fields)
 
@@ -44,7 +60,7 @@ def get_product_product(request, pp_id):
 
     attribute = list(
         filter(
-            lambda e: e["id"] in products[0]["attribute_value_ids"], attribute_values
+            lambda e: e["id"] in products[0]["product_attribute_value_ids"], attribute_values
         )
     )
     labels.append(
@@ -81,23 +97,38 @@ def get_product_template(request, pt_id):
         "default_code",
         "categ_id",
         "lst_price",
-        "attribute_value_ids",
+        "product_template_attribute_value_ids",
         "product_tmpl_id",
     ]
     # GET PRODUCTS WITH FILTERED PRODUCT IDS
     products = get_model(proxy, pp_table, pp_filter, pp_fields)
 
+    ptav_table = "product.template.attribute.value"
+    ptav_filter = [[["product_tmpl_id", "=", pt_id]]]
+    ptav_fields = ["product_attribute_value_id"]
+    product_template_attribute_value_list = get_model(proxy, ptav_table, ptav_filter, ptav_fields)
+
+    # FOR v15 WE NOW HAVE AN INTERMEDIARY MODEL 'product.template.attribute.value'
+    for pp_item in products:
+        product_attribute_value_ids = []
+        for ptav_id in pp_item['product_template_attribute_value_ids']:
+            for ptav_item in product_template_attribute_value_list:
+                if ptav_id == ptav_item['id']:
+                    product_attribute_value_ids.append(ptav_item['product_attribute_value_id'][0])
+                    break
+        pp_item['product_attribute_value_ids'] = product_attribute_value_ids
+
     # FILTER ATTRIBUTE IDS
     # [[12,23], [232,23]]
-    attribute_value_ids = list(map(lambda e: e["attribute_value_ids"], products))
+    product_attribute_value_ids = list(map(lambda e: e["product_attribute_value_ids"], products))
     # [12,23,232,23]
-    attribute_value_ids = reduce(list.__add__, attribute_value_ids)
+    product_attribute_value_ids = reduce(list.__add__, product_attribute_value_ids)
     # [12,23,232]
-    attribute_value_ids = list(set(attribute_value_ids))
+    product_attribute_value_ids = list(set(product_attribute_value_ids))
 
     # pav = product.attribute.value
     pav_table = "product.attribute.value"
-    pav_filter = [[["id", "in", attribute_value_ids]]]
+    pav_filter = [[["id", "in", product_attribute_value_ids]]]
     pav_fields = ["display_name"]
     attribute_values = get_model(proxy, pav_table, pav_filter, pav_fields)
 
@@ -108,7 +139,7 @@ def get_product_template(request, pt_id):
         pass
         attribute = list(
             filter(
-                lambda e: e["id"] in product["attribute_value_ids"], attribute_values
+                lambda e: e["id"] in product["product_attribute_value_ids"], attribute_values
             )
         )
         labels.append(
@@ -160,23 +191,39 @@ def get_purchase_order(request, po_id):
         "default_code",
         "categ_id",
         "lst_price",
-        "attribute_value_ids",
+        "product_template_attribute_value_ids",
         "product_tmpl_id",
     ]
     # GET PRODUCTS WITH FILTERED PRODUCT IDS
     products = get_model(proxy, pp_table, pp_filter, pp_fields)
+    tmpl_id = products[0]['product_tmpl_id'][0]
+
+    ptav_table = "product.template.attribute.value"
+    ptav_filter = [[["product_tmpl_id", "=", tmpl_id]]]
+    ptav_fields = ["product_attribute_value_id"]
+    product_template_attribute_value_list = get_model(proxy, ptav_table, ptav_filter, ptav_fields)
+
+    # FOR v15 WE NOW HAVE AN INTERMEDIARY MODEL 'product.template.attribute.value'
+    for pp_item in products:
+        product_attribute_value_ids = []
+        for ptav_id in pp_item['product_template_attribute_value_ids']:
+            for ptav_item in product_template_attribute_value_list:
+                if ptav_id == ptav_item['id']:
+                    product_attribute_value_ids.append(ptav_item['product_attribute_value_id'][0])
+                    break
+        pp_item['product_attribute_value_ids'] = product_attribute_value_ids
 
     # FILTER ATTRIBUTE IDS
     # [[12,23], [232,23]]
-    attribute_value_ids = list(map(lambda e: e["attribute_value_ids"], products))
+    product_attribute_value_ids = list(map(lambda e: e["product_attribute_value_ids"], products))
     # [12,23,232,23]
-    attribute_value_ids = reduce(list.__add__, attribute_value_ids)
+    product_attribute_value_ids = reduce(list.__add__, product_attribute_value_ids)
     # [12,23,232]
-    attribute_value_ids = list(set(attribute_value_ids))
+    product_attribute_value_ids = list(set(product_attribute_value_ids))
 
     # pav = product.attribute.value
     pav_table = "product.attribute.value"
-    pav_filter = [[["id", "in", attribute_value_ids]]]
+    pav_filter = [[["id", "in", product_attribute_value_ids]]]
     pav_fields = ["display_name"]
     attribute_values = get_model(proxy, pav_table, pav_filter, pav_fields)
 
@@ -194,7 +241,7 @@ def get_purchase_order(request, po_id):
             continue
         attribute = list(
             filter(
-                lambda e: e["id"] in product["attribute_value_ids"], attribute_values
+                lambda e: e["id"] in product["product_attribute_value_ids"], attribute_values
             )
         )
         labels.append(
