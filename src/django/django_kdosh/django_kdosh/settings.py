@@ -22,7 +22,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "LKJAS(8sj8SH*HW&*7356f3gilh8s793h963tg8s3g8s#GH*63gs36")
+SECRET_KEY = os.getenv(
+    "DJANGO_SECRET_KEY", "LKJAS(8sj8SH*HW&*7356f3gilh8s793h963tg8s3g8s#GH*63gs36"
+)
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv("DEBUG", "True") != "False"
@@ -42,6 +44,7 @@ INSTALLED_APPS = [
     "react",
     "barcode",
     "product_rpc",
+    "pos_close_control",
 ]
 
 MIDDLEWARE = [
@@ -86,14 +89,11 @@ if DEVELOPMENT_MODE is True:
             "NAME": os.path.join(BASE_DIR, "db.sqlite3"),
         }
     }
-elif len(sys.argv) > 0 and sys.argv[1] != 'collectstatic':
+elif len(sys.argv) > 0 and sys.argv[1] != "collectstatic":
     if os.getenv("DATABASE_URL", None) is None:
         raise Exception("DATABASE_URL environment variable not defined")
 
-    DATABASES = {
-        "default": dj_database_url.parse(os.environ.get("DATABASE_URL"))
-    }
-
+    DATABASES = {"default": dj_database_url.parse(os.environ.get("DATABASE_URL"))}
 
 
 # Password validation
@@ -133,9 +133,7 @@ USE_TZ = True
 STATIC_URL = "/static/"
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 
-STATICFILES_DIRS = (
-    os.path.join(BASE_DIR, "static"), # your static/ files folder
-)
+STATICFILES_DIRS = (os.path.join(BASE_DIR, "static"),)  # your static/ files folder
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
@@ -143,7 +141,9 @@ STATICFILES_DIRS = (
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # ODOO_CONFIG
-ODOO_URL = os.getenv("ODOO_URL", "https://oxe360-ooc-kdosh1-pre-prd11-0-5935095.dev.odoo.com")
+ODOO_URL = os.getenv(
+    "ODOO_URL", "https://oxe360-ooc-kdosh1-pre-prd11-0-5935095.dev.odoo.com"
+)
 ODOO_DB = os.getenv("ODOO_DB", "oxe360-ooc-kdosh1-pre-prd11-0-5935095")
 ODOO_PWD = os.getenv("ODOO_PWD", "kdosh")
 ODOO_UID = os.getenv("ODOO_UID", "1")
