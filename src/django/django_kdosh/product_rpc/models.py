@@ -43,7 +43,7 @@ class ProductStats(models.Model):
     odoo_id = models.AutoField(primary_key=True)
     client_id = models.IntegerField()
     user_id = models.IntegerField()
-    created = models.DateTimeField()
+    created = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         db_table = "rpc_product_stats"
@@ -61,7 +61,7 @@ class ResPartner(models.Model):
 class OrderStats(models.Model):
     odoo_id = models.AutoField(primary_key=True)
     user_id = models.IntegerField()
-    created = models.DateTimeField()
+    created = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         db_table = "rpc_order_stats"
