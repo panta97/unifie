@@ -149,6 +149,15 @@ def pos_persist(request):
     start_at = datetime.strptime(json_data["summary"]["startAt"], "%Y-%m-%d %H:%M:%S")
     stop_at = datetime.strptime(json_data["summary"]["stopAt"], "%Y-%m-%d %H:%M:%S")
 
+    json_end_state = json_data["endState"]["state"]
+    end_state = None
+    if json_end_state == "stable":
+        end_state = PosSession.STABLE
+    elif json_end_state == "extra":
+        end_state = PosSession.EXTRA
+    elif json_end_state == "missing":
+        end_state = PosSession.MISSING
+
     new_pos_session = PosSession(
         pos_name=json_data["posName"],
         cashier=cashier,
@@ -164,7 +173,7 @@ def pos_persist(request):
         session_name=json_data["summary"]["sessionName"],
         start_at=start_at,
         stop_at=stop_at,
-        end_state=json_data["endState"]["state"],
+        end_state=end_state,
         end_state_amount=json_data["endState"]["amount"],
         end_state_note=json_data["endState"]["note"],
         json=request.body.decode("utf-8"),
