@@ -41,7 +41,7 @@ class ProductAttributeValue(models.Model):
 
 class ProductStats(models.Model):
     odoo_id = models.AutoField(primary_key=True)
-    client_id = models.IntegerField()
+    client_id = models.BigIntegerField()
     user_id = models.IntegerField()
     created = models.DateTimeField(auto_now_add=True)
 
