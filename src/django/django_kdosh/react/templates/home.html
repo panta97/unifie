@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+
+{% block title %}Kdosh{% endblock %}
+
+{% block content %}
+{% if user.is_authenticated %}
+Hello, {{ user.username }}!
+
+<ul>
+    <li><a href="{% url 'barcode' %}">Barcode</a></li>
+    <li><a href="{% url 'purchase_order_sheet' %}">Orden</a></li>
+    <li><a href="/apps/product-rpc">Almacen</a></li>
+    <li><a href="/apps/pos-close-control">Caja Cuadre</a></li>
+    <li><a href="{% url 'logout' %}">Salir</a></li>
+</ul>
+
+{% else %}
+<p>You are not logged in</p>
+<a href="{% url 'login' %}">Log In?</a>
+{% endif %}
+{% endblock %}

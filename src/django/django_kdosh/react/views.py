@@ -25,6 +25,7 @@ def product_rpc_view(request, param):
     return render_react_app(request, "product_rpc", "Almacen")
 
 
+@login_required
 def pos_close_control_view(request, param):
     # don't know what the second argument holds
     return render_react_app(request, "pos_close_control", "Caja Cuadre")
