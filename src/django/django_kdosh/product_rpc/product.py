@@ -232,7 +232,7 @@ def create_product_new(
     edit_product_list_price(list_price_map, tmpl_id, uid, proxy)
 
     # SAVE PRODUCT ODOO ID AND REACT ID INTO DB
-    ProductStats.objects.create(odoo_id=tmpl_id, client_id=client_id, user_id=uid)
+    ProductStats.objects.create(odoo_id="tmpl_id", client_id=client_id, user_id=uid)
 
     return tmpl_id
 
