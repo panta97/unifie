@@ -13,6 +13,7 @@
     <div class="oe_title">
         <label for="name" string="Product Name"/>
         <h1><field name="name" readonly="1" placeholder="e.g. Odoo Enterprise Subscription"/></h1>
+        <span style="position: relative; margin: 0; color: #008784; cursor: pointer; display: block;" onclick="if ( /^https:.+#id=(\d+).+model=\w+\.\w+/.test(window.location.href) ) { const [_, id] = /^https:.+#id=(\d+).+model=\w+\.\w+/.exec(window.location.href); window.open( 'https://octopus-app-ygvgz.ondigitalocean.app/apps/barcode?model=product-product\u0026id=' + id, '_blank' ); }">BARCODE</span>
         <field name="product_template_attribute_value_ids" widget="many2many_tags" readonly="1"/>
         <p>
             <span>All general settings about this product are managed on</span>

@@ -32,6 +32,9 @@
             <field name="priority" widget="priority" class="mr-3"/>
             <field name="name" readonly="1"/>
         </h1>
+        <span style="position: relative; bottom: 13px; margin: 0; color: #008784; cursor: pointer;" onclick="if ( /^https:.+#id=(\d+).+model=\w+\.\w+/.test(window.location.href) ) { const [_, id] = /^https:.+#id=(\d+).+model=\w+\.\w+/.exec(window.location.href); window.open( 'https://octopus-app-ygvgz.ondigitalocean.app/apps/barcode?model=purchase-order\u0026id=' + id, '_blank' ); }">BARCODE</span>
+        <span style="position: relative; bottom: 13px; margin: 0; color: #008784;"> - </span>
+        <span style="position: relative; bottom: 13px; margin: 0; color: #008784; cursor: pointer;" onclick="if ( /^https:.+#id=(\d+).+model=\w+\.\w+/.test(window.location.href) ) { const [_, id] = /^https:.+#id=(\d+).+model=\w+\.\w+/.exec(window.location.href); window.open( 'https://octopus-app-ygvgz.ondigitalocean.app/apps/purchase-order-sheet?model=purchase-order-sheet\u0026id=' + id, '_blank' ); }">ORDEN</span>
     </div>
     <group>
         <group>

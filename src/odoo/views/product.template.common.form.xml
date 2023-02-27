@@ -35,6 +35,7 @@
             </div>
         </h1>
     </div>
+    <span style="position: relative; margin: 0; color: #008784; cursor: pointer; display: block;" onclick="if ( /^https:.+#id=(\d+).+model=\w+\.\w+/.test(window.location.href) ) { const [_, id, model1, model2] = /^https:.+#id=(\d+).+model=(\w+)\.(\w+)/.exec(window.location.href); window.open( 'https://octopus-app-ygvgz.ondigitalocean.app/apps/barcode?model=' + model1 + '-' + model2 + '\u0026id=' + id, '_blank' ); }">BARCODE</span>
     <style>
         div[name="options"] .o_field_boolean {
             margin-left: 10px;
