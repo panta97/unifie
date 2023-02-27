@@ -181,10 +181,18 @@ def edit_product_list_price(lp_map, tmpl_id, uid, proxy):
 
 
 def create_product_new(
-    product_template, default_code_map, list_price_map, client_id, uid, proxy
+    product_template, default_code_map, list_price_map, client_id, uid, proxy, user
 ):
     # CREATE PRODUCT
     tmpl_id = rpc.create_model("product.template", product_template, uid, proxy=proxy)
+    # CREATE COMMENT
+    comment_obj = {
+        "body": f"Creado por: {user.first_name} {user.last_name}",
+        "model": "product.template",
+        "res_id": tmpl_id,
+        "message_type": "comment",
+    }
+    comment_id = rpc.create_model("mail.message", comment_obj, uid, proxy=proxy)
     # GET PRODUCT.PRODUCT IDS
     product_template_attribute_value_list = rpc.get_model(
         "product.template.attribute.value",
@@ -229,7 +237,7 @@ def create_product_new(
     return tmpl_id
 
 
-def product_new(transf_list, uid, pid):
+def product_new(transf_list, uid, pid, user):
     product_template = None
     product_tmpl_ids = []
     for transf in transf_list:
@@ -246,6 +254,7 @@ def product_new(transf_list, uid, pid):
             transf["client_id"],
             uid,
             proxy,
+            user,
         )
         product_template.clear_prod_vals()
         product_tmpl_ids.append(tmpl_id)
@@ -253,8 +262,8 @@ def product_new(transf_list, uid, pid):
     return product_tmpl_ids
 
 
-def create_products_v2(raw_data):
+def create_products_v2(raw_data, curr_user):
     transf_list = transform_product_json(raw_data)
-    product_tmpl_ids = product_new(transf_list, int(settings.ODOO_UID), 0)
+    product_tmpl_ids = product_new(transf_list, int(settings.ODOO_UID), 0, curr_user)
     product_results = product_client_result(product_tmpl_ids)
     return product_results

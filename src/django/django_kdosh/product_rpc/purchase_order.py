@@ -334,7 +334,7 @@ class Order:
         self.__set_lines(dict["order_lines"])
 
 
-def create_order(order):
+def create_order(order, user):
     url = settings.ODOO_URL
     db = settings.ODOO_DB
     uid = int(settings.ODOO_UID)
@@ -362,6 +362,14 @@ def create_order(order):
     order_id = models.execute_kw(
         db, uid, password, "purchase.order", "create", [order_template.__dict__], kwargs
     )
+    # CREATE COMMENT
+    comment_obj = {
+        "body": f"Creado por: {user.first_name} {user.last_name}",
+        "model": "purchase.order",
+        "res_id": order_id,
+        "message_type": "comment",
+    }
+    comment_id = rpc.create_model("mail.message", comment_obj, uid, proxy=models)
     # SAVE ORDER ODOO ID INTO DB
     OrderStats.objects.create(odoo_id=order_id, user_id=uid)
 

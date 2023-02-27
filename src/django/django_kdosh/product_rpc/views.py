@@ -9,10 +9,14 @@ from .reports.reports import get_cpe_report, get_eq_report, get_fc_report
 from .parser import transform_order_json, order_client_result
 from .purchase_order import search_product_by_name, get_order_item, create_order
 from .product import create_products_v2
-from .catalogs.cats import update_product_catalogs, get_product_catalogs, get_order_catalogs, update_order_catalogs
+from .catalogs.cats import (
+    update_product_catalogs,
+    get_product_catalogs,
+    get_order_catalogs,
+    update_order_catalogs,
+)
 from .catalogs.cat_type import CatType
 from django.views.decorators.csrf import csrf_exempt
-
 
 
 def get_catalogs(request, type):
@@ -24,7 +28,7 @@ def get_catalogs(request, type):
             catalogs = get_order_catalogs()
         return JsonResponse(catalogs)
     except Exception as e:
-        return JsonResponse({'result': 'ERROR', 'message' : str(e)}, status=400)
+        return JsonResponse({"result": "ERROR", "message": str(e)}, status=400)
 
 
 @csrf_exempt
@@ -36,9 +40,11 @@ def update_catalogs(request, type):
         elif type == CatType.order.value:
             update_order_catalogs()
     except Exception as e:
-        return JsonResponse({'result': 'ERROR', 'message' : str(e)}, status=400)
+        return JsonResponse({"result": "ERROR", "message": str(e)}, status=400)
 
-    return JsonResponse({'result': 'SUCCESS', 'message' : 'se actualizó la base de datos'}, status=200)
+    return JsonResponse(
+        {"result": "SUCCESS", "message": "se actualizó la base de datos"}, status=200
+    )
 
 
 @csrf_exempt
@@ -46,39 +52,46 @@ def update_catalogs(request, type):
 def save_product(request):
     try:
         raw_json = json.loads(request.body)
-        product_results = create_products_v2(raw_json)
+        product_results = create_products_v2(raw_json, request.user)
     except Exception as e:
-        return JsonResponse({'result': 'ERROR', 'message' : str(e)}, status=400)
-    return JsonResponse({'result': 'SUCCESS', 'products' : product_results}, status=200)
+        return JsonResponse({"result": "ERROR", "message": str(e)}, status=400)
+    return JsonResponse({"result": "SUCCESS", "products": product_results}, status=200)
 
 
 def search_product(request):
     try:
-        products = search_product_by_name(request.GET.get('name'))
-        response = JsonResponse({'result': 'SUCCESS', 'products': products}, status=200)
+        products = search_product_by_name(request.GET.get("name"))
+        response = JsonResponse({"result": "SUCCESS", "products": products}, status=200)
     except Exception as e:
-        response = JsonResponse({'result': 'ERROR', 'message' : str(e)}, status=400)
+        response = JsonResponse({"result": "ERROR", "message": str(e)}, status=400)
     return response
 
 
 def get_purchase_order_product(request):
     try:
-        order_item = get_order_item(request.GET.get('productId'), request.GET.get('type'))
-        response = JsonResponse({'result': 'SUCCESS', 'order_item': order_item}, status=200)
+        order_item = get_order_item(
+            request.GET.get("productId"), request.GET.get("type")
+        )
+        response = JsonResponse(
+            {"result": "SUCCESS", "order_item": order_item}, status=200
+        )
     except Exception as e:
-        response = JsonResponse({'result': 'ERROR', 'message' : str(e)}, status=400)
+        response = JsonResponse({"result": "ERROR", "message": str(e)}, status=400)
     return response
+
 
 @csrf_exempt
 @require_http_methods(["POST"])
 def save_order(request):
     try:
         raw_json = json.loads(request.body)
-        order_id = create_order(transform_order_json(raw_json))
+        order_id = create_order(transform_order_json(raw_json), request.user)
         order_result = order_client_result(order_id)
-        response = JsonResponse({'result': 'SUCCESS', 'order': order_result}, status=200)
+        response = JsonResponse(
+            {"result": "SUCCESS", "order": order_result}, status=200
+        )
     except Exception as e:
-        response = JsonResponse({'result': 'ERROR', 'message' : str(e)}, status=400)
+        response = JsonResponse({"result": "ERROR", "message": str(e)}, status=400)
     return response
 
 
@@ -87,73 +100,82 @@ def save_order(request):
 def get_report(request, type):
     try:
         raw_json = json.loads(request.body)
-        mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        mimetype = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 
         if type == "cpe":
-            workbook, filename = get_cpe_report(raw_json['company_id'], raw_json['date_from'], raw_json['date_to'])
+            workbook, filename = get_cpe_report(
+                raw_json["company_id"], raw_json["date_from"], raw_json["date_to"]
+            )
             response = HttpResponse(workbook, content_type=mimetype)
-            response['Content-Disposition'] = f"attachment; filename={filename}"
+            response["Content-Disposition"] = f"attachment; filename={filename}"
         elif type == "dk":
-            response = JsonResponse({'result': 'ERROR', 'message' : "deprecated"}, status=400)
+            response = JsonResponse(
+                {"result": "ERROR", "message": "deprecated"}, status=400
+            )
         elif type == "eq":
-            workbook, filename = get_eq_report(raw_json['store'], raw_json['date_from'], raw_json['date_to'])
+            workbook, filename = get_eq_report(
+                raw_json["store"], raw_json["date_from"], raw_json["date_to"]
+            )
             response = HttpResponse(workbook, content_type=mimetype)
-            response['Content-Disposition'] = f"attachment; filename={filename}"
+            response["Content-Disposition"] = f"attachment; filename={filename}"
         elif type == "fc":
-            workbook, filename = get_fc_report(raw_json['date_from'], raw_json['date_to'])
+            workbook, filename = get_fc_report(
+                raw_json["date_from"], raw_json["date_to"]
+            )
             response = HttpResponse(workbook, content_type=mimetype)
-            response['Content-Disposition'] = f"attachment; filename={filename}"
+            response["Content-Disposition"] = f"attachment; filename={filename}"
 
         return response
     except Exception as e:
-        return JsonResponse({'result': 'ERROR', 'message' : str(e)}, status=400)
+        return JsonResponse({"result": "ERROR", "message": str(e)}, status=400)
 
 
 def get_attribute_vals(request):
-    attribute_vals = get_attr_vals(request.GET.get('attrId'))
-    response = JsonResponse({'result': 'SUCCESS', 'attribute_vals': attribute_vals}, status=200)
+    attribute_vals = get_attr_vals(request.GET.get("attrId"))
+    response = JsonResponse(
+        {"result": "SUCCESS", "attribute_vals": attribute_vals}, status=200
+    )
     return response
+
 
 @csrf_exempt
 @require_http_methods(["POST"])
 def sort_attribute_vals(request):
     raw_json = json.loads(request.body)
-    update_attribute_vals(request.GET.get('attrId'), raw_json['new_attrs_sort'])
-    response = JsonResponse({'result': 'SUCCESS', 'message': 'attributo actualizado'}, status=200)
+    update_attribute_vals(request.GET.get("attrId"), raw_json["new_attrs_sort"])
+    response = JsonResponse(
+        {"result": "SUCCESS", "message": "attributo actualizado"}, status=200
+    )
     return response
 
 
 def get_invoice_details(request):
     try:
-        invoice_details = get_invoice(request.GET.get('number'))
+        invoice_details = get_invoice(request.GET.get("number"))
         response = JsonResponse(
-                    {'result': 'SUCCESS', 'invoice_details': invoice_details},
-                    status=200
-                )
+            {"result": "SUCCESS", "invoice_details": invoice_details}, status=200
+        )
     except Exception as e:
-        response = JsonResponse(
-                    {'result': 'ERROR', 'message': str(e)},
-                    status=400
-                )
+        response = JsonResponse({"result": "ERROR", "message": str(e)}, status=400)
     return response
+
 
 @csrf_exempt
 @require_http_methods(["POST"])
 def create_refund_invoice(request):
     try:
         raw_json = json.loads(request.body)
-        invoice_summaries = invoice_refund(raw_json['invoice_details'], raw_json['stock_location'])
+        invoice_summaries = invoice_refund(
+            raw_json["invoice_details"], raw_json["stock_location"]
+        )
         response = JsonResponse(
-                    {
-                        'result': 'SUCCESS',
-                        'refund_invoice': invoice_summaries['refund_invoice'],
-                        'stock_move': invoice_summaries['stock_move'],
-                    },
-                    status=200
-                )
+            {
+                "result": "SUCCESS",
+                "refund_invoice": invoice_summaries["refund_invoice"],
+                "stock_move": invoice_summaries["stock_move"],
+            },
+            status=200,
+        )
     except Exception as e:
-        response = JsonResponse(
-                    {'result': 'ERROR', 'message': str(e)},
-                    status=400
-                )
+        response = JsonResponse({"result": "ERROR", "message": str(e)}, status=400)
     return response
