@@ -1,3 +1,4 @@
+import React from 'react';
 import { InvoiceSummary } from "../../types/refund";
 
 export interface InvoiceSummaryTableProps {

@@ -1,3 +1,4 @@
+import React from 'react';
 import { Catalog } from "../../types";
 
 interface TypistProps {

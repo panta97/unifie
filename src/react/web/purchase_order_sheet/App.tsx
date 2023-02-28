@@ -1,7 +1,7 @@
+import React, { useState } from "react";
 import { IOrderGrouped, RowHandler } from "./logic/rowHandler";
 import { Sheet } from "./Components/Sheet/Sheet";
 import { Destiny } from "./Components/Destiny/Destiny";
-import { useState } from "react";
 import { Catalog } from "./types";
 import { stores, storesTypist } from "./logic/stores";
 import { useEffect } from "react";
@@ -11,7 +11,7 @@ import { Typist } from "./Components/Typist/Typist";
 const App = () => {
   const [store, setStore] = useState<Catalog>(stores[0]);
   const [storeTypist, ] = useState<Catalog[]>(storesTypist);
-  const [typist, setTypist] = useState<Catalog>();
+  const [typist, setTypist] = useState<Catalog>(storesTypist[0]);
   const [orderGroups, setOrderGroups] = useState<IOrderGrouped[]>([]);
   const [totalQty, setTotalQty] = useState<number>(0);
 
@@ -33,7 +33,7 @@ const App = () => {
   };
 
   const handleStoreUpdateTypist = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const typist = storesTypist.find((store)=> store.id  === Number(e.target.value));
+    const typist = storesTypist?.find((store)=> store.id  === Number(e.target.value))!;
     setTypist(typist);
   };
 

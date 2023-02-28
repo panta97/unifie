@@ -1,3 +1,4 @@
+import React from 'react';
 import "./animation.css";
 import { createPortal } from "react-dom";
 import { fetchStatus } from "../../app/slice/pos/posType";

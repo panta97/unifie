@@ -1,3 +1,4 @@
+import React from 'react';
 import { Wrapper } from "../../shared/Wrapper";
 import { AddButton } from "./AddButton";
 import { OrderItemSearch } from "./search/OrderItemSearch";

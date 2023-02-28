@@ -1,3 +1,4 @@
+import React from 'react';
 import { Wrapper } from "../../shared/Wrapper";
 import { OrderName } from "./OrderName";
 import { PartnerField } from "./PartnerField";

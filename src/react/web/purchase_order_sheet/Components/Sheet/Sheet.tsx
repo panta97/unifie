@@ -1,3 +1,4 @@
+import React from 'react';
 import { IOrderGrouped } from "../../logic/rowHandler";
 import { Catalog } from "../../types";
 import { Footer } from "../Footer/Footer";

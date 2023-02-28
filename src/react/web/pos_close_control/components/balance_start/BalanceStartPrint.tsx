@@ -1,3 +1,4 @@
+import React from "react";
 import { createPortal } from "react-dom";
 import { useAppSelector } from "../../app/hooks";
 import { selectManager } from "../../app/slice/pos/posSlice";

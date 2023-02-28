@@ -1,3 +1,4 @@
+import React from 'react';
 import { Wrapper } from "../../shared/Wrapper";
 import { CreateButton } from "./CreateButton";
 import { Table } from "./Table";

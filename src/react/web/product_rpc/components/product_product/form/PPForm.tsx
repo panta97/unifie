@@ -1,3 +1,4 @@
+import React from 'react';
 import { AddButton } from "./AddButton";
 import { AttributeTable } from "./AttributeTable";
 import { DefaultCodeTable } from "./DefaultCodeTable";

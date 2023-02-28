@@ -1,3 +1,4 @@
+import React from "react";
 import { Wrapper } from "../shared/Wrapper";
 import { InvoiceSearch } from "./InvoiceSearch";
 import { InvoiceTicketPrint } from "./InvoiceTicketPrint";

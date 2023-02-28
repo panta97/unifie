@@ -1,3 +1,4 @@
+import React from 'react';
 import { useAppSelector } from "../../app/hooks";
 import { selectReportState } from "../../app/slice/report/reportSlice";
 import { Loader } from "../shared/Loader";

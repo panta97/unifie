@@ -1,3 +1,4 @@
+import React from 'react';
 import { HEADER_HEIGHT } from "../../logic/constants";
 import { IOrderDetailsGrouped } from "../../logic/rowHandler";
 import { Catalog } from "../../types";

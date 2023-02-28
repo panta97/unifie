@@ -1,3 +1,4 @@
+import React from 'react';
 import { stores } from "../../logic/stores";
 import { Catalog } from "../../types";
 
