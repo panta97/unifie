@@ -1,3 +1,5 @@
+import React from 'react';
+
 export const QtyTable = () => {
   return (
     <div className="border border-gray-200 overflow-hidden rounded-md">

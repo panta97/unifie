@@ -1,3 +1,4 @@
+import React from 'react';
 import {
   HEADER_HEIGHT,
   LINE_HEIGHT,

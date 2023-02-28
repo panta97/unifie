@@ -1,3 +1,4 @@
+import React from 'react';
 import { IOrderDetailsGrouped } from "../../logic/rowHandler";
 
 interface FooterProps {

@@ -1,3 +1,4 @@
+import React from 'react';
 import { OrderItem, ProductItem } from "../../../../types/purchaseOrder";
 import { ItemTableType } from "./OrderItemAttr";
 import { TableAttr as TA } from "../../../shared/table/TableAttr";

@@ -1,3 +1,4 @@
+import React from 'react';
 import "../../styles/animation.css";
 import { createPortal } from "react-dom";
 import { FetchStatus } from "../../types/fetch";

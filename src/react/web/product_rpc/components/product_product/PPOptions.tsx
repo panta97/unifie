@@ -1,3 +1,4 @@
+import React from 'react';
 import { batch } from "react-redux";
 import { useAppDispatch } from "../../app/hooks";
 import { updateAll } from "../../app/slice/product/catalogSlice";

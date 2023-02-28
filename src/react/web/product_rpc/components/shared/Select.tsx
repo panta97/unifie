@@ -1,3 +1,4 @@
+import React from 'react';
 import { CatalogGeneric } from "../../types/shared";
 
 interface SelectProps {

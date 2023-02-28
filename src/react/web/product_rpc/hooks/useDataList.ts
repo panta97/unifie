@@ -1,4 +1,4 @@
-import { Reducer, useReducer } from "react";
+import React, { Reducer, useReducer } from "react";
 import { TagData } from "../types/tag";
 
 interface State<T> {

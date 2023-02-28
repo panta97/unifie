@@ -1,6 +1,7 @@
+import React from 'react';
 import "./App.css";
 import { Login } from "./components/login/Login";
-import { Refund } from "./components/refund/Refund";
+import Refund from "./components/refund/Refund";
 import { useToken } from "./hooks/useToken";
 
 function AppRefund() {
