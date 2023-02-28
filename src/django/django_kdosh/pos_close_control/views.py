@@ -90,14 +90,14 @@ def get_pos_details(request, session_id):
     )
 
     absl_sorted = sorted(account_bank_statement_lines, key=lambda x: x["id"])
-    opening = pos_session[0]["cash_register_balance_end"]
+    opening = 0
     cash_in_outs_total = 0
-    if len(absl_sorted) > 1:
+    if len(absl_sorted) > 0:
         # skip first element
-        for item in absl_sorted[1:]:
-            cash_in_outs_total += item["amount_residual"]
-        # remove cash in and outs from opening
-        opening += cash_in_outs_total
+        opening = -absl_sorted[0]["amount_residual"]
+        for item in absl_sorted:
+            # for item in absl_sorted:
+            cash_in_outs_total -= item["amount_residual"]
 
     # POS PAYMENT
     pp_table = "pos.payment"
@@ -106,10 +106,11 @@ def get_pos_details(request, session_id):
     pos_payments = get_model(pp_table, pp_filter, pp_fields, proxy=proxy)
 
     card = 0
+    cash = cash_in_outs_total
     # PAYMENT METHODS (1, 'Efectivo'), (2, 'BCP KDOSH'), (4, 'Nota de Credito')
     for payment in pos_payments:
         if payment["payment_method_id"][0] == 1:
-            opening -= payment["amount"]
+            cash += payment["amount"]
         elif payment["payment_method_id"][0] == 2:
             card += payment["amount"]
 
@@ -124,7 +125,7 @@ def get_pos_details(request, session_id):
         "balance_start": opening,
         "start_at": start_at,
         "stop_at": stop_at,
-        "cash": pos_session[0]["cash_register_balance_end"],
+        "cash": cash,
         "card": card,
         # "discounts": get_discounts(session_id),
         "discounts": [],
