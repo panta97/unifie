@@ -209,10 +209,13 @@ def get_purchase_order(request, po_id):
     ]
     # GET PRODUCTS WITH FILTERED PRODUCT IDS
     products = get_model(proxy, pp_table, pp_filter, pp_fields)
-    tmpl_id = products[0]["product_tmpl_id"][0]
+    tmpl_ids = set()
+    for product in products:
+        tmpl_ids.add(product["product_tmpl_id"][0])
+    tmpl_ids = list(tmpl_ids)
 
     ptav_table = "product.template.attribute.value"
-    ptav_filter = [[["product_tmpl_id", "=", tmpl_id]]]
+    ptav_filter = [[["product_tmpl_id", "in", tmpl_ids]]]
     ptav_fields = ["product_attribute_value_id"]
     product_template_attribute_value_list = get_model(
         proxy, ptav_table, ptav_filter, ptav_fields
