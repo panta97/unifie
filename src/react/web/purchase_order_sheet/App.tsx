@@ -11,7 +11,7 @@ import { Typist } from "./Components/Typist/Typist";
 const App = () => {
   const [store, setStore] = useState<Catalog>(stores[0]);
   const [storeTypist, ] = useState<Catalog[]>(storesTypist);
-  const [typist, setTypist] = useState<Catalog>({id:0, name:''});
+  const [typist, setTypist] = useState<Catalog>(storesTypist[0]);
   const [orderGroups, setOrderGroups] = useState<IOrderGrouped[]>([]);
   const [totalQty, setTotalQty] = useState<number>(0);
 
