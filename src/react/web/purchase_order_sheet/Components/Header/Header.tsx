@@ -6,6 +6,7 @@ interface HeaderProps {
   order_details: IOrderDetailsGrouped;
   totalQty: number;
   store: Catalog;
+  typist: Catalog;
 }
 
 const getFirstName = (fullName: string) => {
@@ -14,7 +15,7 @@ const getFirstName = (fullName: string) => {
   return fullName;
 };
 
-export const Header = ({ order_details, totalQty, store }: HeaderProps) => {
+export const Header = ({ order_details, totalQty, store, typist }: HeaderProps) => {
   return (
     <div className="border-b border-black border-dashed mb-2">
       <h2 className="text-lg font-semibold">
@@ -32,7 +33,7 @@ export const Header = ({ order_details, totalQty, store }: HeaderProps) => {
               <tbody>
                 <tr>
                   <td className="text-right font-semibold">Digitador: </td>
-                  <td>{getFirstName(order_details.username)}</td>
+                  <td>{typist?.name || ''}</td>
                 </tr>
                 <tr>
                   <td className="text-right font-semibold">Almacenero(s):</td>

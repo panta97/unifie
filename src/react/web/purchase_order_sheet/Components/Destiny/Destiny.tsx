@@ -13,7 +13,7 @@ export const Destiny = ({ store, updateStore }: DestinyProps) => {
         <label>DESTINO: </label>
         <select className="uppercase" value={store.id} onChange={updateStore}>
           {stores.map((store) => (
-            <option key={store.id} value={store.id}>
+            <option key={`destiny-${store.id}`} value={store.id}>
               {store.name}
             </option>
           ))}
