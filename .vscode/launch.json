@@ -1,0 +1,31 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python: Django",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/src/django/django_kdosh/manage.py",
+            "env": {
+                "DEBUG": "True",
+                "DEVELOPMENT_MODE": "True",
+                "PG_NAME": "kdosh_analytics",
+                "PG_USER": "roos",
+                "PG_HOST": "159.203.111.136",
+                "PG_PWD": "BN3hq`BgN3J`LG<{",
+                "ODOO_URL": "https://oxe360-ooc-kdosh-150-staging-15-0-7403378.dev.odoo.com",
+                "ODOO_DB": "oxe360-ooc-kdosh-150-staging-15-0-7403378",
+                "ODOO_PWD": "20c5aaf29cc989036cc1708c4d8e10afeb531db3",
+                "ODOO_UID": "2",
+            },
+            "args": [
+                "runserver"
+            ],
+            "django": true,
+            "justMyCode": true
+        }
+    ]
+}

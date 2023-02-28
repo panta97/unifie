@@ -9,9 +9,10 @@ interface SheetProps {
   orderGroup: IOrderGrouped;
   totalQty: number;
   store: Catalog;
+  typist: Catalog;
 }
 
-export const Sheet = ({ orderGroup, totalQty, store }: SheetProps) => {
+export const Sheet = ({ orderGroup, totalQty, store, typist }: SheetProps) => {
   return (
     <div className="font-mono text-sm">
       <div className="sheet-page w-[210mm] h-[297mm] my-[10mm] mx-auto py-8 px-12 border border-black bg-white">
@@ -19,6 +20,7 @@ export const Sheet = ({ orderGroup, totalQty, store }: SheetProps) => {
           order_details={orderGroup.order_details}
           totalQty={totalQty}
           store={store}
+          typist={typist}
         />
         <List
           order_details={orderGroup.order_details}
