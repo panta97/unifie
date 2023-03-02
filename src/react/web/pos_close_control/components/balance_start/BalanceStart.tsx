@@ -291,7 +291,7 @@ export const BalanceStart = () => {
 
             <tr>
               <td className="border border-black px-2 text-right" colSpan={2}>
-                TOTAL
+                TOTAL (SACAR)
               </td>
               <td className="border border-black px-2 text-right">
                 {getCurrencyFormat(profitTotal)}

@@ -6,7 +6,6 @@ import { Cash } from "./components/cash/Cash";
 import { Card } from "./components/card/Card";
 import { Discount } from "./components/discount/Discount";
 import { BalanceStart } from "./components/balance_start/BalanceStart";
-import { LockWrapper } from "./components/security/LockWrapper";
 import { useEffect } from "react";
 import { useAppDispatch, useAppSelector } from "./app/hooks";
 import {
@@ -53,37 +52,12 @@ function App() {
       <div className="my-2 mx-4 mt-0 font-mono">
         <NavBar />
         <Routes>
-          <Route
-            path={basePath}
-            element={
-              // <LockWrapper>
-              <Summary />
-              // </LockWrapper>
-            }
-          />
-          <Route
-            path={`${basePath}/cash`}
-            element={
-              <LockWrapper>
-                <Cash />
-              </LockWrapper>
-            }
-          />
-          <Route
-            path={`${basePath}/card`}
-            element={
-              <LockWrapper>
-                <Card />
-              </LockWrapper>
-            }
-          />
+          <Route path={basePath} element={<Summary />} />
+          <Route path={`${basePath}/cash`} element={<Cash />} />
+          <Route path={`${basePath}/card`} element={<Card />} />
           <Route
             path={`${basePath}/balance-start`}
-            element={
-              <LockWrapper>
-                <BalanceStart />
-              </LockWrapper>
-            }
+            element={<BalanceStart />}
           />
           <Route path={`${basePath}/discount`} element={<Discount />} />
           <Route

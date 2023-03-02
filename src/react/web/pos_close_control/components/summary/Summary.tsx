@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useLocalStorage } from "../../../shared/hooks/useLocalStorage";
 import { useAppDispatch, useAppSelector } from "../../app/hooks";
 import {
   fetchPOSDetails,
@@ -31,7 +32,8 @@ export const Summary = () => {
   const cashier = posState.cashier;
   const manager = posState.manager;
   const dispatch = useAppDispatch();
-  const [sessionId, setSessionId] = useState("");
+  const { storedValue: sessionId, setValue: setSessionId } =
+    useLocalStorage<string>("r-state-session-id", "");
 
   const handleFetchPOSSession = () => {
     dispatch(fetchPOSDetails({ sessionId }));
@@ -57,7 +59,9 @@ export const Summary = () => {
         </thead>
         <tbody>
           <tr>
-            <td className="border border-black px-2 w-1/2" colSpan={2}></td>
+            <td className="border border-black px-2 w-1/2" colSpan={2}>
+              ODOO
+            </td>
             <td className="border border-black px-2 w-1/2" colSpan={2}>
               CAJA
             </td>
