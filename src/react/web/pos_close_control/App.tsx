@@ -60,10 +60,6 @@ function App() {
             element={<BalanceStart />}
           />
           <Route path={`${basePath}/discount`} element={<Discount />} />
-          <Route
-            path={`${basePath}/cash-unlocked`}
-            element={<CashUnlocked />}
-          />
         </Routes>
       </div>
     </Router>

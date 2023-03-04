@@ -16,7 +16,7 @@ const NavBar = () => {
       <nav className="border-b border-black">
         <NavLink
           className={({ isActive }) => getLinkStyles(isActive)}
-          to={basePath}
+          to={`${basePath}/`}
         >
           RESUMEN
         </NavLink>
@@ -43,12 +43,6 @@ const NavBar = () => {
           to={`${basePath}/discount`}
         >
           DESC
-        </NavLink>
-        <NavLink
-          className={({ isActive }) => getLinkStyles(isActive)}
-          to={`${basePath}/cash-unlocked`}
-        >
-          RECUENTO
         </NavLink>
       </nav>
     </>

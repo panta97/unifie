@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import { useAppDispatch, useAppSelector } from "../../app/hooks";
 import {
   selectCardDenominations,
@@ -9,12 +9,13 @@ import { ECardDenom } from "../../app/slice/pos/posType";
 import { getStateMessage } from "../../shared";
 import { getCurrencyFormat } from "../../utils";
 import NumberInputBlank from "../input/NumberInputBlank";
+import useRoveFocus from "../../../shared/hooks/useRoveFocus";
 
 export const Card = () => {
   const denoms = useAppSelector(selectCardDenominations);
   const summary = useAppSelector(selectSummary);
   const diff = summary.posCard - summary.odooCard;
-
+  const [focus, setFocus] = useRoveFocus(3);
   const dispatch = useAppDispatch();
 
   const updateDenomination = (
@@ -34,6 +35,9 @@ export const Card = () => {
             <td className="border border-black px-2 text-right w-1/2">POS 1</td>
             <td className="border border-black px-2 text-right w-1/2">
               <NumberInputBlank
+                setFocus={setFocus as (e: number) => void}
+                index={0}
+                focus={focus === 0}
                 className="w-full"
                 value={denoms.pos1}
                 onChange={(e) => updateDenomination(e, ECardDenom.pos1)}
@@ -44,6 +48,9 @@ export const Card = () => {
             <td className="border border-black px-2 text-right">POS 2</td>
             <td className="border border-black px-2 text-right">
               <NumberInputBlank
+                setFocus={setFocus as (e: number) => void}
+                index={1}
+                focus={focus === 1}
                 className="w-full"
                 value={denoms.pos2}
                 onChange={(e) => updateDenomination(e, ECardDenom.pos2)}
@@ -54,6 +61,9 @@ export const Card = () => {
             <td className="border border-black px-2 text-right">OTROS</td>
             <td className="border border-black px-2 text-right">
               <NumberInputBlank
+                setFocus={setFocus as (e: number) => void}
+                index={2}
+                focus={focus === 2}
                 className="w-full"
                 value={denoms.miscellaneous}
                 onChange={(e) =>
