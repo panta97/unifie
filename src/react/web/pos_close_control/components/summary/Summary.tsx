@@ -69,7 +69,7 @@ export const Summary = () => {
           <tr>
             <td className="border border-black px-2 w-1/4">EFECTIVO</td>
             <td className="border border-black px-2 w-1/4">
-              {getCurrencyFormat(summary.odooCash)}
+              {getCurrencyFormat(summary.odooCash + summary.balanceStart)}
             </td>
             <td className="border border-black px-2 w-1/4">EFECTIVO</td>
             <td className="border border-black px-2 w-1/4">
@@ -110,13 +110,20 @@ export const Summary = () => {
             >
               <div className="flex justify-center gap-1">
                 CODIGO DE SESION:
-                <input
-                  onChange={(e) => setSessionId(e.target.value)}
-                  value={sessionId}
-                  className="w-[50px] border-black border-b-2 outline-none focus:border-blue-600"
-                  type={"text"}
-                ></input>
-                <button onClick={handleFetchPOSSession}>Buscar</button>
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    handleFetchPOSSession();
+                  }}
+                >
+                  <input
+                    onChange={(e) => setSessionId(e.target.value)}
+                    value={sessionId}
+                    className="w-[50px] border-black border-b-2 outline-none focus:border-blue-600"
+                    type={"text"}
+                  ></input>
+                  <button>Buscar</button>
+                </form>
               </div>
             </td>
           </tr>

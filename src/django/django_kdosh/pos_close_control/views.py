@@ -90,12 +90,11 @@ def get_pos_details(request, session_id):
     )
 
     absl_sorted = sorted(account_bank_statement_lines, key=lambda x: x["id"])
-    opening = 0
     cash_in_outs_total = 0
     if len(absl_sorted) > 0:
-        # skip first element
-        opening = -absl_sorted[0]["amount_residual"]
         for item in absl_sorted:
+            if "Opening Balance difference for" in item["payment_ref"]:
+                continue
             # for item in absl_sorted:
             cash_in_outs_total -= item["amount_residual"]
 
@@ -122,7 +121,7 @@ def get_pos_details(request, session_id):
         "pos_name": pos_session[0]["config_id"][1].split()[0],
         "session_id": pos_session[0]["id"],
         "session_name": pos_session[0]["display_name"],
-        "balance_start": opening,
+        "balance_start": pos_session[0]["cash_register_balance_end"] - cash,
         "start_at": start_at,
         "stop_at": stop_at,
         "cash": cash,

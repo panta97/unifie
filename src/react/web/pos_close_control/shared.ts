@@ -9,8 +9,8 @@ export const getStateMessage = (diffAmount: number) => {
 
 export const getOdooStateMessage = (diffAmount: number) => {
   if (diffAmount === 0) return "";
-  else if (diffAmount < 0) return "SACAR";
-  else return "PONER";
+  else if (diffAmount < 0) return "Salida";
+  else return "Entrada";
 };
 
 export const getDateFormat = (sqlDate: string) => {
