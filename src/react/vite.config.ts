@@ -23,6 +23,7 @@ export default defineConfig({
         purchase_order_sheet: "web/purchase_order_sheet/index.tsx",
         product_rpc: "web/product_rpc/index.tsx",
         pos_close_control: "web/pos_close_control/index.tsx",
+        misscellaneous: "web/miscellaneous/index.tsx",
         default: "web/default/main.tsx",
       },
     },

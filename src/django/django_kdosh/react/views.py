@@ -27,8 +27,12 @@ def product_rpc_view(request, param):
 
 @login_required
 def pos_close_control_view(request, param):
-    # don't know what the second argument holds
     return render_react_app(request, "pos_close_control", "Caja Cuadre")
+
+
+@login_required
+def miscellaneous_view(request):
+    return render_react_app(request, "miscellaneous", "Otros")
 
 
 def forward_static_files_view(request):

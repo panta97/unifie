@@ -8,6 +8,7 @@ from .views import (
     k_sales_view,
     forward_static_files_view,
     pos_close_control_view,
+    miscellaneous_view,
 )
 
 urlpatterns = [
@@ -28,6 +29,7 @@ urlpatterns = [
         pos_close_control_view,
         name="pos_close_control",
     ),
+    path("apps/miscellaneous", miscellaneous_view, name="miscellaneous"),
     re_path(
         r"^react-static/web/.*",
         forward_static_files_view,
