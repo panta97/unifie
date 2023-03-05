@@ -18,7 +18,7 @@ urlpatterns = [
         purchase_order_sheet_view,
         name="purchase_order_sheet",
     ),
-    path("apps/k-sales", k_sales_view, name="k_sales"),
+    path("apps/k-sales/997e106", k_sales_view, name="k_sales"),
     re_path(
         r"^apps/product-rpc/(|product-product|purchase-order|reports|refunds)",
         product_rpc_view,

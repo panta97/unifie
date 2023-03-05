@@ -1,17 +1,14 @@
-import today from '../utils/date';
+import today from "../utils/date";
 
-async function getSales(urlParams, date=today()) {
-  const ENDPOINT = `${urlParams.get('api')}?date=${date}`;
-  const PARAMS = {
-    headers: {
-      'x-api-key': urlParams.get('key'),
-    },
-  }
+async function getSales(urlParams, date = today()) {
+  const ENDPOINT = `/api/miscellaneous/sales/${date}`;
   try {
-    const response = await (await fetch(ENDPOINT, PARAMS)).json();
-    return response.statusCode === 200 ? response.body : [];
+    const result = await fetch(ENDPOINT);
+    const response = await result.json();
+    return result.status === 200 ? response.body : [];
   } catch (error) {
     console.log(error);
+    alert(error);
   }
 }
 
