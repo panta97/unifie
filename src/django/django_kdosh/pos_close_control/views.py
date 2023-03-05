@@ -113,6 +113,9 @@ def get_pos_details(request, session_id):
         elif payment["payment_method_id"][0] == 2:
             card += payment["amount"]
 
+    opening = pos_session[0]["cash_register_balance_end"] - cash
+    cash += opening
+
     # CHANGE TIMEZONE FORM UTC TO UTC-5
     start_at = pos_session[0]["start_at"]
     stop_at = pos_session[0]["stop_at"]
@@ -121,7 +124,7 @@ def get_pos_details(request, session_id):
         "pos_name": pos_session[0]["config_id"][1].split()[0],
         "session_id": pos_session[0]["id"],
         "session_name": pos_session[0]["display_name"],
-        "balance_start": pos_session[0]["cash_register_balance_end"] - cash,
+        "balance_start": opening,
         "start_at": start_at,
         "stop_at": stop_at,
         "cash": cash,

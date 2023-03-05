@@ -69,7 +69,7 @@ export const Summary = () => {
           <tr>
             <td className="border border-black px-2 w-1/4">EFECTIVO</td>
             <td className="border border-black px-2 w-1/4">
-              {getCurrencyFormat(summary.odooCash + summary.balanceStart)}
+              {getCurrencyFormat(summary.odooCash)}
             </td>
             <td className="border border-black px-2 w-1/4">EFECTIVO</td>
             <td className="border border-black px-2 w-1/4">
