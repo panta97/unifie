@@ -38,8 +38,6 @@ export const Summary = () => {
   const { data: cashiers, isLoading: cashiersLoading } =
     useGetEmployeesByTypeQuery("CA");
 
-  console.log(managersLoading);
-
   const { storedValue: sessionId, setValue: setSessionId } =
     useLocalStorage<string>("r-state-session-id", "");
 
