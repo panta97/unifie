@@ -1,6 +1,6 @@
 from django.urls import path
 
-from .views import get_pos_details, pos_persist
+from .views import get_pos_details, pos_persist, employee
 
 urlpatterns = [
     path(
@@ -13,4 +13,5 @@ urlpatterns = [
         pos_persist,
         name="pos_persist",
     ),
+    path("api/pos-close-control/employee/<str:type>", employee, name="employee"),
 ]

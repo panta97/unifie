@@ -5,6 +5,14 @@ class Employee(models.Model):
     id = models.AutoField(primary_key=True)
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
+    CASHIER = "CA"
+    MANAGER = "MN"
+    TYPE_CHOICES = (
+        (CASHIER, "CA"),
+        (MANAGER, "MN"),
+    )
+    type = models.CharField(max_length=2, choices=TYPE_CHOICES, default=CASHIER)
+    is_used = models.BooleanField(default=True)
 
 
 class PosSession(models.Model):

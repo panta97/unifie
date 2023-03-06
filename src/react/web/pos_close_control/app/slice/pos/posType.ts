@@ -1,3 +1,5 @@
+import { Employee } from "../employee/employeeType";
+
 export interface POSState {
   posName: string;
   cashier: Employee;
@@ -10,11 +12,6 @@ export interface POSState {
   fetchPOSStateStatus: fetchStatus;
   savePOSStateStatus: fetchStatus;
   isPOSStateSaved: boolean;
-}
-
-export interface Employee {
-  id: number;
-  name: string;
 }
 
 export interface POSSummary {

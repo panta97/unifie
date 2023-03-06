@@ -187,3 +187,18 @@ def pos_persist(request):
     data = {"msj": "POS Details Saved!"}
 
     return JsonResponse(data)
+
+
+def employee(request, type):
+    if type == Employee.CASHIER:
+        cashiers = Employee.objects.filter(type=Employee.CASHIER, is_used=True).values(
+            "id", "first_name", "last_name"
+        )
+        cashiers = list(cashiers)
+        return JsonResponse(cashiers, safe=False)
+    elif type == Employee.MANAGER:
+        managers = Employee.objects.filter(type=Employee.MANAGER, is_used=True).values(
+            "id", "first_name", "last_name"
+        )
+        managers = list(managers)
+        return JsonResponse(managers, safe=False)
