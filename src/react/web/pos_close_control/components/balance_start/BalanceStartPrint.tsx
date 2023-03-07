@@ -16,11 +16,15 @@ export const BalanceStartPrint = () => {
           <p className="font-bold mt-2">INICIO DE CAJA DEL</p>
           <p>{getTomorrowDate()}</p>
           <p className="font-bold mt-2">DEJADO POR</p>
-          <p>{manager.name}</p>
+          <p>
+            {manager.first_name} {manager.last_name}
+          </p>
           <p className="font-bold mt-2">MONTO</p>
           <p>{getCurrencyFormat(bsnd)}</p>
           <p className="h-6 border-b border-black mt-3"></p>
-          <p className="font-bold">{manager.name}</p>
+          <p className="font-bold">
+            {manager.first_name} {manager.last_name}
+          </p>
         </div>
       </PrintValidator>
     </div>,
