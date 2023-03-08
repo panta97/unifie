@@ -26,6 +26,7 @@ urlpatterns = [
     path("", include("barcode.urls")),
     path("", include("product_rpc.urls")),
     path("", include("pos_close_control.urls")),
+    path("", include("miscellaneous.urls")),
     path("", include("react.urls")),
     path("admin/", admin.site.urls),
     path("accounts/", include("django.contrib.auth.urls")),

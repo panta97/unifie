@@ -8,6 +8,7 @@ from .views import (
     k_sales_view,
     forward_static_files_view,
     pos_close_control_view,
+    miscellaneous_view,
 )
 
 urlpatterns = [
@@ -17,7 +18,7 @@ urlpatterns = [
         purchase_order_sheet_view,
         name="purchase_order_sheet",
     ),
-    path("apps/k-sales", k_sales_view, name="k_sales"),
+    path("apps/k-sales/997e106", k_sales_view, name="k_sales"),
     re_path(
         r"^apps/product-rpc/(|product-product|purchase-order|reports|refunds)",
         product_rpc_view,
@@ -28,6 +29,7 @@ urlpatterns = [
         pos_close_control_view,
         name="pos_close_control",
     ),
+    path("apps/miscellaneous", miscellaneous_view, name="miscellaneous"),
     re_path(
         r"^react-static/web/.*",
         forward_static_files_view,

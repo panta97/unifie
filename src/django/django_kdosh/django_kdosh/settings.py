@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     "barcode",
     "product_rpc",
     "pos_close_control",
+    "miscellaneous",
 ]
 
 MIDDLEWARE = [

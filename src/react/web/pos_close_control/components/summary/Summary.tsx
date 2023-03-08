@@ -1,5 +1,7 @@
-import React, { useState } from "react";
+import React from "react";
+import { useLocalStorage } from "../../../shared/hooks/useLocalStorage";
 import { useAppDispatch, useAppSelector } from "../../app/hooks";
+import { useGetEmployeesByTypeQuery } from "../../app/slice/employee/employeeSlice";
 import {
   fetchPOSDetails,
   savePOSDetails,
@@ -7,7 +9,7 @@ import {
   updateEndState,
   updateManager,
 } from "../../app/slice/pos/posSlice";
-import { cashiers, endStates, managers } from "../../data/data";
+import { endStates } from "../../data/data";
 import { getDateFormat, getEndStateSpanish } from "../../shared";
 import { getCurrencyFormat } from "../../utils";
 import NumberInputBlank from "../input/NumberInputBlank";
@@ -31,7 +33,13 @@ export const Summary = () => {
   const cashier = posState.cashier;
   const manager = posState.manager;
   const dispatch = useAppDispatch();
-  const [sessionId, setSessionId] = useState("");
+  const { data: managers, isLoading: managersLoading } =
+    useGetEmployeesByTypeQuery("MN");
+  const { data: cashiers, isLoading: cashiersLoading } =
+    useGetEmployeesByTypeQuery("CA");
+
+  const { storedValue: sessionId, setValue: setSessionId } =
+    useLocalStorage<string>("r-state-session-id", "");
 
   const handleFetchPOSSession = () => {
     dispatch(fetchPOSDetails({ sessionId }));
@@ -57,7 +65,9 @@ export const Summary = () => {
         </thead>
         <tbody>
           <tr>
-            <td className="border border-black px-2 w-1/2" colSpan={2}></td>
+            <td className="border border-black px-2 w-1/2" colSpan={2}>
+              ODOO
+            </td>
             <td className="border border-black px-2 w-1/2" colSpan={2}>
               CAJA
             </td>
@@ -106,13 +116,20 @@ export const Summary = () => {
             >
               <div className="flex justify-center gap-1">
                 CODIGO DE SESION:
-                <input
-                  onChange={(e) => setSessionId(e.target.value)}
-                  value={sessionId}
-                  className="w-[50px] border-black border-b-2 outline-none focus:border-blue-600"
-                  type={"text"}
-                ></input>
-                <button onClick={handleFetchPOSSession}>Buscar</button>
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    handleFetchPOSSession();
+                  }}
+                >
+                  <input
+                    onChange={(e) => setSessionId(e.target.value)}
+                    value={sessionId}
+                    className="w-[50px] border-black border-b-2 outline-none focus:border-blue-600"
+                    type={"text"}
+                  ></input>
+                  <button>Buscar</button>
+                </form>
               </div>
             </td>
           </tr>
@@ -175,18 +192,26 @@ export const Summary = () => {
               className="border border-black px-2 text-center h-7"
               colSpan={4}
             >
-              <select
-                value={cashier.id}
-                onChange={(e) =>
-                  dispatch(updateCashier({ cashierId: Number(e.target.value) }))
-                }
-              >
-                {cashiers.map((cashier) => (
-                  <option key={cashier.id} value={cashier.id}>
-                    {cashier.name}
-                  </option>
-                ))}
-              </select>
+              {!cashiersLoading && (
+                <select
+                  value={cashier.id}
+                  onChange={(e) =>
+                    dispatch(
+                      updateCashier({
+                        cashier: (cashiers ?? []).find(
+                          (c) => c.id === Number(e.target.value)
+                        )!,
+                      })
+                    )
+                  }
+                >
+                  {(cashiers ?? []).map((cashier) => (
+                    <option key={cashier.id} value={cashier.id}>
+                      {cashier.first_name} {cashier.last_name}
+                    </option>
+                  ))}
+                </select>
+              )}
             </td>
           </tr>
           <Divider />
@@ -203,18 +228,26 @@ export const Summary = () => {
               className="border border-black px-2 text-center h-7"
               colSpan={4}
             >
-              <select
-                value={manager.id}
-                onChange={(e) =>
-                  dispatch(updateManager({ managerId: Number(e.target.value) }))
-                }
-              >
-                {managers.map((manager) => (
-                  <option key={manager.id} value={manager.id}>
-                    {manager.name}
-                  </option>
-                ))}
-              </select>
+              {!managersLoading && (
+                <select
+                  value={manager.id}
+                  onChange={(e) =>
+                    dispatch(
+                      updateManager({
+                        manager: (managers ?? []).find(
+                          (c) => c.id === Number(e.target.value)
+                        )!,
+                      })
+                    )
+                  }
+                >
+                  {(managers ?? []).map((manager) => (
+                    <option key={manager.id} value={manager.id}>
+                      {manager.first_name} {manager.last_name}
+                    </option>
+                  ))}
+                </select>
+              )}
             </td>
           </tr>
           <Divider />

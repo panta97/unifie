@@ -90,12 +90,11 @@ def get_pos_details(request, session_id):
     )
 
     absl_sorted = sorted(account_bank_statement_lines, key=lambda x: x["id"])
-    opening = 0
     cash_in_outs_total = 0
     if len(absl_sorted) > 0:
-        # skip first element
-        opening = -absl_sorted[0]["amount_residual"]
         for item in absl_sorted:
+            if "Opening Balance difference for" in item["payment_ref"]:
+                continue
             # for item in absl_sorted:
             cash_in_outs_total -= item["amount_residual"]
 
@@ -113,6 +112,9 @@ def get_pos_details(request, session_id):
             cash += payment["amount"]
         elif payment["payment_method_id"][0] == 2:
             card += payment["amount"]
+
+    opening = pos_session[0]["cash_register_balance_end"] - cash
+    cash += opening
 
     # CHANGE TIMEZONE FORM UTC TO UTC-5
     start_at = pos_session[0]["start_at"]
@@ -185,3 +187,18 @@ def pos_persist(request):
     data = {"msj": "POS Details Saved!"}
 
     return JsonResponse(data)
+
+
+def employee(request, type):
+    if type == Employee.CASHIER:
+        cashiers = Employee.objects.filter(type=Employee.CASHIER, is_used=True).values(
+            "id", "first_name", "last_name"
+        )
+        cashiers = list(cashiers)
+        return JsonResponse(cashiers, safe=False)
+    elif type == Employee.MANAGER:
+        managers = Employee.objects.filter(type=Employee.MANAGER, is_used=True).values(
+            "id", "first_name", "last_name"
+        )
+        managers = list(managers)
+        return JsonResponse(managers, safe=False)

@@ -84,7 +84,9 @@ def get_product_product(request, pp_id):
     data = {
         "statusCode": 200,
         "allLabels": "ALL",
-        "body": labels,
+        "body": {
+            "labels": labels,
+        },
     }
 
     return JsonResponse(data)
@@ -170,7 +172,9 @@ def get_product_template(request, pt_id):
     data = {
         "statusCode": 200,
         "allLabels": "ALL",
-        "body": labels,
+        "body": {
+            "labels": labels,
+        },
     }
 
     return JsonResponse(data)
@@ -178,6 +182,12 @@ def get_product_template(request, pt_id):
 
 def get_purchase_order(request, po_id):
     proxy = xmlrpclib.ServerProxy("{}/xmlrpc/2/object".format(settings.ODOO_URL))
+
+    # po = purchase.order
+    po_table = "purchase.order"
+    po_filter = [[["id", "=", po_id]]]
+    po_fields = ["name"]
+    purchase_order = get_model(proxy, po_table, po_filter, po_fields)
 
     # pol = purchase.order.line
     pol_table = "purchase.order.line"
@@ -282,7 +292,10 @@ def get_purchase_order(request, po_id):
     data = {
         "statusCode": 200,
         "allLabels": "ALL" if len(order_line) == len(products) else "INCOMPLETE",
-        "body": labels,
+        "body": {
+            "labels": labels,
+            "purchase_order_name": purchase_order[0]["name"],
+        },
     }
 
     return JsonResponse(data)

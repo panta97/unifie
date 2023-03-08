@@ -1,4 +1,5 @@
 import { Action, configureStore, ThunkAction } from "@reduxjs/toolkit";
+import { setupListeners } from "@reduxjs/toolkit/dist/query";
 import {
   FLUSH,
   PAUSE,
@@ -12,6 +13,7 @@ import {
 import hardSet from "redux-persist/lib/stateReconciler/hardSet";
 import storage from "redux-persist/lib/storage";
 import discountReducer from "./slice/discount/discountSlice";
+import { employeeApi } from "./slice/employee/employeeSlice";
 import posReducer from "./slice/pos/posSlice";
 import securityReducer from "./slice/security/securitySlice";
 
@@ -41,14 +43,17 @@ export const store = configureStore({
     pos: persistedReducerPos,
     discount: discountReducer,
     security: persistedReducerSecurity,
+    [employeeApi.reducerPath]: employeeApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
       serializableCheck: {
         ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
       },
-    }),
+    }).concat(employeeApi.middleware),
 });
+
+setupListeners(store.dispatch);
 
 export let persistor = persistStore(store);
 

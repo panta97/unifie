@@ -1,7 +1,8 @@
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { cashiers, endStates, managers } from "../../../data/data";
+import { endStates } from "../../../data/data";
 import { fixNumber } from "../../../utils";
 import { RootState } from "../../store";
+import { Employee } from "../employee/employeeType";
 import {
   ECardDenom,
   ECashDenom,
@@ -13,8 +14,8 @@ import {
 
 const initialState: POSState = {
   posName: "",
-  cashier: cashiers[0],
-  manager: managers[0],
+  cashier: { id: 0, first_name: "", last_name: "" },
+  manager: { id: 0, first_name: "", last_name: "" },
   summary: {
     odooCash: 0,
     odooCard: 0,
@@ -212,18 +213,14 @@ export const POSSlice = createSlice({
     },
     updateCashier: (
       state,
-      { payload: { cashierId } }: PayloadAction<{ cashierId: number }>
+      { payload: { cashier } }: PayloadAction<{ cashier: Employee }>
     ) => {
-      const cashier = cashiers.find((cashier) => cashier.id === cashierId);
-      if (!cashier) return;
       state.cashier = cashier;
     },
     updateManager: (
       state,
-      { payload: { managerId } }: PayloadAction<{ managerId: number }>
+      { payload: { manager } }: PayloadAction<{ manager: Employee }>
     ) => {
-      const manager = managers.find((manager) => manager.id === managerId);
-      if (!manager) return;
       state.manager = manager;
     },
     updateOdooSummary: (

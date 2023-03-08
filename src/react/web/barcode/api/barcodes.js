@@ -1,4 +1,4 @@
-async function getPurchaseOrder(urlParams) {
+async function getBarcodes(urlParams) {
   const model = urlParams.get("model");
   const id = urlParams.get("id");
   const ENDPOINT = `/api/barcode/${model}/${id}`;
@@ -15,4 +15,4 @@ async function getPurchaseOrder(urlParams) {
   }
 }
 
-export default getPurchaseOrder;
+export default getBarcodes;
