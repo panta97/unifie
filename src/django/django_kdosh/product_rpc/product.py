@@ -312,7 +312,7 @@ def generate_barcode_product(product_tmpl_id,curr_user):
 def create_products_v2(raw_data, curr_user):
     transf_list = transform_product_json(raw_data)
     product_tmpl_ids = product_new(transf_list, int(settings.ODOO_UID), 0, curr_user)
-    if len(raw_data[0]["attrs"]) > 0 :
+    if len(raw_data[0]["attrs"]) == 1 :
         generate_barcode_product(product_tmpl_ids,curr_user)
     product_results = product_client_result(product_tmpl_ids)
     return product_results
