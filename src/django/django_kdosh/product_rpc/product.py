@@ -5,6 +5,7 @@ from .parser import product_client_result, transform_product_json
 from .models import ProductStats
 from .utils import rpc
 from django.conf import settings
+import json
 
 
 class ProductResult(Enum):
@@ -247,6 +248,7 @@ def product_new(transf_list, uid, pid, user):
 
         proxy = rpc.get_proxy()
         product_template.set_product_dict(transf["product"])
+        # return product_template.__dict__
         tmpl_id = create_product_new(
             product_template.__dict__,
             transf["default_code_map"],
@@ -262,8 +264,55 @@ def product_new(transf_list, uid, pid, user):
     return product_tmpl_ids
 
 
+def generate_barcode_product(product_tmpl_id,curr_user):
+    json_model = """ {
+        "id": 321,
+        "jsonrpc": "2.0",
+        "method": "call",
+        "params": {
+            "args": [
+                [
+                    578157
+                ]
+            ],
+            "model": "product.template",
+            "method": "action_generate_barcode",
+            "kwargs": {
+                "context": {
+                    "lang": "es_PE",
+                    "tz": "America/Lima",
+                    "uid": 2,
+                    "allowed_company_ids": [
+                        1
+                    ],
+                    "params": {
+                        "menu_id": 236,
+                        "cids": 1,
+                        "action": 374,
+                        "model": "product.template",
+                        "view_type": "form",
+                        "id": 82952
+                    },
+                    "search_default_filter_to_availabe_pos": 1,
+                    "default_available_in_pos": true,
+                    "create_variant_never": "no_variant"
+                }
+            }
+        }
+    }
+    """
+    dict_model = json.loads(json_model)
+    dict_model["params"]["args"][0][0] = product_tmpl_id
+    dict_model["id"] = product_tmpl_id
+    proxy = rpc.get_proxy()
+    stock_picking_line_result = rpc.execute_json_model(dict_model, int(settings.ODOO_UID), proxy=proxy)
+    return stock_picking_line_result
+
+
 def create_products_v2(raw_data, curr_user):
     transf_list = transform_product_json(raw_data)
     product_tmpl_ids = product_new(transf_list, int(settings.ODOO_UID), 0, curr_user)
+    if len(raw_data[0]["attrs"]) == 1 :
+        generate_barcode_product(product_tmpl_ids,curr_user)
     product_results = product_client_result(product_tmpl_ids)
     return product_results

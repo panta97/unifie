@@ -8,7 +8,7 @@ from .attribute import get_attribute_vals as get_attr_vals, update_attribute_val
 from .reports.reports import get_cpe_report, get_eq_report, get_fc_report
 from .parser import transform_order_json, order_client_result
 from .purchase_order import search_product_by_name, get_order_item, create_order
-from .product import create_products_v2
+from .product import create_products_v2, generate_barcode_product
 from .catalogs.cats import (
     update_product_catalogs,
     get_product_catalogs,
