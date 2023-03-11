@@ -7,6 +7,7 @@ import Stores from "./Stores/Stores";
 import now from "./utils/now";
 import ViewGroup from "./ViewGroup/ViewGroup";
 import today from "./utils/date";
+import { DateTime } from "luxon";
 
 const todayDate = today();
 
@@ -56,7 +57,10 @@ function App() {
         showLastUpdate={todayDate === iptDate}
       />
       <h1 className="main-title" style={{ marginBottom: "5px" }}>
-        today's sales
+        ventas{", "}
+        {DateTime.fromFormat(iptDate, "yyyy-MM-dd")
+          .setLocale("es")
+          .toFormat("cccc dd 'de' LLLL")}
       </h1>
       <input
         style={{ marginLeft: "40px", marginBottom: "8px" }}

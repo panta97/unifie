@@ -16,7 +16,7 @@ def purchase_order_sheet_view(request):
 
 @login_required
 def k_sales_view(request):
-    return render_react_app(request, "k_sales", "Sales")
+    return render_react_app(request, "k_sales", "Ventas")
 
 
 @login_required
