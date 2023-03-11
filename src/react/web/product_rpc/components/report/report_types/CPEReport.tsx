@@ -13,6 +13,7 @@ import { updateReportStatus } from "../../../app/slice/report/reportSlice";
 import { fetchResult, FetchStatus } from "../../../types/fetch";
 import { NoFocusButton } from "../../shared/NoFocusButton";
 
+// TODO: remove compañia field or default it to KDOSH
 export const CPEReport = () => {
   const dispatch = useAppDispatch();
   const [dateFrom, setDateFrom] = useState(getTodayDate());
@@ -39,7 +40,10 @@ export const CPEReport = () => {
           date_to: dateTo,
         }),
       };
-      const response = await fetch("/api/product-rpc/report/cpe", requestOptions);
+      const response = await fetch(
+        "/api/product-rpc/report/cpe",
+        requestOptions
+      );
       if (
         response.headers.get("Content-Type") ===
         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
