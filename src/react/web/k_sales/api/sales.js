@@ -1,6 +1,4 @@
-import today from "../utils/date";
-
-async function getSales(urlParams, date = today()) {
+async function getSales(date) {
   const ENDPOINT = `/api/miscellaneous/sales/${date}`;
   try {
     const result = await fetch(ENDPOINT);
