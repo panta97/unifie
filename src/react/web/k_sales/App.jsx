@@ -67,7 +67,6 @@ function App() {
       <ViewGroup view={view} updateView={updateView} />
       <Stores sales={sales} view={view} />
       <Line sales={sales} />
-      <div className="line-deco"></div>
     </div>
   );
 }
