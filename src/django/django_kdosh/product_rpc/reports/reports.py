@@ -155,14 +155,22 @@ def get_eq_report(store, date_from, date_to):
             "B004",
             "B005",
             "B006",
+            "B007",
+            "B008",
+            "B013",
             "F001",
             "F003",
             "F004",
             "F005",
             "F006",
+            "F007",
+            "F008",
+            "F013",
         ]
     elif store == "SM":
         series = ["B002", "F002"]
+    elif store == "TG":
+        series = ["B009", "B010", "B011", "B012", "F009", "F010", "F011", "F012"]
     series = list(map(lambda e: "'{}'".format(e), series))
     series = ",".join(series)
 
