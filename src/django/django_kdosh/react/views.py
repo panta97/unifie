@@ -35,6 +35,11 @@ def miscellaneous_view(request):
     return render_react_app(request, "miscellaneous", "Otros")
 
 
+@login_required
+def miscellaneous_view(request):
+    return render_react_app(request, "gift_card", "Gift Card")
+
+
 def forward_static_files_view(request):
     response = requests.get(f"http://localhost:9000{request.path}")
     return HttpResponse(response, content_type=response.headers["Content-Type"])
