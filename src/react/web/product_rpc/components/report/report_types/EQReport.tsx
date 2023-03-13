@@ -39,7 +39,10 @@ export const EQReport = () => {
           date_to: dateTo,
         }),
       };
-      const response = await fetch("/api/product-rpc/report/eq", requestOptions);
+      const response = await fetch(
+        "/api/product-rpc/report/eq",
+        requestOptions
+      );
       if (
         response.headers.get("Content-Type") ===
         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
@@ -76,7 +79,7 @@ export const EQReport = () => {
             updateDate={(date) => setDateTo(date)}
           />
         </div>
-        <div className="inline-flex flex-col w-48 mr-1">
+        <div className="inline-flex flex-col w-[280px] mr-1">
           <label htmlFor="company">Tienda</label>
           <div
             className="flex items-center justify-between"
@@ -84,7 +87,7 @@ export const EQReport = () => {
           >
             <div className="flex items-center">
               <Switch
-                id="kdosh"
+                id="abtao-store"
                 checked={store === "AB"}
                 onChange={() => setStore("AB")}
               />
@@ -92,11 +95,19 @@ export const EQReport = () => {
             </div>
             <div className="flex items-center">
               <Switch
-                id="olympo"
+                id="sanmartin-store"
                 checked={store === "SM"}
                 onChange={() => setStore("SM")}
               />
               <label>SAN MARTIN</label>
+            </div>
+            <div className="flex items-center">
+              <Switch
+                id="tingo-store"
+                checked={store === "TG"}
+                onChange={() => setStore("TG")}
+              />
+              <label>TINGO</label>
             </div>
           </div>
         </div>
