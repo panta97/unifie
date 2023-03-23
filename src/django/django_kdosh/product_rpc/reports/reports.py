@@ -3,6 +3,8 @@ import pandas as pd
 from .connection import select_df
 from datetime import datetime
 
+MIGRATION_DATE = "2023-02-27"
+
 
 def get_cpe(date_from, date_to, odoo_version):
     if odoo_version == 11:
@@ -84,22 +86,18 @@ def get_cpe(date_from, date_to, odoo_version):
 
 
 def get_cpe_all(date_from, date_to):
-    MIGRATION_DATE = "2023-02-27"
     date_migration_obj = datetime.strptime(MIGRATION_DATE, "%Y-%m-%d").date()
     date_from_obj = datetime.strptime(date_from, "%Y-%m-%d").date()
     date_to_obj = datetime.strptime(date_to, "%Y-%m-%d").date()
 
     if date_migration_obj >= date_to_obj:
-        print("only 11")
         return get_cpe(date_from, date_to, 11)
     elif date_from_obj < date_migration_obj <= date_to_obj:
-        print("both 11 and 15")
         cpe_all_11 = get_cpe(date_from, "2023-02-26", 11)
         cpe_all_15 = get_cpe(MIGRATION_DATE, date_to, 15)
         cpe_all = pd.concat([cpe_all_11, cpe_all_15], ignore_index=True)
         return cpe_all
-    elif date_migration_obj >= date_from_obj:
-        print("only 15")
+    elif date_migration_obj <= date_from_obj:
         return get_cpe(date_from, date_to, 15)
 
 
@@ -146,6 +144,125 @@ def get_cpe_report(company_id, date_from, date_to):
     return (workbook, filename)
 
 
+def get_eq(date_from, date_to, series, odoo_version):
+    if odoo_version == 11:
+        sql = """
+            with temp as
+            (
+                select
+                    ai.date_invoice fecha,
+                    case
+                            when pc.id in (2, 4, 5, 11, 17) then 'EQ CABALLERO'
+                            when pc.id in (8) then 'EQ DEPORTIVO'
+                            when pc.id in (3, 13, 15) then 'EQ ACCESORIO'
+                            when pc.id in (6, 7, 12, 16) then 'EQ DAMA'
+                            when pc.id in (9) then 'EQ HOME'
+                            when pc.id in (10, 14) then 'EQ NINO'
+                            when pc.id in (1) then 'LIQUIDACION'
+                            else 'OTROS'
+                        end eq,
+                        case
+                            when pc.name = 'DESCUENTOS' then 'EN.LIQUIDACION'
+                            else pc.name
+                        end categoria,
+                    ail.price_total venta,
+                    substr(ai.number, 0, 5) serie
+                from account_invoice ai
+                left join account_invoice_line ail
+                    on ai.id = ail.invoice_id
+                left join product_product pp
+                    on ail.product_id = pp.id
+                left join product_template pt
+                    on pp.product_tmpl_id = pt.id
+                left join pos_category pc
+                    on pt.pos_categ_id = pc.id
+                where ai.company_id = 1 -- kdosh company
+                and ai.type = 'out_invoice' -- boletas y facturas
+                )
+            select fecha, eq, categoria, sum(venta) venta
+            from temp
+            where eq <> 'OTROS'
+                and serie in ({})
+                and fecha between '{}' and '{}'
+            group by fecha, eq, categoria
+            order by fecha;
+        """.format(
+            series, date_from, date_to
+        )
+        eq_all = select_df(sql, 11)
+        return eq_all
+    elif odoo_version == 15:
+        sql = """
+            with temp as
+                (
+                    select
+                        am.invoice_date fecha,
+                        case
+                            when pc_imd.v11_id in (2, 4, 5, 11, 17) then 'EQ CABALLERO'
+                            when pc_imd.v11_id in (8) then 'EQ DEPORTIVO'
+                            when pc_imd.v11_id in (3, 13, 15) then 'EQ ACCESORIO'
+                            when pc_imd.v11_id in (6, 7, 12, 16) then 'EQ DAMA'
+                            when pc_imd.v11_id in (9) then 'EQ HOME'
+                            when pc_imd.v11_id in (10, 14) then 'EQ NINO'
+                            when pc_imd.v11_id in (1) then 'LIQUIDACION'
+                            else 'OTROS'
+                        end eq,
+                        case
+                            when pc.name = 'DESCUENTOS' then 'EN.LIQUIDACION'
+                            else pc.name
+                        end categoria,
+                        aml.price_total venta,
+                        substr(am.sequence_prefix, 0, 5) serie
+                    from account_move am
+                    left join account_move_line aml
+                        on am.id = aml.move_id
+                    left join product_product pp
+                        on aml.product_id = pp.id
+                    left join product_template pt
+                        on pp.product_tmpl_id = pt.id
+                    left join pos_category pc
+                        on pt.pos_categ_id = pc.id
+                    left join (
+                        select
+                            cast(substring(name, 'pos_category_(\d+)') as integer) v11_id,
+                            res_id
+                        from ir_model_data imd
+                        where imd.model = 'pos.category'
+                    ) as pc_imd
+                        on pc.id = pc_imd.res_id
+                    where am.company_id = 1 -- kdosh company
+                    and am.move_type = 'out_invoice' -- boletas y facturas
+                )
+            select fecha, eq, categoria, sum(venta) venta
+            from temp
+            where eq <> 'OTROS'
+                and serie in ({})
+                and fecha between '{}' and '{}'
+            group by fecha, eq, categoria
+            order by fecha;
+        """.format(
+            series, date_from, date_to
+        )
+        eq_all = select_df(sql, 15)
+        return eq_all
+
+
+def get_eq_all(date_from, date_to, series):
+    date_migration_obj = datetime.strptime(MIGRATION_DATE, "%Y-%m-%d").date()
+    date_from_obj = datetime.strptime(date_from, "%Y-%m-%d").date()
+    date_to_obj = datetime.strptime(date_to, "%Y-%m-%d").date()
+
+    if date_migration_obj >= date_to_obj:
+        return get_eq(date_from, date_to, series, 11)
+    elif date_from_obj < date_migration_obj <= date_to_obj:
+        eq_all_11 = get_eq(date_from, "2023-02-26", series, 11)
+        eq_all_15 = get_eq(MIGRATION_DATE, date_to, series, 15)
+        eq_all = pd.concat([eq_all_11, eq_all_15], ignore_index=True)
+        return eq_all
+    elif date_migration_obj <= date_from_obj:
+        return get_eq(date_from, date_to, series, 15)
+
+
 def get_eq_report(store, date_from, date_to):
     series = []
     if store == "AB":
@@ -155,62 +272,26 @@ def get_eq_report(store, date_from, date_to):
             "B004",
             "B005",
             "B006",
+            "B007",
+            "B008",
+            "B013",
             "F001",
             "F003",
             "F004",
             "F005",
             "F006",
+            "F007",
+            "F008",
+            "F013",
         ]
     elif store == "SM":
         series = ["B002", "F002"]
+    elif store == "TG":
+        series = ["B009", "B010", "B011", "B012", "F009", "F010", "F011", "F012"]
     series = list(map(lambda e: "'{}'".format(e), series))
     series = ",".join(series)
 
-    sql = """
-        with temp as
-        (
-            select
-                ai.date_invoice fecha,
-                case
-                        when pc.id in (2, 4, 5, 11, 17) then 'EQ CABALLERO'
-                        when pc.id in (8) then 'EQ DEPORTIVO'
-                        when pc.id in (3, 13, 15) then 'EQ ACCESORIO'
-                        when pc.id in (6, 7, 12, 16) then 'EQ DAMA'
-                        when pc.id in (9) then 'EQ HOME'
-                        when pc.id in (10, 14) then 'EQ NINO'
-                        when pc.id in (1) then 'LIQUIDACION'
-                        else 'OTROS'
-                    end eq,
-                    case
-                        when pc.name = 'DESCUENTOS' then 'EN.LIQUIDACION'
-                        else pc.name
-                    end categoria,
-                ail.price_total venta,
-                substr(ai.number, 0, 5) serie
-            from account_invoice ai
-            left join account_invoice_line ail
-                on ai.id = ail.invoice_id
-            left join product_product pp
-                on ail.product_id = pp.id
-            left join product_template pt
-                on pp.product_tmpl_id = pt.id
-            left join pos_category pc
-                on pt.pos_categ_id = pc.id
-            where ai.company_id = 1 -- kdosh company
-            and ai.type = 'out_invoice' -- boletas y facturas
-            )
-        select fecha, eq, categoria, sum(venta) venta
-        from temp
-        where eq <> 'OTROS'
-            and serie in ({})
-            and fecha between '{}' and '{}'
-        group by fecha, eq, categoria
-        order by fecha;
-    """.format(
-        series, date_from, date_to
-    )
-
-    eq_all = select_df(sql, 11)
+    eq_all = get_eq_all(date_from, date_to, series)
     if eq_all.shape[0] == 0:
         raise Exception("Sin datos")
     eq_all.columns = [col.upper() for col in eq_all.columns]
