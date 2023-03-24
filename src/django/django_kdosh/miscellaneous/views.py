@@ -16,7 +16,7 @@ def move_lines(request, invoice_number):
     return response
 
 
-@login_required
+# @login_required
 def sales(request, date):
     try:
         # authorized_user_ids = [1]

@@ -14,7 +14,8 @@ def purchase_order_sheet_view(request):
     return render_react_app(request, "purchase_order_sheet", "Purchase Order")
 
 
-@login_required
+# TODO: find a way to keep this link secure but don't require a login
+# @login_required
 def k_sales_view(request):
     return render_react_app(request, "k_sales", "Ventas")
 
