@@ -161,28 +161,53 @@ def pos_persist(request):
     elif json_end_state == "missing":
         end_state = PosSession.MISSING
 
-    new_pos_session = PosSession(
-        pos_name=json_data["posName"],
-        cashier=cashier,
-        manager=manager,
-        odoo_session_id=json_data["summary"]["sessionId"],
-        odoo_cash=json_data["summary"]["odooCash"],
-        odoo_card=json_data["summary"]["odooCard"],
-        pos_cash=json_data["summary"]["posCash"],
-        pos_card=json_data["summary"]["posCard"],
-        profit_total=json_data["summary"]["profitTotal"],
-        balance_start=json_data["summary"]["balanceStart"],
-        balance_start_next_day=json_data["summary"]["balanceStartNextDay"],
-        session_name=json_data["summary"]["sessionName"],
-        start_at=start_at,
-        stop_at=stop_at,
-        end_state=end_state,
-        end_state_amount=json_data["endState"]["amount"],
-        end_state_note=json_data["endState"]["note"],
-        json=request.body.decode("utf-8"),
-    )
+    # check if session is already created
 
-    new_pos_session.save()
+    try:
+        pos_session = PosSession.objects.get(
+            odoo_session_id=json_data["summary"]["sessionId"]
+        )
+        pos_session.pos_name = json_data["posName"]
+        pos_session.cashier = cashier
+        pos_session.manager = manager
+        pos_session.odoo_session_id = json_data["summary"]["sessionId"]
+        pos_session.odoo_cash = json_data["summary"]["odooCash"]
+        pos_session.odoo_card = json_data["summary"]["odooCard"]
+        pos_session.pos_cash = json_data["summary"]["posCash"]
+        pos_session.pos_card = json_data["summary"]["posCard"]
+        pos_session.profit_total = json_data["summary"]["profitTotal"]
+        pos_session.balance_start = json_data["summary"]["balanceStart"]
+        pos_session.balance_start_next_day = json_data["summary"]["balanceStartNextDay"]
+        pos_session.session_name = json_data["summary"]["sessionName"]
+        pos_session.start_at = start_at
+        pos_session.stop_at = stop_at
+        pos_session.end_state = end_state
+        pos_session.end_state_amount = json_data["endState"]["amount"]
+        pos_session.end_state_note = json_data["endState"]["note"]
+        pos_session.json = request.body.decode("utf-8")
+        pos_session.save()
+    except PosSession.DoesNotExist:
+        new_pos_session = PosSession(
+            pos_name=json_data["posName"],
+            cashier=cashier,
+            manager=manager,
+            odoo_session_id=json_data["summary"]["sessionId"],
+            odoo_cash=json_data["summary"]["odooCash"],
+            odoo_card=json_data["summary"]["odooCard"],
+            pos_cash=json_data["summary"]["posCash"],
+            pos_card=json_data["summary"]["posCard"],
+            profit_total=json_data["summary"]["profitTotal"],
+            balance_start=json_data["summary"]["balanceStart"],
+            balance_start_next_day=json_data["summary"]["balanceStartNextDay"],
+            session_name=json_data["summary"]["sessionName"],
+            start_at=start_at,
+            stop_at=stop_at,
+            end_state=end_state,
+            end_state_amount=json_data["endState"]["amount"],
+            end_state_note=json_data["endState"]["note"],
+            json=request.body.decode("utf-8"),
+        )
+        new_pos_session.save()
 
     data = {"msj": "POS Details Saved!"}
 
