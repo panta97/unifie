@@ -27,6 +27,7 @@
     <h1 class="oe_title">
         <field name="name" attrs="{'invisible': [('name','=','/')]}" class="oe_inline"/>
     </h1>
+    <span style="position: relative; margin: 0; color: #008784; cursor: pointer; display: inline-block;" onclick="if ( /^https:.+#id=(\d+).+model=\w+\.\w+/.test(window.location.href) ) { const [_, id] = /^https:.+#id=(\d+).+model=\w+\.\w+/.exec(window.location.href); window.open( 'https://octopus-app-ygvgz.ondigitalocean.app/apps/pos-close-control/?sessionId=' + id, '_blank' ); }">CUADRE</span>
     <group>
         <field name="cash_control" invisible="1"/>
         <field name="user_id"/>

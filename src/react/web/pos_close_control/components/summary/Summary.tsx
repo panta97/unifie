@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useLocalStorage } from "../../../shared/hooks/useLocalStorage";
 import { useAppDispatch, useAppSelector } from "../../app/hooks";
 import { useGetEmployeesByTypeQuery } from "../../app/slice/employee/employeeSlice";
@@ -52,6 +52,16 @@ export const Summary = () => {
     }
     dispatch(savePOSDetails({ posState }));
   };
+
+  useEffect(() => {
+    const queryString = window.location.search;
+    const urlParams = new URLSearchParams(queryString);
+    const sessionId = urlParams.get("sessionId");
+    if (sessionId) {
+      setSessionId(sessionId);
+      dispatch(fetchPOSDetails({ sessionId }));
+    }
+  }, []);
 
   return (
     <section>
