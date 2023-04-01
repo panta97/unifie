@@ -320,50 +320,114 @@ def get_eq_report(store, date_from, date_to):
     return (workbook, filename)
 
 
-def get_fc_report(date_from, date_to):
-    sql = """
-        select numero_odoo,
-                proveedor,
-                referencia_proveedor,
-                numero_op,
-                numero_factura,
-                fecha_factura,
-                fecha_vencimiento,
-                venta,
-                igv,
-                importe,
-                case
-                    when estado = 'open' then 'abierto'
-                    when estado = 'paid' then 'pagado'
-                    else estado end estado
-        from (
-                    select ai.number                        numero_odoo,
-                        rp.name                       proveedor,
-                        po.partner_ref               referencia_proveedor,
-                        po.name                      numero_op,
-                        concat('F', right(ai.l10n_pe_doc_serie, length(ai.l10n_pe_doc_serie) - 1), '-',
-                                ai.l10n_pe_doc_number) numero_factura,
-                        ai.date_invoice                  fecha_factura,
-                        ai.date_due                      fecha_vencimiento,
-                        ai.amount_untaxed                venta,
-                        ai.amount_tax                    igv,
-                        ai.amount_total                  importe,
-                        ai.state                      estado
-                    from account_invoice ai
-                            left join purchase_order po
-                                    on ai.origin = po.name
-                            left join res_partner rp
-                                    on ai.partner_filtered_id = rp.id
-                    where ai.type = 'in_invoice'
-                    and ai.journal_sunat_type = '01'
-                ) t
-        where fecha_factura between '{}' and '{}'
-        order by fecha_factura;
-    """.format(
-        date_from, date_to
-    )
+def get_fc(date_from, date_to, odoo_version):
+    if odoo_version == 11:
+        sql = """
+            select numero_odoo,
+                    proveedor,
+                    referencia_proveedor,
+                    numero_op,
+                    numero_factura,
+                    fecha_factura,
+                    fecha_vencimiento,
+                    venta,
+                    igv,
+                    importe,
+                    case
+                        when estado = 'open' then 'abierto'
+                        when estado = 'paid' then 'pagado'
+                        else estado end estado
+            from (
+                        select ai.number                        numero_odoo,
+                            rp.name                       proveedor,
+                            po.partner_ref               referencia_proveedor,
+                            po.name                      numero_op,
+                            concat('F', right(ai.l10n_pe_doc_serie, length(ai.l10n_pe_doc_serie) - 1), '-',
+                                    ai.l10n_pe_doc_number) numero_factura,
+                            ai.date_invoice                  fecha_factura,
+                            ai.date_due                      fecha_vencimiento,
+                            ai.amount_untaxed                venta,
+                            ai.amount_tax                    igv,
+                            ai.amount_total                  importe,
+                            ai.state                      estado
+                        from account_invoice ai
+                                left join purchase_order po
+                                        on ai.origin = po.name
+                                left join res_partner rp
+                                        on ai.partner_filtered_id = rp.id
+                        where ai.type = 'in_invoice'
+                        and ai.journal_sunat_type = '01'
+                    ) t
+            where fecha_factura between '{}' and '{}'
+            order by fecha_factura;
+        """.format(
+            date_from, date_to
+        )
+        fc_all = select_df(sql, 11)
+        return fc_all
+    elif odoo_version == 15:
+        sql = """
+            select  numero_odoo,
+            proveedor,
+            referencia_proveedor,
+            numero_op,
+            numero_factura,
+            fecha_factura,
+            fecha_vencimiento,
+            venta,
+            igv,
+            importe,
+            case
+                when estado = 'not_paid' then 'abierto'
+                when estado = 'in_payment' then 'pagado'
+                when estado = 'paid' then 'pagado'
+                else estado end estado
+            from (select concat('FP01-', am.id) numero_odoo,
+                    rp.name                proveedor,
+                    am.ref                 referencia_proveedor,
+                    am.invoice_origin      numero_op,
+                    am.payment_reference   numero_factura,
+                    am.invoice_date        fecha_factura,
+                    am.invoice_date_due    fecha_vencimiento,
+                    am.amount_untaxed      venta,
+                    am.amount_tax          igv,
+                    am.amount_total        importe,
+                    am.payment_state       estado
+            from account_move am
+                    left join purchase_order po
+                                on am.invoice_origin = po.name
+                    left join res_partner rp
+                                on am.partner_id = rp.id
+            where am.move_type = 'in_invoice'
+                and am.journal_id = 2
+            ) t
+            where fecha_factura between '{}' and '{}'
+            order by fecha_factura
+        """.format(
+            date_from, date_to
+        )
+        fc_all = select_df(sql, 15)
+        return fc_all
 
-    invoice_all = select_df(sql, 11)
+
+def get_fc_all(date_from, date_to):
+    date_migration_obj = datetime.strptime(MIGRATION_DATE, "%Y-%m-%d").date()
+    date_from_obj = datetime.strptime(date_from, "%Y-%m-%d").date()
+    date_to_obj = datetime.strptime(date_to, "%Y-%m-%d").date()
+
+    if date_migration_obj >= date_to_obj:
+        return get_fc(date_from, date_to, 11)
+    elif date_from_obj < date_migration_obj <= date_to_obj:
+        fc_all_11 = get_fc(date_from, "2023-02-26", 11)
+        fc_all_15 = get_fc(MIGRATION_DATE, date_to, 15)
+        fc_all = pd.concat([fc_all_11, fc_all_15], ignore_index=True)
+        return fc_all
+    elif date_migration_obj <= date_from_obj:
+        return get_fc(date_from, date_to, 15)
+
+
+def get_fc_report(date_from, date_to):
+    invoice_all = get_fc_all(date_from, date_to)
     if invoice_all.shape[0] == 0:
         raise Exception("Sin datos")
     output = BytesIO()
