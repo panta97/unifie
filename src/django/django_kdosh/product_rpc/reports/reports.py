@@ -39,9 +39,9 @@ def get_cpe(date_from, date_to, odoo_version):
         sql = """
             with invoice as (
                 select
-                    substring(am.sequence_prefix, '([B|F])\d{{3}}-') doc_type,
-                    substring(am.sequence_prefix, '([B|F]\d{{3}})-') serie,
-                    substring(am.name, '[B|F]\d{{3}}-(\d{{8}})') doc_number,
+                    substring(regexp_replace(am.sequence_prefix, '\s+', ''), '([B|F])\w{{3}}-') doc_type,
+                    substring(regexp_replace(am.sequence_prefix, '\s+', ''), '([B|F]\w{{3}})-') serie,
+                    substring(regexp_replace(am.name, '\s+', ''), '[B|F]\w{{3}}-(\d{{8}})') doc_number,
                     rp.vat rp_vat,
                     rp.id rp_id,
                     rp.display_name rp_display_name,
@@ -76,7 +76,7 @@ def get_cpe(date_from, date_to, odoo_version):
                 '' NUMERO2,
                 '' FECHA2
             from invoice
-            where date between '{}' and '{}'
+            where date between '{}' and '{}' and serie is not null
             order by serie, doc_number;
         """.format(
             date_from, date_to
