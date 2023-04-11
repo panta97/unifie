@@ -39,14 +39,21 @@ def get_cpe(date_from, date_to, odoo_version):
         sql = """
             with invoice as (
                 select
+                    am.date,
                     substring(regexp_replace(am.sequence_prefix, '\s+', ''), '([B|F])\w{{3}}-') doc_type,
                     substring(regexp_replace(am.sequence_prefix, '\s+', ''), '([B|F]\w{{3}})-') serie,
                     substring(regexp_replace(am.name, '\s+', ''), '[B|F]\w{{3}}-(\d{{8}})') doc_number,
                     rp.vat rp_vat,
                     rp.id rp_id,
                     rp.display_name rp_display_name,
-                    am.*
+                    am.amount_total,
+                    am2.date date2,
+                    substring(regexp_replace(am2.sequence_prefix, '\s+', ''), '([B|F])\w{{3}}-') doc_type2,
+                    substring(regexp_replace(am2.sequence_prefix, '\s+', ''), '([B|F]\w{{3}})-') serie2,
+                    substring(regexp_replace(am2.name, '\s+', ''), '[B|F]\w{{3}}-(\d{{8}})') doc_number2
                 from account_move am
+                left join account_move am2
+                    on am.reversed_entry_id = am2.id
                 left join res_partner rp
                     on am.partner_id = rp.id
                 where am.move_type in ('out_invoice', 'out_refund')
@@ -58,7 +65,7 @@ def get_cpe(date_from, date_to, odoo_version):
                     when doc_type = 'B' then '03'
                     when doc_type = 'F' then '01'
                 else '-' end TIPOC,
-                serie SERIE,
+                serie "SERIE",
                 doc_number NUMERO,
                 case
                     when doc_type = 'B' then '1'
@@ -71,10 +78,13 @@ def get_cpe(date_from, date_to, odoo_version):
                 amount_total EXONERADO,
                 0 RETENCION,
                 amount_total TOTAL,
-                '' TIPOC2,
-                '' SERIE2,
-                '' NUMERO2,
-                '' FECHA2
+                case
+                    when doc_type2 = 'B' then '03'
+                    when doc_type2 = 'F' then '01'
+                else '' end TIPOC2,
+                serie2 "SERIE2",
+                doc_number2 NUMERO2,
+                date2 FECHA2
             from invoice
             where date between '{}' and '{}' and serie is not null
             order by serie, doc_number;
