@@ -35,7 +35,6 @@ def get_cpe(date_from, date_to, odoo_version):
         cpe_all = select_df(sql, 11)
         return cpe_all
     elif odoo_version == 15:
-        # TODO: add refund invoices
         sql = """
             with invoice as (
                 select
