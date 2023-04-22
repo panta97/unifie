@@ -333,6 +333,7 @@ def get_fc(date_from, date_to, odoo_version):
     if odoo_version == 11:
         sql = """
             select numero_odoo,
+                    ruc,
                     proveedor,
                     referencia_proveedor,
                     numero_op,
@@ -348,6 +349,7 @@ def get_fc(date_from, date_to, odoo_version):
                         else estado end estado
             from (
                         select ai.number                        numero_odoo,
+                            rp.doc_number                        ruc,
                             rp.name                       proveedor,
                             po.partner_ref               referencia_proveedor,
                             po.name                      numero_op,
@@ -377,6 +379,7 @@ def get_fc(date_from, date_to, odoo_version):
     elif odoo_version == 15:
         sql = """
             select  numero_odoo,
+            ruc,
             proveedor,
             referencia_proveedor,
             numero_op,
@@ -392,6 +395,7 @@ def get_fc(date_from, date_to, odoo_version):
                 when estado = 'paid' then 'pagado'
                 else estado end estado
             from (select concat('FP01-', am.id) numero_odoo,
+                    rp.vat                 ruc,
                     rp.name                proveedor,
                     am.ref                 referencia_proveedor,
                     am.invoice_origin      numero_op,
