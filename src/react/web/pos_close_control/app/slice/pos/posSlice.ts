@@ -12,6 +12,8 @@ import {
   POSState,
 } from "./posType";
 
+export const FIXED_BALANCE_START = 600;
+
 const initialState: POSState = {
   posName: "",
   cashier: { id: 0, first_name: "", last_name: "" },
@@ -162,24 +164,32 @@ export const POSSlice = createSlice({
       posCash += state.cashDenominations.d200_00 * 200;
       state.summary.posCash = fixNumber(posCash);
 
-      let profitTotal = 0;
-      profitTotal += Math.max(state.cashDenominations.d10_00 - 20, 0) * 10;
-      profitTotal += Math.max(state.cashDenominations.d20_00 - 20, 0) * 20;
+      let profitTotal = -FIXED_BALANCE_START;
+      profitTotal += state.cashDenominations.d0_10 * 0.1;
+      profitTotal += state.cashDenominations.d0_20 * 0.2;
+      profitTotal += state.cashDenominations.d0_50 * 0.5;
+      profitTotal += state.cashDenominations.d1_00;
+      profitTotal += state.cashDenominations.d2_00 * 2;
+      profitTotal += state.cashDenominations.d5_00 * 5;
+      profitTotal += state.cashDenominations.d10_00 * 10;
+      profitTotal += state.cashDenominations.d20_00 * 20;
+      // profitTotal += Math.max(state.cashDenominations.d20_00 - 20, 0) * 20;
       profitTotal += state.cashDenominations.d50_00 * 50;
       profitTotal += state.cashDenominations.d100_00 * 100;
       profitTotal += state.cashDenominations.d200_00 * 200;
       state.summary.profitTotal = fixNumber(profitTotal);
 
       // bsnd = balance start next day
-      let bsnd = 0;
-      bsnd += state.cashDenominations.d0_10 * 0.1;
-      bsnd += state.cashDenominations.d0_20 * 0.2;
-      bsnd += state.cashDenominations.d0_50 * 0.5;
-      bsnd += state.cashDenominations.d1_00;
-      bsnd += state.cashDenominations.d2_00 * 2;
-      bsnd += state.cashDenominations.d5_00 * 5;
-      bsnd += Math.min(state.cashDenominations.d10_00, 20) * 10;
-      bsnd += Math.min(state.cashDenominations.d20_00, 20) * 20;
+      let bsnd = FIXED_BALANCE_START;
+      // bsnd += state.cashDenominations.d0_10 * 0.1;
+      // bsnd += state.cashDenominations.d0_20 * 0.2;
+      // bsnd += state.cashDenominations.d0_50 * 0.5;
+      // bsnd += state.cashDenominations.d1_00;
+      // bsnd += state.cashDenominations.d2_00 * 2;
+      // bsnd += state.cashDenominations.d5_00 * 5;
+      // bsnd += Math.min(state.cashDenominations.d10_00, 60) * 10;
+      // bsnd += Math.min(state.cashDenominations.d20_00, 20) * 20;
+      // bsnd += Math.min(state.cashDenominations.d100_00, 6) * 100;
       state.summary.balanceStartNextDay = fixNumber(bsnd);
     },
     updateCardDenom: (

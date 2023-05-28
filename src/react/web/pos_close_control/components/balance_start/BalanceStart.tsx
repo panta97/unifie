@@ -1,6 +1,9 @@
 import React from "react";
 import { useAppSelector } from "../../app/hooks";
-import { selectCashDenominations } from "../../app/slice/pos/posSlice";
+import {
+  FIXED_BALANCE_START,
+  selectCashDenominations,
+} from "../../app/slice/pos/posSlice";
 import { getCurrencyFormat } from "../../utils";
 import { BalanceStartPrint } from "./BalanceStartPrint";
 
@@ -16,6 +19,146 @@ export const BalanceStart = () => {
           <thead>
             <tr>
               <th colSpan={3}>INICIO SIGUIENTE DIA</th>
+            </tr>
+          </thead>
+          <tbody>
+            {/* <tr>
+              <td className="border border-black px-2 w-1/3 text-center">
+                DENOMINACION
+              </td>
+              <td className="border border-black px-2 w-1/3 text-center">
+                CANTIDAD
+              </td>
+              <td className="border border-black px-2 w-1/3 text-center">
+                TOTAL
+              </td>
+            </tr> */}
+
+            {/* <tr>
+              <td className="border border-black px-2 text-right">
+                {getCurrencyFormat(0.1)}
+              </td>
+              <td className="border border-black px-2"></td>
+              <td className="border border-black px-2 text-right">
+                {getCurrencyFormat(0)}
+              </td>
+            </tr>
+
+            <tr>
+              <td className="border border-black px-2 text-right">
+                {getCurrencyFormat(0.2)}
+              </td>
+              <td className="border border-black px-2"></td>
+              <td className="border border-black px-2 text-right">
+                {getCurrencyFormat(0)}
+              </td>
+            </tr>
+
+            <tr>
+              <td className="border border-black px-2 text-right">
+                {getCurrencyFormat(0.5)}
+              </td>
+              <td className="border border-black px-2"></td>
+              <td className="border border-black px-2 text-right">
+                {getCurrencyFormat(0)}
+              </td>
+            </tr>
+
+            <tr>
+              <td className="border border-black px-2 text-right">
+                {getCurrencyFormat(1)}
+              </td>
+              <td className="border border-black px-2"></td>
+              <td className="border border-black px-2 text-right">
+                {getCurrencyFormat(0)}
+              </td>
+            </tr>
+
+            <tr>
+              <td className="border border-black px-2 text-right">
+                {getCurrencyFormat(2)}
+              </td>
+              <td className="border border-black px-2"></td>
+              <td className="border border-black px-2 text-right">
+                {getCurrencyFormat(0)}
+              </td>
+            </tr>
+
+            <tr>
+              <td className="border border-black px-2 text-right">
+                {getCurrencyFormat(5)}
+              </td>
+              <td className="border border-black px-2"></td>
+              <td className="border border-black px-2 text-right">
+                {getCurrencyFormat(0)}
+              </td>
+            </tr>
+
+            <tr>
+              <td className="border border-black px-2 text-right">
+                {getCurrencyFormat(10)}
+              </td>
+              <td className="border border-black px-2"></td>
+              <td className="border border-black px-2 text-right">
+                {getCurrencyFormat(0)}
+              </td>
+            </tr>
+
+            <tr>
+              <td className="border border-black px-2 text-right">
+                {getCurrencyFormat(20)}
+              </td>
+              <td className="border border-black px-2"></td>
+              <td className="border border-black px-2 text-right">
+                {getCurrencyFormat(0)}
+              </td>
+            </tr>
+
+            <tr>
+              <td className="border border-black px-2 text-right">
+                {getCurrencyFormat(50)}
+              </td>
+              <td className="border border-black px-2"></td>
+              <td className="border border-black px-2 text-right">
+                {getCurrencyFormat(0)}
+              </td>
+            </tr>
+
+            <tr>
+              <td className="border border-black px-2 text-right">
+                {getCurrencyFormat(100)}
+              </td>
+              <td className="border border-black px-2"></td>
+              <td className="border border-black px-2 text-right">
+                {getCurrencyFormat(0)}
+              </td>
+            </tr>
+
+            <tr>
+              <td className="border border-black px-2 text-right">
+                {getCurrencyFormat(200)}
+              </td>
+              <td className="border border-black px-2"></td>
+              <td className="border border-black px-2 text-right">
+                {getCurrencyFormat(0)}
+              </td>
+            </tr> */}
+
+            <tr>
+              <td className="border border-black px-2 text-right" colSpan={2}>
+                TOTAL
+              </td>
+              <td className="border border-black px-2 text-right">
+                {getCurrencyFormat(bsnd)}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <table className="w-[400px] border-collapse border border-black">
+          <thead>
+            <tr>
+              <th colSpan={3}>CANTIDAD EN EL SOBRE</th>
             </tr>
           </thead>
           <tbody>
@@ -95,11 +238,9 @@ export const BalanceStart = () => {
               <td className="border border-black px-2 text-right">
                 {getCurrencyFormat(10)}
               </td>
-              <td className="border border-black px-2">
-                {Math.min(denoms.d10_00, 20)}
-              </td>
+              <td className="border border-black px-2">{denoms.d10_00}</td>
               <td className="border border-black px-2 text-right">
-                {getCurrencyFormat(Math.min(denoms.d10_00, 20) * 10)}
+                {getCurrencyFormat(denoms.d10_00 * 10)}
               </td>
             </tr>
 
@@ -107,155 +248,9 @@ export const BalanceStart = () => {
               <td className="border border-black px-2 text-right">
                 {getCurrencyFormat(20)}
               </td>
-              <td className="border border-black px-2">
-                {Math.min(denoms.d20_00, 20)}
-              </td>
+              <td className="border border-black px-2">{denoms.d20_00}</td>
               <td className="border border-black px-2 text-right">
-                {getCurrencyFormat(Math.min(denoms.d20_00, 20) * 20)}
-              </td>
-            </tr>
-
-            <tr>
-              <td className="border border-black px-2 text-right">
-                {getCurrencyFormat(50)}
-              </td>
-              <td className="border border-black px-2"></td>
-              <td className="border border-black px-2 text-right">
-                {getCurrencyFormat(0)}
-              </td>
-            </tr>
-
-            <tr>
-              <td className="border border-black px-2 text-right">
-                {getCurrencyFormat(100)}
-              </td>
-              <td className="border border-black px-2"></td>
-              <td className="border border-black px-2 text-right">
-                {getCurrencyFormat(0)}
-              </td>
-            </tr>
-
-            <tr>
-              <td className="border border-black px-2 text-right">
-                {getCurrencyFormat(200)}
-              </td>
-              <td className="border border-black px-2"></td>
-              <td className="border border-black px-2 text-right">
-                {getCurrencyFormat(0)}
-              </td>
-            </tr>
-
-            <tr>
-              <td className="border border-black px-2 text-right" colSpan={2}>
-                TOTAL
-              </td>
-              <td className="border border-black px-2 text-right">
-                {getCurrencyFormat(bsnd)}
-              </td>
-            </tr>
-          </tbody>
-        </table>
-
-        <table className="w-[400px] border-collapse border border-black">
-          <thead>
-            <tr>
-              <th colSpan={3}>CANTIDAD EN EL SOBRE</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td className="border border-black px-2 w-1/3 text-center">
-                DENOMINACION
-              </td>
-              <td className="border border-black px-2 w-1/3 text-center">
-                CANTIDAD
-              </td>
-              <td className="border border-black px-2 w-1/3 text-center">
-                TOTAL
-              </td>
-            </tr>
-
-            <tr>
-              <td className="border border-black px-2 text-right">
-                {getCurrencyFormat(0.1)}
-              </td>
-              <td className="border border-black px-2"></td>
-              <td className="border border-black px-2 text-right">
-                {getCurrencyFormat(0)}
-              </td>
-            </tr>
-
-            <tr>
-              <td className="border border-black px-2 text-right">
-                {getCurrencyFormat(0.2)}
-              </td>
-              <td className="border border-black px-2"></td>
-              <td className="border border-black px-2 text-right">
-                {getCurrencyFormat(0)}
-              </td>
-            </tr>
-
-            <tr>
-              <td className="border border-black px-2 text-right">
-                {getCurrencyFormat(0.5)}
-              </td>
-              <td className="border border-black px-2"></td>
-              <td className="border border-black px-2 text-right">
-                {getCurrencyFormat(0)}
-              </td>
-            </tr>
-
-            <tr>
-              <td className="border border-black px-2 text-right">
-                {getCurrencyFormat(1)}
-              </td>
-              <td className="border border-black px-2"></td>
-              <td className="border border-black px-2 text-right">
-                {getCurrencyFormat(0)}
-              </td>
-            </tr>
-
-            <tr>
-              <td className="border border-black px-2 text-right">
-                {getCurrencyFormat(2)}
-              </td>
-              <td className="border border-black px-2"></td>
-              <td className="border border-black px-2 text-right">
-                {getCurrencyFormat(0)}
-              </td>
-            </tr>
-
-            <tr>
-              <td className="border border-black px-2 text-right">
-                {getCurrencyFormat(5)}
-              </td>
-              <td className="border border-black px-2"></td>
-              <td className="border border-black px-2 text-right">
-                {getCurrencyFormat(0)}
-              </td>
-            </tr>
-
-            <tr>
-              <td className="border border-black px-2 text-right">
-                {getCurrencyFormat(10)}
-              </td>
-              <td className="border border-black px-2">
-                {Math.max(denoms.d10_00 - 20, 0)}
-              </td>
-              <td className="border border-black px-2 text-right">
-                {getCurrencyFormat(Math.max(denoms.d10_00 - 20, 0) * 10)}
-              </td>
-            </tr>
-
-            <tr>
-              <td className="border border-black px-2 text-right">
-                {getCurrencyFormat(20)}
-              </td>
-              <td className="border border-black px-2">
-                {Math.max(denoms.d20_00 - 20, 0)}
-              </td>
-              <td className="border border-black px-2 text-right">
-                {getCurrencyFormat(Math.max(denoms.d20_00 - 20, 0) * 20)}
+                {getCurrencyFormat(denoms.d20_00 * 20)}
               </td>
             </tr>
 
@@ -273,7 +268,9 @@ export const BalanceStart = () => {
               <td className="border border-black px-2 text-right">
                 {getCurrencyFormat(100)}
               </td>
-              <td className="border border-black px-2">{denoms.d100_00}</td>
+              <td className="border border-black px-2">
+                {Math.max(denoms.d100_00 - 6, 0)}
+              </td>
               <td className="border border-black px-2 text-right">
                 {getCurrencyFormat(denoms.d100_00 * 100)}
               </td>
@@ -292,6 +289,14 @@ export const BalanceStart = () => {
             <tr>
               <td className="border border-black px-2 text-right" colSpan={2}>
                 TOTAL
+              </td>
+              <td className="border border-black px-2 text-right">
+                {getCurrencyFormat(profitTotal + FIXED_BALANCE_START)}
+              </td>
+            </tr>
+            <tr>
+              <td className="border border-black px-2 text-right" colSpan={2}>
+                TOTAL MENOS INICIO
               </td>
               <td className="border border-black px-2 text-right">
                 {getCurrencyFormat(profitTotal)}
