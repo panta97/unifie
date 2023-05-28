@@ -268,9 +268,7 @@ export const BalanceStart = () => {
               <td className="border border-black px-2 text-right">
                 {getCurrencyFormat(100)}
               </td>
-              <td className="border border-black px-2">
-                {Math.max(denoms.d100_00 - 6, 0)}
-              </td>
+              <td className="border border-black px-2">{denoms.d100_00}</td>
               <td className="border border-black px-2 text-right">
                 {getCurrencyFormat(denoms.d100_00 * 100)}
               </td>
