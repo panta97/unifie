@@ -25,7 +25,7 @@ class Product:
         self.detailed_type = "product"
         self.uom_id = 1
         self.uom_po_id = 1
-        self.taxes_id = [[6, False, [2]]]
+        self.taxes_id = [[6, False, [3]]]
         self.l10n_pe_withhold_code = False
         self.l10n_pe_withhold_percentage = 0
         self.standard_price = 0
