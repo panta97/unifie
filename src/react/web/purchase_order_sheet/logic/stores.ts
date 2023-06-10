@@ -11,4 +11,5 @@ export const storesTypist: Catalog[] = [
   { id: 3, name: "Joan Sacramento" },
   { id: 4, name: "Karen Salazar" },
   { id: 5, name: "Maryori Ayala" },
+  { id: 6, name: "Reynaldo Encarnacion" },
 ];
