@@ -1,4 +1,4 @@
-import { Catalog } from '../types';
+import { Catalog } from "../types";
 
 export const stores: Catalog[] = [
   { id: 1, name: "abtao" },
@@ -8,9 +8,7 @@ export const stores: Catalog[] = [
 
 export const storesTypist: Catalog[] = [
   { id: 1, name: "Ivan Salazar" },
-  { id: 2, name: "Jairo Berrospi" },
   { id: 3, name: "Joan Sacramento" },
   { id: 4, name: "Karen Salazar" },
-  { id: 5, name: "Raul Esteban" },
-  { id: 6, name: "Yanina Damian" },
+  { id: 5, name: "Maryori Ayala" },
 ];
