@@ -24,6 +24,7 @@ export default defineConfig({
         product_rpc: "web/product_rpc/index.tsx",
         pos_close_control: "web/pos_close_control/index.tsx",
         misscellaneous: "web/miscellaneous/index.tsx",
+        gift_card: "web/gift_card/index.tsx",
         default: "web/default/main.tsx",
       },
     },

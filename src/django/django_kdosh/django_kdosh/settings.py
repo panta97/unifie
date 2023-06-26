@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     "product_rpc",
     "pos_close_control",
     "miscellaneous",
+    "gift_card",
 ]
 
 MIDDLEWARE = [

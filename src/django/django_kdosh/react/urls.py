@@ -30,6 +30,7 @@ urlpatterns = [
         name="pos_close_control",
     ),
     path("apps/miscellaneous", miscellaneous_view, name="miscellaneous"),
+    path("apps/gift-card", miscellaneous_view, name="gift_card"),
     re_path(
         r"^react-static/web/.*",
         forward_static_files_view,
