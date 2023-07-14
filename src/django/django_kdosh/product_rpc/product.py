@@ -2,7 +2,7 @@ import datetime as dt
 from enum import Enum
 
 from .parser import product_client_result, transform_product_json
-from .models import ProductStats
+from .models import ProductStats, WeightMap
 from .utils import rpc
 from django.conf import settings
 
@@ -267,3 +267,7 @@ def create_products_v2(raw_data, curr_user):
     product_tmpl_ids = product_new(transf_list, int(settings.ODOO_UID), 0, curr_user)
     product_results = product_client_result(product_tmpl_ids)
     return product_results
+
+
+def get_weight_list():
+    return WeightMap.objects.all()
