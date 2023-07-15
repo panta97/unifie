@@ -64,6 +64,7 @@ export interface ProductProductForm {
   attrs: AttributeForm[];
   attr_default_code: AttributeDefaultCodeForm[];
   attr_list_price: AttributeListPrice[];
+  weight: number;
 }
 
 export interface ProductResult {

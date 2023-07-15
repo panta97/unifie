@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import { useAppDispatch, useAppSelector } from "../../../../app/hooks";
 import { selectCatalogs } from "../../../../app/slice/product/catalogSlice";
 import {
@@ -12,10 +12,23 @@ export const CategoryFamilyField = () => {
   const catalogs = useAppSelector(selectCatalogs);
   const lineId = useAppSelector(selectProductLineId);
   const familyId = useAppSelector(selectProductFamilyId);
+
   const dispatch = useAppDispatch();
 
   const handleCategoryFamily = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newId = Number(e.target.value);
+    // TODO: auto update weight field
+
+    const weightList = catalogs.weight_list;
+    const weightItem = weightList.find(w => w.fk_id === newId);
+
+    // TODO: fix if needed
+    dispatch({
+      updateWeight({
+        weight: weightItem.weight,
+      })
+    })
+
     dispatch(
       updateFamily({
         categoryFamilyId: newId,

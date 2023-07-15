@@ -75,6 +75,16 @@ export const productSlice = createSlice({
       state.category_brand_id = 0;
       state.category_brand_name = "";
     },
+    updateWeight: (
+      state,
+      {
+        payload,
+      }: PayloadAction<{
+        weight: number;
+      }>
+    ) => {
+      state.weight = payload.weight;
+    },
     updateFamily: (
       state,
       {

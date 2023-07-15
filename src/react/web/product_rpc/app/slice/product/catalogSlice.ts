@@ -11,6 +11,8 @@ const initialState: CatalogState = {
   pos_category: [],
   product_attribute: [],
   product_attribute_value: [],
+  // see how to handle this based on catalogs endpoind
+  weight_list: [],
 };
 
 export const catalogSlice = createSlice({
