@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import { useAppDispatch, useAppSelector } from "../../../../app/hooks";
 import { selectCatalogs } from "../../../../app/slice/product/catalogSlice";
 import {
@@ -13,6 +13,7 @@ export const CategoryFamilyField = () => {
   const catalogs = useAppSelector(selectCatalogs);
   const lineId = useAppSelector(selectProductLineId);
   const familyId = useAppSelector(selectProductFamilyId);
+
   const dispatch = useAppDispatch();
 
   const handleCategoryFamily = (e: React.ChangeEvent<HTMLSelectElement>) => {
