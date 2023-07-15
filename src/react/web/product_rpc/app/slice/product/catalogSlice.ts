@@ -11,6 +11,8 @@ const initialState: CatalogState = {
   pos_category: [],
   product_attribute: [],
   product_attribute_value: [],
+
+  weight_list:[],
 };
 
 export const catalogSlice = createSlice({
@@ -27,6 +29,7 @@ export const catalogSlice = createSlice({
       state.pos_category = catalogs.pos_category;
       state.product_attribute = catalogs.product_attribute;
       state.product_attribute_value = catalogs.product_attribute_value;
+      state.weight_list = catalogs.weight_list;
     },
   },
 });

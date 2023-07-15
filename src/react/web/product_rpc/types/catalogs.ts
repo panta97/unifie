@@ -25,7 +25,11 @@ export interface ProductAttributeValue extends CatalogGeneric {
 export interface Partner extends CatalogGeneric {
   vat: string;
 }
-
+export interface WeightItem {
+  id:number;
+  weight:number;
+  fk_product_category_id:number;
+}
 export interface Catalogs {
   product_category_line: ProductCategoryLine[];
   product_category_family: ProductCategoryFamily[];
@@ -33,6 +37,7 @@ export interface Catalogs {
   pos_category: PosCategory[];
   product_attribute: ProductAttribute[];
   product_attribute_value: ProductAttributeValue[];
+  weight_list: WeightItem[];
 }
 
 export interface OrderCatalogs {

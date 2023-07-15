@@ -35,7 +35,7 @@ export interface AttributeDefaultCodeForm {
 export interface AttributeListPrice {
   attr_val_ids: Partial<ProductAttributeValue>[];
   list_price: number;
-}
+} 
 
 // Product list form state
 export enum ProductFormState {
@@ -64,7 +64,11 @@ export interface ProductProductForm {
   attrs: AttributeForm[];
   attr_default_code: AttributeDefaultCodeForm[];
   attr_list_price: AttributeListPrice[];
+  weight: number;
+  
+
 }
+
 
 export interface ProductResult {
   odoo_id: number;
