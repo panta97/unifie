@@ -19,6 +19,7 @@ const initialState: ProductState = {
   name: "",
   list_price: 1,
   default_code: "",
+  weight: 0,
   category_line_name: "",
   category_line_id: 0,
   category_family_name: "",
@@ -74,6 +75,16 @@ export const productSlice = createSlice({
       state.category_family_name = "";
       state.category_brand_id = 0;
       state.category_brand_name = "";
+    },
+    updateWeight: (
+      state,
+      {
+        payload,
+      }: PayloadAction<{
+        weight: number;
+      }>
+    ) => {
+      state.weight = payload.weight;
     },
     updateFamily: (
       state,
@@ -304,6 +315,7 @@ export const productSlice = createSlice({
       state.name = product.name;
       state.list_price = product.list_price;
       state.default_code = product.default_code;
+      state.weight = product.weight;
       state.category_line_name = product.category_line_name;
       state.category_line_id = product.category_line_id;
       state.category_family_name = product.category_family_name;
@@ -322,6 +334,7 @@ export const productSlice = createSlice({
       state.name = "";
       state.list_price = 1;
       state.default_code = "";
+      state.weight = 0;
       state.category_line_name = "";
       state.category_line_id = 0;
       state.category_family_name = "";
@@ -355,6 +368,7 @@ export const {
   updateAttrListPrice,
   replaceProduct,
   reset,
+  updateWeight,
 } = productSlice.actions;
 
 export const selectProduct = (state: RootState) => state.product.product;
@@ -379,5 +393,4 @@ export const selectProductAttrDefaultCode = (state: RootState) =>
   state.product.product.attr_default_code;
 export const selectProductAttrListPrice = (state: RootState) =>
   state.product.product.attr_list_price;
-
 export default productSlice.reducer;

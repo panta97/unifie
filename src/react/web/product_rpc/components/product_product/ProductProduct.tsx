@@ -7,10 +7,11 @@ import { PPForm } from "./form/PPForm";
 import { useAppDispatch, useAppSelector } from "../../app/hooks";
 import {
   selectCatalogs,
-  updateAll,
+  updateMost,
+  updateWeight,
 } from "../../app/slice/product/catalogSlice";
 import { selectFormState } from "../../app/slice/product/formSlice";
-import { getCatalogs } from "./shared";
+import { getCatalogs, getWeights } from "./shared";
 
 const ProductProduct = () => {
   const formState = useAppSelector(selectFormState);
@@ -24,8 +25,11 @@ const ProductProduct = () => {
         0
       ) === 0;
     if (!areCatalogsEmpty) return;
-    const result = await getCatalogs();
-    dispatch(updateAll({ catalogs: result }));
+    const resultMost = await getCatalogs();
+    dispatch(updateMost({ catalogs: resultMost }));
+    // TODO: need to validate if weightList was previously empty
+    const resultWeight = await getWeights();
+    dispatch(updateWeight({ weightCatalog: resultWeight }));
   }, [dispatch, catalogs]);
 
   useEffect(() => {

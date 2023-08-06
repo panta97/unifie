@@ -11,6 +11,7 @@ import { PriceField } from "./fields/PriceField";
 import { DefaultCodeField } from "./fields/DefaultCodeField";
 import { Wrapper } from "../../shared/Wrapper";
 import { ListPriceTable } from "./ListPriceTable";
+import { WeightField } from './fields/WeightField';
 
 export const PPForm = () => {
   return (
@@ -26,6 +27,7 @@ export const PPForm = () => {
           <PosCategoryField />
           <PriceField />
           <DefaultCodeField />
+          <WeightField/>
         </div>
         <div className="mb-2">
           <AttributeTable />

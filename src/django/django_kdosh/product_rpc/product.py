@@ -1,8 +1,7 @@
 import datetime as dt
 from enum import Enum
-
 from .parser import product_client_result, transform_product_json
-from .models import ProductStats
+from .models import ProductStats, WeightMap, ProductCategory
 from .utils import rpc
 from django.conf import settings
 
@@ -180,8 +179,30 @@ def edit_product_list_price(lp_map, tmpl_id, uid, proxy):
             )
 
 
+def edit_product_weight(weight, product_product_list, uid, proxy):
+    ids = list(map(lambda product_product: product_product["id"], product_product_list))
+    rpc.update_model("product.product", ids, {"weight": weight}, uid, proxy=proxy)
+
+
+def update_weightmap(new_weight, category_id):
+    try:
+        weight_map = WeightMap.objects.get(product_category_id=category_id)
+        if weight_map.weight != new_weight:
+            weight_map.weight = new_weight
+            weight_map.save()
+    except WeightMap.DoesNotExist:
+        WeightMap.objects.create(weight=new_weight, product_category_id=category_id)
+
+
 def create_product_new(
-    product_template, default_code_map, list_price_map, client_id, uid, proxy, user
+    product_template,
+    default_code_map,
+    list_price_map,
+    weight,
+    client_id,
+    uid,
+    proxy,
+    user,
 ):
     # CREATE PRODUCT
     tmpl_id = rpc.create_model("product.template", product_template, uid, proxy=proxy)
@@ -230,9 +251,13 @@ def create_product_new(
         default_code_map, product_product_list, product_template, uid, proxy
     )
     edit_product_list_price(list_price_map, tmpl_id, uid, proxy)
+    edit_product_weight(weight, product_product_list, uid, proxy)
 
-    # SAVE PRODUCT ODOO ID AND REACT ID INTO DB
+    # SAVE PRODUCT ODOO ID AND REACT ID IN DB
     ProductStats.objects.create(odoo_id=tmpl_id, client_id=client_id, user_id=uid)
+
+    # SAVE OR UPDATE WEIGHT IN DB
+    update_weightmap(weight, product_template["categ_id"])
 
     return tmpl_id
 
@@ -251,6 +276,7 @@ def product_new(transf_list, uid, pid, user):
             product_template.__dict__,
             transf["default_code_map"],
             transf["list_price_map"],
+            transf["weight_map"],
             transf["client_id"],
             uid,
             proxy,
@@ -267,3 +293,7 @@ def create_products_v2(raw_data, curr_user):
     product_tmpl_ids = product_new(transf_list, int(settings.ODOO_UID), 0, curr_user)
     product_results = product_client_result(product_tmpl_ids)
     return product_results
+
+
+def get_weight_list():
+    return {"weight_list": list(WeightMap.objects.values())}

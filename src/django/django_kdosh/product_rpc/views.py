@@ -8,7 +8,7 @@ from .attribute import get_attribute_vals as get_attr_vals, update_attribute_val
 from .reports.reports import get_cpe_report, get_eq_report, get_fc_report
 from .parser import transform_order_json, order_client_result
 from .purchase_order import search_product_by_name, get_order_item, create_order
-from .product import create_products_v2
+from .product import create_products_v2, get_weight_list
 from .catalogs.cats import (
     update_product_catalogs,
     get_product_catalogs,
@@ -26,6 +26,8 @@ def get_catalogs(request, type):
             catalogs = get_product_catalogs()
         elif type == CatType.order.value:
             catalogs = get_order_catalogs()
+        elif type == CatType.weight.value:
+            catalogs = get_weight_list()
         return JsonResponse(catalogs)
     except Exception as e:
         return JsonResponse({"result": "ERROR", "message": str(e)}, status=400)

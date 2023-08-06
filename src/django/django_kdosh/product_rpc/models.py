@@ -73,3 +73,12 @@ class ProductAttributeValueOrder(models.Model):
 
     class Meta:
         db_table = "rpc_product_attribute_value_order"
+
+
+class WeightMap(models.Model):
+    id = models.AutoField(primary_key=True)
+    product_category_id = models.IntegerField(blank=True)
+    weight = models.DecimalField(max_digits=9, decimal_places=4)
+
+    class Meta:
+        db_table = "rpc_weight_map"

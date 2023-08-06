@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import { useAppDispatch, useAppSelector } from "../../../../app/hooks";
 import { selectCatalogs } from "../../../../app/slice/product/catalogSlice";
 import {

@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { Catalogs } from "../../../types/catalogs";
+import { Catalogs, WeightCatalog, WeightItem } from "../../../types/catalogs";
 import { RootState } from "../../store";
 
 export type CatalogState = Catalogs;
@@ -11,13 +11,14 @@ const initialState: CatalogState = {
   pos_category: [],
   product_attribute: [],
   product_attribute_value: [],
+  weight_list: [],
 };
 
 export const catalogSlice = createSlice({
   name: "catalog",
   initialState,
   reducers: {
-    updateAll: (
+    updateMost: (
       state,
       { payload: { catalogs } }: PayloadAction<{ catalogs: Catalogs }>
     ) => {
@@ -28,10 +29,18 @@ export const catalogSlice = createSlice({
       state.product_attribute = catalogs.product_attribute;
       state.product_attribute_value = catalogs.product_attribute_value;
     },
+    updateWeight: (
+      state,
+      {
+        payload: { weightCatalog },
+      }: PayloadAction<{ weightCatalog: WeightCatalog }>
+    ) => {
+      state.weight_list = weightCatalog.weight_list;
+    },
   },
 });
 
-export const { updateAll } = catalogSlice.actions;
+export const { updateMost, updateWeight } = catalogSlice.actions;
 
 export const selectCatalogs = (state: RootState) => state.product.catalog;
 

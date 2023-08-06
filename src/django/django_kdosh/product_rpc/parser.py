@@ -47,6 +47,8 @@ def transform_product_json(data):
                 "product": product,
                 "default_code_map": default_code_map,
                 "list_price_map": list_price_map,
+                # not actually a map
+                "weight_map": prod["weight"] if prod["weight"] else 0,
                 "client_id": prod["id"],
             }
         )
