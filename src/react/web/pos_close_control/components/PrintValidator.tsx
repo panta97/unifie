@@ -6,10 +6,8 @@ interface PrintValidatorProps {
 }
 
 export const PrintValidator = ({ children }: PrintValidatorProps) => {
-  const isSessionClosed = useAppSelector(
-    (root) => root.pos.summary.isSessionClosed
-  );
-  const isPosSaved = useAppSelector((root) => root.pos.isPOSStateSaved);
+  const isSessionClosed = true;
+  const isPosSaved = true;
   const msjs: ReactNode[] = [];
 
   if (!isSessionClosed)
