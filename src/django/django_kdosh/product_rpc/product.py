@@ -180,7 +180,6 @@ def edit_product_list_price(lp_map, tmpl_id, uid, proxy):
 
 
 def edit_product_weight(weight, product_product_list, uid, proxy):
-    # for product_product in product_product_list:
     ids = list(map(lambda product_product: product_product["id"], product_product_list))
     rpc.update_model("product.product", ids, {"weight": weight}, uid, proxy=proxy)
 
