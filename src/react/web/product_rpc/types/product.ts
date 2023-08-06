@@ -1,4 +1,5 @@
 import { ProductAttribute, ProductAttributeValue } from "./catalogs";
+import { FetchStatus } from "./fetch";
 
 interface Attr {
   id: number;
@@ -44,11 +45,13 @@ export enum ProductFormState {
 }
 
 export interface ProductProductForm {
-  // helper props
+  // ui props
   id: number;
   is_in_list: boolean;
   odoo_id?: number;
   odoo_link?: string;
+  fetch_status: FetchStatus;
+
   // product props
   name: string;
   list_price: number;

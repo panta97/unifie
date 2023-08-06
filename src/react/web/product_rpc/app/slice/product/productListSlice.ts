@@ -2,6 +2,7 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { cloneDeep } from "lodash";
 import { ProductProductForm, ProductResult } from "../../../types/product";
 import { RootState } from "../../store";
+import { FetchStatus } from "../../../types/fetch";
 
 export type ProductListState = ProductProductForm[];
 
@@ -44,6 +45,19 @@ export const productListSlice = createSlice({
           prod.attr_list_price = product.attr_list_price;
         }
       });
+    },
+    updateProductListFetchStatus: (
+      state,
+      {
+        payload: { productIds, fetchStatus },
+      }: PayloadAction<{ productIds: number[]; fetchStatus: FetchStatus }>
+    ) => {
+      for (let i = 0; i < productIds.length; i++) {
+        const productId = productIds[i];
+        const product = state.find((product) => product.id === productId);
+        if (!product) continue;
+        product.fetch_status = fetchStatus;
+      }
     },
     duplicateSelectedProduct: (
       state,
@@ -93,6 +107,7 @@ export const productListSlice = createSlice({
 export const {
   addProduct,
   updateSelectedProduct,
+  updateProductListFetchStatus,
   duplicateSelectedProduct,
   deleteSelectedProduct,
   setOdooLink,

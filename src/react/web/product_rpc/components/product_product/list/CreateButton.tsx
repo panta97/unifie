@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import { batch } from "react-redux";
 import { useAppDispatch, useAppSelector } from "../../../app/hooks";
 import {
@@ -10,11 +10,14 @@ import {
   reset as productListReset,
   selectProducts,
   setOdooLink,
+  updateProductListFetchStatus,
 } from "../../../app/slice/product/productListSlice";
 import { reset as productReset } from "../../../app/slice/product/productSlice";
 import { fetchResult, FetchStatus } from "../../../types/fetch";
 import { ProductFormState, ProductResult } from "../../../types/product";
 import { productsSchema } from "../PPValidation";
+
+const BUNDLE_SIZE = 5;
 
 export const CreateButton = () => {
   const formState = useAppSelector(selectFormState);
@@ -27,26 +30,60 @@ export const CreateButton = () => {
       await productsSchema.validate(products);
       // UPLOAD PRODUCTS
       dispatch(updateFormStatus({ status: FetchStatus.LOADING }));
-      const params = {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(products),
-      };
-      const response = await fetch("/api/product-rpc/product_product", params);
-      const json = await response.json();
-      if (json.result === fetchResult.SUCCESS) {
-        const productResults: ProductResult[] = json.products;
-        batch(() => {
+
+      // since server could timeout for long product lists, we'll send them by bundles
+      for (let i = 0; i < Math.ceil(products.length / BUNDLE_SIZE); i++) {
+        const productBundle = products.slice(
+          i * BUNDLE_SIZE,
+          (i + 1) * BUNDLE_SIZE
+        );
+        const productIds = productBundle.map((product) => product.id);
+
+        const params = {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(productBundle),
+        };
+
+        dispatch(
+          updateProductListFetchStatus({
+            productIds,
+            fetchStatus: FetchStatus.LOADING,
+          })
+        );
+        const response = await fetch(
+          "/api/product-rpc/product_product",
+          params
+        );
+        dispatch(
+          updateProductListFetchStatus({
+            productIds,
+            fetchStatus: FetchStatus.IDLE,
+          })
+        );
+
+        const json = await response.json();
+        if (json.result === fetchResult.SUCCESS) {
+          const productResults: ProductResult[] = json.products;
           dispatch(setOdooLink({ productResults }));
-          dispatch(updateFormState({ formState: ProductFormState.CREATED }));
+        } else {
           dispatch(updateFormStatus({ status: FetchStatus.IDLE }));
-        });
-      } else {
-        dispatch(updateFormStatus({ status: FetchStatus.IDLE }));
-        alert(json.message);
+          dispatch(
+            updateProductListFetchStatus({
+              productIds,
+              fetchStatus: FetchStatus.IDLE,
+            })
+          );
+          alert(json.message);
+        }
       }
+
+      batch(() => {
+        dispatch(updateFormState({ formState: ProductFormState.CREATED }));
+        dispatch(updateFormStatus({ status: FetchStatus.IDLE }));
+      });
     } catch (error) {
       dispatch(updateFormStatus({ status: FetchStatus.IDLE }));
       alert(error);

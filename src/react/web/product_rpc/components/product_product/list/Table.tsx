@@ -11,6 +11,7 @@ import {
 } from "../../../app/slice/product/productSlice";
 import { ProductProductForm } from "../../../types/product";
 import { Svg } from "../../shared/Svg";
+import { FetchStatus } from "../../../types/fetch";
 
 export const Table = () => {
   const products = useAppSelector(selectProducts);
@@ -112,49 +113,63 @@ export const Table = () => {
                   )}
                 </div>
               </td>
-              {product.odoo_link ? (
-                <td className="p-1" colSpan={3}>
-                  <div className="flex justify-center">
-                    <a
-                      className="inline-flex items-center rounded px-1 bg-blue-400 text-white cursor-pointer"
-                      title="Odoo link"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      href={product.odoo_link}
-                    >
-                      <span className="mr-0.5">Creado</span>
-                      <Svg.ExternalLink className="h-5 w-5" />
-                    </a>
-                  </div>
-                </td>
-              ) : (
-                <>
-                  <td className="p-1">
-                    <span title="Editar">
-                      <Svg.PencilAlt
-                        className="h-5 w-5 mx-auto cursor-pointer"
-                        onClick={() => handleEditProduct(product)}
-                      />
-                    </span>
-                  </td>
-                  <td className="p-1">
-                    <span title="Duplicar">
-                      <Svg.Duplicate
-                        className="h-5 w-5 mx-auto cursor-pointer"
-                        onClick={() => handleDuplicateProduct(product.id)}
-                      />
-                    </span>
-                  </td>
-                  <td className="p-1">
-                    <span title="Eliminar">
-                      <Svg.Trash
-                        className="h-5 w-5 mx-auto cursor-pointer"
-                        onClick={() => handleDeleteProduct(product.id)}
-                      />
-                    </span>
-                  </td>
-                </>
-              )}
+              {(() => {
+                if (product.fetch_status === FetchStatus.LOADING) {
+                  return (
+                    <td className="p-1" colSpan={3}>
+                      <div className="flex justify-center">
+                        <div className="lds-dual-ring"></div>
+                      </div>
+                    </td>
+                  );
+                } else if (product.odoo_link) {
+                  return (
+                    <td className="p-1" colSpan={3}>
+                      <div className="flex justify-center">
+                        <a
+                          className="inline-flex items-center rounded px-1 bg-blue-400 text-white cursor-pointer"
+                          title="Odoo link"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          href={product.odoo_link}
+                        >
+                          <span className="mr-0.5">Creado</span>
+                          <Svg.ExternalLink className="h-5 w-5" />
+                        </a>
+                      </div>
+                    </td>
+                  );
+                } else {
+                  return (
+                    <>
+                      <td className="p-1">
+                        <span title="Editar">
+                          <Svg.PencilAlt
+                            className="h-5 w-5 mx-auto cursor-pointer"
+                            onClick={() => handleEditProduct(product)}
+                          />
+                        </span>
+                      </td>
+                      <td className="p-1">
+                        <span title="Duplicar">
+                          <Svg.Duplicate
+                            className="h-5 w-5 mx-auto cursor-pointer"
+                            onClick={() => handleDuplicateProduct(product.id)}
+                          />
+                        </span>
+                      </td>
+                      <td className="p-1">
+                        <span title="Eliminar">
+                          <Svg.Trash
+                            className="h-5 w-5 mx-auto cursor-pointer"
+                            onClick={() => handleDeleteProduct(product.id)}
+                          />
+                        </span>
+                      </td>
+                    </>
+                  );
+                }
+              })()}
             </tr>
           ))}
         </tbody>

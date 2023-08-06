@@ -4,7 +4,7 @@ export enum fetchResult {
 }
 
 export enum FetchStatus {
-  IDLE,
-  LOADING,
-  FAILED,
+  IDLE = "IDLE",
+  LOADING = "LOADING",
+  FAILED = "FAILED",
 }

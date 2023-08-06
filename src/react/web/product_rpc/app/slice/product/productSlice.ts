@@ -10,11 +10,13 @@ import { ProductProductForm } from "../../../types/product";
 import { TagData } from "../../../types/tag";
 import { RootState } from "../../store";
 import { cartesianDC, cartesianLP } from "./cartesian";
+import { FetchStatus } from "../../../types/fetch";
 
 export type ProductState = ProductProductForm;
 
 const initialState: ProductState = {
   id: new Date().getTime(),
+  fetch_status: FetchStatus.IDLE,
   is_in_list: false,
   name: "",
   list_price: 1,
