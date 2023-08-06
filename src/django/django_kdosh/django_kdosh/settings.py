@@ -147,8 +147,8 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # ODOO_CONFIG
 ODOO_URL = os.getenv(
-    "ODOO_URL", "https://oxe360-ooc-kdosh-150-staging-15-0-8741549.dev.odoo.com"
+    "ODOO_URL", "https://oxe360-ooc-kdosh1-pre-prd11-0-5935095.dev.odoo.com"
 )
-ODOO_DB = os.getenv("ODOO_DB", "oxe360-ooc-kdosh-150-staging-15-0-8741549")
-ODOO_PWD = os.getenv("ODOO_PWD", "20c5aaf29cc989036cc1708c4d8e10afeb531db3")
-ODOO_UID = os.getenv("ODOO_UID", "2")
+ODOO_DB = os.getenv("ODOO_DB", "oxe360-ooc-kdosh1-pre-prd11-0-5935095")
+ODOO_PWD = os.getenv("ODOO_PWD", "kdosh")
+ODOO_UID = os.getenv("ODOO_UID", "1")

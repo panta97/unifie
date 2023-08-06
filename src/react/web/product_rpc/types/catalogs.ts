@@ -26,9 +26,9 @@ export interface Partner extends CatalogGeneric {
   vat: string;
 }
 export interface WeightItem {
-  id:number;
-  weight:number;
-  fk_product_category_id:number;
+  id: number;
+  weight: number;
+  product_category_id: number;
 }
 export interface Catalogs {
   product_category_line: ProductCategoryLine[];
@@ -40,6 +40,10 @@ export interface Catalogs {
   weight_list: WeightItem[];
 }
 
+export interface WeightCatalog {
+  weight_list: WeightItem[];
+}
+
 export interface OrderCatalogs {
   res_partner: Partner[];
 }
@@ -47,4 +51,5 @@ export interface OrderCatalogs {
 export enum CatalogType {
   product = 1,
   order = 2,
+  weight = 3,
 }

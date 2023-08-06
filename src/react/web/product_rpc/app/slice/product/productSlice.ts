@@ -5,7 +5,6 @@ import {
   ProductCategoryBrand,
   ProductCategoryFamily,
   ProductCategoryLine,
-  WeightItem,
 } from "../../../types/catalogs";
 import { ProductProductForm } from "../../../types/product";
 import { TagData } from "../../../types/tag";
@@ -20,6 +19,7 @@ const initialState: ProductState = {
   name: "",
   list_price: 1,
   default_code: "",
+  weight: 0,
   category_line_name: "",
   category_line_id: 0,
   category_family_name: "",
@@ -31,7 +31,6 @@ const initialState: ProductState = {
   attrs: [],
   attr_default_code: [],
   attr_list_price: [],
-  weight:0,
 };
 
 export const productSlice = createSlice({
@@ -77,21 +76,16 @@ export const productSlice = createSlice({
       state.category_brand_id = 0;
       state.category_brand_name = "";
     },
-
-
-    updateWeight:(
+    updateWeight: (
       state,
       {
         payload,
       }: PayloadAction<{
-        weight:number;
+        weight: number;
       }>
-    ) =>{
+    ) => {
       state.weight = payload.weight;
     },
-
- 
-
     updateFamily: (
       state,
       {
@@ -321,6 +315,7 @@ export const productSlice = createSlice({
       state.name = product.name;
       state.list_price = product.list_price;
       state.default_code = product.default_code;
+      state.weight = product.weight;
       state.category_line_name = product.category_line_name;
       state.category_line_id = product.category_line_id;
       state.category_family_name = product.category_family_name;
@@ -339,6 +334,7 @@ export const productSlice = createSlice({
       state.name = "";
       state.list_price = 1;
       state.default_code = "";
+      state.weight = 0;
       state.category_line_name = "";
       state.category_line_id = 0;
       state.category_family_name = "";
@@ -377,15 +373,24 @@ export const {
 
 export const selectProduct = (state: RootState) => state.product.product;
 export const selectProductId = (state: RootState) => state.product.product.id;
-export const selectProductName = (state: RootState) => state.product.product.name;
-export const selectProductListPrice = (state: RootState) => state.product.product.list_price;
-export const selectProductDefaultCode = (state: RootState) => state.product.product.default_code;
-export const selectProductLineId = (state: RootState) =>state.product.product.category_line_id;
-export const selectProductFamilyId = (state: RootState) =>state.product.product.category_family_id;
-export const selectProductBrandId = (state: RootState) =>state.product.product.category_brand_id;
-export const selectProductPosId = (state: RootState) =>state.product.product.pos_categ_id;
-export const selectProductAttribute = (state: RootState) =>state.product.product.attrs;
-export const selectProductAttrDefaultCode = (state: RootState) =>state.product.product.attr_default_code;
-export const selectProductAttrListPrice = (state: RootState) =>state.product.product.attr_list_price;
-export const selectProductWeight =(state:RootState)=>state.product.product.weight;
+export const selectProductName = (state: RootState) =>
+  state.product.product.name;
+export const selectProductListPrice = (state: RootState) =>
+  state.product.product.list_price;
+export const selectProductDefaultCode = (state: RootState) =>
+  state.product.product.default_code;
+export const selectProductLineId = (state: RootState) =>
+  state.product.product.category_line_id;
+export const selectProductFamilyId = (state: RootState) =>
+  state.product.product.category_family_id;
+export const selectProductBrandId = (state: RootState) =>
+  state.product.product.category_brand_id;
+export const selectProductPosId = (state: RootState) =>
+  state.product.product.pos_categ_id;
+export const selectProductAttribute = (state: RootState) =>
+  state.product.product.attrs;
+export const selectProductAttrDefaultCode = (state: RootState) =>
+  state.product.product.attr_default_code;
+export const selectProductAttrListPrice = (state: RootState) =>
+  state.product.product.attr_list_price;
 export default productSlice.reducer;

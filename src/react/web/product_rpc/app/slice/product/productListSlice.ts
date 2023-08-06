@@ -30,6 +30,7 @@ export const productListSlice = createSlice({
           prod.name = product.name;
           prod.list_price = product.list_price;
           prod.default_code = product.default_code;
+          prod.weight = product.weight;
           prod.category_line_name = product.category_line_name;
           prod.category_line_id = product.category_line_id;
           prod.category_family_name = product.category_family_name;

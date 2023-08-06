@@ -37,6 +37,10 @@ const productSchema = object({
     .min(1)
     .required(),
   default_code: string().optional(),
+  weight: number()
+    .positive()
+    .min(0.0001, "Peso en kg debe ser positivo")
+    .required(),
   category_line_id: number().positive("Debe seleccionar una Línea").required(),
   category_family_id: number()
     .positive("Debe seleccinar una Familia")

@@ -1,63 +1,31 @@
-import React,{useEffect} from "react";
+import React from "react";
 import { useAppDispatch, useAppSelector } from "../../../../app/hooks";
 
-import { selectProductFamilyId,
-         selectProductWeight,   
-         updateWeight,
+import { updateWeight } from "../../../../app/slice/product/productSlice";
 
-} from "../../../../app/slice/product/productSlice";
-    
+export const WeightField = () => {
+  const weight = useAppSelector((state) => state.product.product.weight);
+  const dispatch = useAppDispatch();
 
-export const WeightField = () =>{
-    const familyId = useAppSelector(selectProductFamilyId);
-    const weight = useAppSelector(selectProductWeight);
-    const dispatch = useAppDispatch();
-    
-    
-    useEffect(()=>{
-        
-        const fetchWeightFromBackend =async () => {
-            try{
-                const response = await fetch(`http://127.0.0.1:8000/api/product-rpc/weights`);
-                const data = await response.json();
-                const weightList  = data.weight_list;
-                const categoryWeight = weightList.find((item)=>item.fk_product_category_id === familyId);
-                if (categoryWeight) {
-                    dispatch(updateWeight({weight:parseInt(categoryWeight.weight)}));
-                }     
-                
-            }catch (error){
-                console.log('Error al obtener peso del producto:', error);
-            }            
-        };
-        
-        if (familyId !== 0) {
-            fetchWeightFromBackend();
-        }
-    }, [familyId, dispatch]);
+  const handleWeight = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newWeight = e.target.valueAsNumber;
+    dispatch(updateWeight({ weight: newWeight }));
+  };
 
-    const handleWeight = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const newWeight = parseInt(e.target.value);
-        dispatch(updateWeight({ weight: newWeight }));
-    };
-
-    return(
-        <div className="inline-flex flex-col w-40 mr-1">
-            <label htmlFor="product_weight" className="text-xs">
-                Peso en g.
-            </label>
-            <input
-            className="border-b-2 border-gray "
-            type="number"
-            autoComplete=""
-            spellCheck={false}
-            value={weight}
-            onChange={handleWeight}
-            id="product_weight"
-            ></input>
-
-        </div>
-    );
-    
+  return (
+    <div className="inline-flex flex-col w-24 mr-1">
+      <label htmlFor="weight" className="text-xs">
+        Peso en kg
+      </label>
+      <input
+        className="border border-gray-300 rounded text-sm px-1"
+        type="number"
+        id="weight"
+        name="weight"
+        spellCheck={false}
+        value={weight}
+        onChange={handleWeight}
+      ></input>
+    </div>
+  );
 };
-

@@ -8,7 +8,7 @@ from .attribute import get_attribute_vals as get_attr_vals, update_attribute_val
 from .reports.reports import get_cpe_report, get_eq_report, get_fc_report
 from .parser import transform_order_json, order_client_result
 from .purchase_order import search_product_by_name, get_order_item, create_order
-from .product import create_products_v2,get_weight_list
+from .product import create_products_v2, get_weight_list
 from .catalogs.cats import (
     update_product_catalogs,
     get_product_catalogs,
@@ -26,6 +26,8 @@ def get_catalogs(request, type):
             catalogs = get_product_catalogs()
         elif type == CatType.order.value:
             catalogs = get_order_catalogs()
+        elif type == CatType.weight.value:
+            catalogs = get_weight_list()
         return JsonResponse(catalogs)
     except Exception as e:
         return JsonResponse({"result": "ERROR", "message": str(e)}, status=400)
@@ -45,10 +47,10 @@ def update_catalogs(request, type):
     return JsonResponse(
         {"result": "SUCCESS", "message": "se actualizó la base de datos"}, status=200
     )
+
+
 @csrf_exempt
 @require_http_methods(["POST"])
-
-
 def save_product(request):
     try:
         raw_json = json.loads(request.body)
@@ -77,17 +79,6 @@ def get_purchase_order_product(request):
         )
     except Exception as e:
         response = JsonResponse({"result": "ERROR", "message": str(e)}, status=400)
-    return response
-
-
-def get_weights(request):
-    try:
-        weight_list = get_weight_list()
-        response =JsonResponse(
-            {"result":"SUCCESS","weight_list": weight_list}, status =200
-        )
-    except Exception as e:
-        response = JsonResponse({"result": "Error", "message":str(e)}, status=400)
     return response
 
 
