@@ -5,7 +5,6 @@ import {
   selectProductFamilyId,
   selectProductLineId,
   updateFamily,
-
 } from "../../../../app/slice/product/productSlice";
 import { Select } from "../../../shared/Select";
 
@@ -18,15 +17,6 @@ export const CategoryFamilyField = () => {
 
   const handleCategoryFamily = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newId = Number(e.target.value);
-    //auto update weight field
-    // const weightList = catalogs.weight_list;
-    // const weightItem = weightList.find(w => w.fk_product_category_id === newId)
-
-    // todo: fix if needed
-
-
-
-
     dispatch(
       updateFamily({
         categoryFamilyId: newId,
