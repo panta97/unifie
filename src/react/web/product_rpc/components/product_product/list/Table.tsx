@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import { useAppDispatch, useAppSelector } from "../../../app/hooks";
 import {
   deleteSelectedProduct,
@@ -35,7 +35,6 @@ export const Table = () => {
             <th className="font-normal p-1">Nombre</th>
             <th className="font-normal p-1">Categoría</th>
             <th className="font-normal p-1">Categoría POS</th>
-            
             <th className="font-normal p-1">Precio</th>
             <th className="font-normal p-1">Peso</th>
             <th className="font-normal p-1">Atributos</th>
@@ -48,7 +47,6 @@ export const Table = () => {
         <tbody>
           {products.map((product) => (
             <tr key={product.id} className="even:bg-gray-100">
-
               <td className="p-1">
                 {product.name + " "}
                 {product.id === productId && (
@@ -77,11 +75,8 @@ export const Table = () => {
                 ) : (
                   <span>{product.list_price.toFixed(2)}</span>
                 )}
-
               </td>
-              <td className="p-1">
-                  {product.weight}
-              </td>
+              <td className="p-1">{product.weight}</td>
               <td className="p-1">
                 <div className="flex items-start flex-wrap">
                   {product.attrs.map((attr) => {
