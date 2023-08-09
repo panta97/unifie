@@ -5,7 +5,6 @@ import {
   selectProductBrandId,
   selectProductFamilyId,
   updateBrand,
-  updateWeight,
 } from "../../../../app/slice/product/productSlice";
 import { Select } from "../../../shared/Select";
 
@@ -13,9 +12,6 @@ export const CategoryBrandField = () => {
   const catalogs = useAppSelector(selectCatalogs);
   const familyId = useAppSelector(selectProductFamilyId);
   const brandId = useAppSelector(selectProductBrandId);
-  const weightList = useAppSelector(
-    (state) => state.product.catalog.weight_list
-  );
   const dispatch = useAppDispatch();
 
   const handleCategoryBrand = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -26,11 +22,6 @@ export const CategoryBrandField = () => {
         categoryBrands: catalogs.product_category_brand,
       })
     );
-    // side effect: udpate weight
-    const weightItem = weightList.find((w) => w.product_category_id === newId);
-    if (weightItem) {
-      dispatch(updateWeight({ weight: weightItem.weight }));
-    }
   };
 
   return (
