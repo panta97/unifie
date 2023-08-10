@@ -16,6 +16,16 @@
     <link rel="stylesheet" href="/react-static/{{ css_filename }}">
     {% endif %}
     <title>{{ display_name }}</title>
+
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-YXFT1ZDVHK"></script>
+    <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-YXFT1ZDVHK');
+    </script>
 </head>
 
 <body>
