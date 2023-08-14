@@ -1,10 +1,18 @@
 import { CatalogGeneric } from "../../types/shared";
 
-export type ReportType = CatalogGeneric;
+export interface ReportType extends CatalogGeneric {}
 
-export const reportTypes: ReportType[] = [
-  { id: 1, name: "CPE - VENTAS" },
-  { id: 2, name: "EQ - METAS" },
-  { id: 3, name: "FC - FACTURAS" },
-  { id: 4, name: "INV - OLYMPO" },
-];
+export type DataType = "date" | "text" | "number";
+
+export interface ReportParam {
+  id: number;
+  name: string;
+  data_type: DataType;
+}
+export interface Report {
+  id: number;
+  name: string;
+  params: ReportParam[];
+}
+
+export type DynamicReportResult = { [key: string]: any };

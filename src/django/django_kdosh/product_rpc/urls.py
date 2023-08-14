@@ -13,43 +13,25 @@ from .views import (
     sort_attribute_vals,
     get_invoice_details,
     create_refund_invoice,
+    ReportList,
 )
 
 
 urlpatterns = [
-    path("api/product-rpc/catalogs/<int:type>", get_catalogs, name="get_catalogs"),
+    path("catalogs/<int:type>", get_catalogs, name="get_catalogs"),
+    path("update/cats/<int:type>", update_catalogs, name="update_catalogs"),
+    path("product_product", save_product, name="save_product"),
+    path("purchase_order/product", search_product, name="search_product"),
     path(
-        "api/product-rpc/update/cats/<int:type>",
-        update_catalogs,
-        name="update_catalogs",
-    ),
-    path("api/product-rpc/product_product", save_product, name="save_product"),
-    path(
-        "api/product-rpc/purchase_order/product", search_product, name="search_product"
-    ),
-    path(
-        "api/product-rpc/purchase_order/order_item",
+        "purchase_order/order_item",
         get_purchase_order_product,
         name="get_purchase_order_product",
     ),
-    path("api/product-rpc/purchase_order", save_order, name="save_order"),
-    path("api/product-rpc/report/<str:type>", get_report, name="get_report"),
-    path(
-        "api/product-rpc/attribute/list", get_attribute_vals, name="get_attribute_vals"
-    ),
-    path(
-        "api/product-rpc/attribute/sort",
-        sort_attribute_vals,
-        name="sort_attribute_vals",
-    ),
-    path(
-        "api/product-rpc/refund/invoice",
-        get_invoice_details,
-        name="get_invoice_details",
-    ),
-    path(
-        "api/product-rpc/refund/create",
-        create_refund_invoice,
-        name="create_refund_invoice",
-    ),
+    path("purchase_order", save_order, name="save_order"),
+    path("report/<str:type>", get_report, name="get_report"),
+    path("attribute/list", get_attribute_vals, name="get_attribute_vals"),
+    path("attribute/sort", sort_attribute_vals, name="sort_attribute_vals"),
+    path("refund/invoice", get_invoice_details, name="get_invoice_details"),
+    path("refund/create", create_refund_invoice, name="create_refund_invoice"),
+    path("reports", ReportList.as_view(), name="reports"),
 ]
