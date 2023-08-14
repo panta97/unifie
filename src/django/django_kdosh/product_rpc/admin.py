@@ -1,3 +1,15 @@
 from django.contrib import admin
 
-# Register your models here.
+from .models import Report, ReportParam
+
+
+class ReportParamInline(admin.TabularInline):
+    model = ReportParam
+    extra = 1
+
+
+class ReportAdmin(admin.ModelAdmin):
+    inlines = [ReportParamInline]
+
+
+admin.site.register(Report, ReportAdmin)

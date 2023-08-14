@@ -1,4 +1,5 @@
 from django.db import models
+from .reports.constants import REPORT_DATATYPE_CHOICES
 
 
 class ProductCategory(models.Model):
@@ -82,3 +83,24 @@ class WeightMap(models.Model):
 
     class Meta:
         db_table = "rpc_weight_map"
+
+
+# report
+
+
+class Report(models.Model):
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    name = models.CharField(max_length=200)
+    query = models.TextField(blank=False)
+
+    def __str__(self):
+        return self.name
+
+
+class ReportParam(models.Model):
+    name = models.CharField(max_length=200)
+    report = models.ForeignKey(Report, on_delete=models.CASCADE)
+    data_type = models.CharField(
+        choices=REPORT_DATATYPE_CHOICES, max_length=20, blank=True
+    )

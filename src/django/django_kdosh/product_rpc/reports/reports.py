@@ -1,6 +1,7 @@
 from io import BytesIO
 import pandas as pd
-from .connection import select_df
+from .connection import select_df, select
+from ..models import Report
 from datetime import datetime
 
 MIGRATION_DATE = "2023-02-27"
@@ -458,3 +459,14 @@ def get_fc_report(date_from, date_to):
     output.seek(0)
     workbook = output.read()
     return (workbook, filename)
+
+
+def get_report_dynamic(report):
+    report_obj = Report.objects.get(id=report["id"])
+    param_dict = {}
+    for param in report["params"]:
+        param_dict[param["name"]] = param["value"]
+
+    query_result = select(report_obj.query, 15, param_dict)
+
+    return query_result

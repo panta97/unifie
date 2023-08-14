@@ -2,10 +2,20 @@ import json
 
 from django.http import HttpResponse, JsonResponse
 from django.views.decorators.http import require_http_methods
+from django.views.decorators.csrf import csrf_exempt
+from rest_framework import generics
 
+
+from .models import Report
+from .serializers import ReportSerializer
 from .refund import get_invoice, invoice_refund
 from .attribute import get_attribute_vals as get_attr_vals, update_attribute_vals
-from .reports.reports import get_cpe_report, get_eq_report, get_fc_report
+from .reports.reports import (
+    get_cpe_report,
+    get_eq_report,
+    get_fc_report,
+    get_report_dynamic,
+)
 from .parser import transform_order_json, order_client_result
 from .purchase_order import search_product_by_name, get_order_item, create_order
 from .product import create_products_v2, get_weight_list
@@ -16,7 +26,6 @@ from .catalogs.cats import (
     update_order_catalogs,
 )
 from .catalogs.cat_type import CatType
-from django.views.decorators.csrf import csrf_exempt
 
 
 def get_catalogs(request, type):
@@ -101,12 +110,12 @@ def save_order(request):
 @require_http_methods(["POST"])
 def get_report(request, type):
     try:
-        raw_json = json.loads(request.body)
+        body_json = json.loads(request.body)
         mimetype = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 
         if type == "cpe":
             workbook, filename = get_cpe_report(
-                raw_json["company_id"], raw_json["date_from"], raw_json["date_to"]
+                body_json["company_id"], body_json["date_from"], body_json["date_to"]
             )
             response = HttpResponse(workbook, content_type=mimetype)
             response["Content-Disposition"] = f"attachment; filename={filename}"
@@ -116,16 +125,19 @@ def get_report(request, type):
             )
         elif type == "eq":
             workbook, filename = get_eq_report(
-                raw_json["store"], raw_json["date_from"], raw_json["date_to"]
+                body_json["store"], body_json["date_from"], body_json["date_to"]
             )
             response = HttpResponse(workbook, content_type=mimetype)
             response["Content-Disposition"] = f"attachment; filename={filename}"
         elif type == "fc":
             workbook, filename = get_fc_report(
-                raw_json["date_from"], raw_json["date_to"]
+                body_json["date_from"], body_json["date_to"]
             )
             response = HttpResponse(workbook, content_type=mimetype)
             response["Content-Disposition"] = f"attachment; filename={filename}"
+        elif type == "dynamic":
+            query_result = get_report_dynamic(body_json)
+            response = JsonResponse(query_result, safe=False)
 
         return response
     except Exception as e:
@@ -181,3 +193,8 @@ def create_refund_invoice(request):
     except Exception as e:
         response = JsonResponse({"result": "ERROR", "message": str(e)}, status=400)
     return response
+
+
+class ReportList(generics.ListAPIView):
+    queryset = Report.objects.all()
+    serializer_class = ReportSerializer
