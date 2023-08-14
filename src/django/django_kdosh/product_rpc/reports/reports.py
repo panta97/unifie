@@ -148,7 +148,7 @@ def get_cpe_report(company_id, date_from, date_to):
         worksheet = writer.sheets[cpe_serie.iloc[0][3]]
         worksheet.set_column("A:B", 10)
 
-    writer.save()
+    writer.close()
     output.seek(0)
     workbook = output.read()
     return (workbook, filename)
@@ -324,7 +324,7 @@ def get_eq_report(store, date_from, date_to):
         worksheet = writer.sheets[eq.iloc[0][1]]
         worksheet.set_column("A:A", 10)
 
-    writer.save()
+    writer.close()
     output.seek(0)
     workbook = output.read()
     return (workbook, filename)
@@ -455,7 +455,7 @@ def get_fc_report(date_from, date_to):
         col_idx = invoice_all.columns.get_loc(column)
         writer.sheets[sheet_name].set_column(col_idx, col_idx, column_length)
 
-    writer.save()
+    writer.close()
     output.seek(0)
     workbook = output.read()
     return (workbook, filename)
