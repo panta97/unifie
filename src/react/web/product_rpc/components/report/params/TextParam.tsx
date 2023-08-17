@@ -1,5 +1,4 @@
 import React from "react";
-import { ReportParamUI } from "../report_types/GenericReport";
 import { ParamProps } from "./types";
 
 const TextParam: React.FC<ParamProps> = ({
@@ -8,12 +7,12 @@ const TextParam: React.FC<ParamProps> = ({
 }) => {
   return (
     <div className="inline-flex flex-col w-40 mr-1">
-      <label className="text-xs" htmlFor={param.html}>
-        {param.html}
+      <label className="text-xs" htmlFor={param.name}>
+        {param.display_name}
       </label>
       <input
-        id={param.html}
-        name={param.html}
+        id={param.name}
+        name={param.name}
         type="text"
         className="border border-gray-300 rounded text-sm px-1"
         value={param.value}

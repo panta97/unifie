@@ -5,7 +5,7 @@ from .models import Report, ReportParam
 class ReportParamSerializer(serializers.ModelSerializer):
     class Meta:
         model = ReportParam
-        fields = ("id", "name", "data_type")
+        fields = ("id", "name", "display_name", "data_type")
 
 
 class ReportSerializer(serializers.ModelSerializer):

@@ -7,6 +7,7 @@ export type DataType = "date" | "text" | "number";
 export interface ReportParam {
   id: number;
   name: string;
+  display_name: string;
   data_type: DataType;
 }
 export interface Report {

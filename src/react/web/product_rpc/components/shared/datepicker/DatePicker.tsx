@@ -30,7 +30,9 @@ export const DatePicker = ({ name, value, updateDate }: DatePickerProps) => {
 
   useEffect(() => {
     updateDate(state.date);
-  }, [state.date, updateDate]);
+    // we used to have updateDate function in the array below
+    // but was causing infinite renders
+  }, [state.date]);
 
   const toggleDisplayDateFocus = (): void => {
     /**

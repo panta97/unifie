@@ -10,7 +10,6 @@ import { FetchStatus } from "../../../types/fetch";
 
 export interface ReportParamUI extends ReportParam {
   value: string;
-  html: string;
 }
 
 interface GenericReportProps {
@@ -30,7 +29,6 @@ const GenericReport: React.FC<GenericReportProps> = ({
       report.params.map((rp) => ({
         ...rp,
         value: "",
-        html: rp.name.replace(/ /g, "_"),
       }))
     );
   }, [report]);

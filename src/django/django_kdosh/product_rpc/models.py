@@ -1,5 +1,9 @@
 from django.db import models
-from .reports.constants import REPORT_DATATYPE_CHOICES
+from .reports.constants import (
+    REPORT_DATATYPE_CHOICES,
+    DATABASE_TARGET_CHOICES,
+    DB_ODOO_V15,
+)
 
 
 class ProductCategory(models.Model):
@@ -93,6 +97,9 @@ class Report(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     name = models.CharField(max_length=200)
     query = models.TextField(blank=False)
+    db_target = models.CharField(
+        choices=DATABASE_TARGET_CHOICES, max_length=20, default=DB_ODOO_V15
+    )
 
     def __str__(self):
         return self.name
@@ -100,6 +107,7 @@ class Report(models.Model):
 
 class ReportParam(models.Model):
     name = models.CharField(max_length=200)
+    display_name = models.CharField(max_length=200, default="")
     report = models.ForeignKey(Report, on_delete=models.CASCADE)
     data_type = models.CharField(
         choices=REPORT_DATATYPE_CHOICES, max_length=20, blank=True

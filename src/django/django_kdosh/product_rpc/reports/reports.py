@@ -3,6 +3,8 @@ import pandas as pd
 from .connection import select_df, select
 from ..models import Report
 from datetime import datetime
+from .constants import DB_ODOO_V15, DB_ODOO_V11
+
 
 MIGRATION_DATE = "2023-02-27"
 
@@ -467,6 +469,12 @@ def get_report_dynamic(report):
     for param in report["params"]:
         param_dict[param["name"]] = param["value"]
 
-    query_result = select(report_obj.query, 15, param_dict)
+    odoo_db_version = 0
+    if report_obj.db_target == DB_ODOO_V11:
+        odoo_db_version = 11
+    elif report_obj.db_target == DB_ODOO_V15:
+        odoo_db_version = 15
+
+    query_result = select(report_obj.query, odoo_db_version, param_dict)
 
     return query_result
