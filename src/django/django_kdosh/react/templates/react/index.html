@@ -20,16 +20,21 @@
     <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-YXFT1ZDVHK"></script>
     <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
 
-    gtag('config', 'G-YXFT1ZDVHK');
+        gtag('config', 'G-YXFT1ZDVHK');
     </script>
 </head>
 
 <body>
+    <!-- https://stackoverflow.com/questions/74698700/after-the-new-version-of-chrome108-it-adds-an-extra-blank-page-when-printing -->
+    {% if hide_in_print_mode %}
     <div id="root" class="print:hidden"></div>
+    {% else %}
+    <div id="root"></div>
+    {% endif %}
     <div id="portal" class="print:hidden"></div>
     <div id="print" class="hidden print:block"></div>
 

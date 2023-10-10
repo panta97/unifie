@@ -5,6 +5,7 @@ from .views import (
     barcode_view,
     product_rpc_view,
     purchase_order_sheet_view,
+    stock_picking_sheet_view,
     k_sales_view,
     forward_static_files_view,
     pos_close_control_view,
@@ -17,6 +18,11 @@ urlpatterns = [
         "apps/purchase-order-sheet",
         purchase_order_sheet_view,
         name="purchase_order_sheet",
+    ),
+    path(
+        "apps/stock-picking-sheet",
+        stock_picking_sheet_view,
+        name="stock_picking_sheet",
     ),
     path("apps/k-sales/997e106", k_sales_view, name="k_sales"),
     re_path(

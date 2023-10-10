@@ -11,7 +11,16 @@ def barcode_view(request):
 
 @login_required
 def purchase_order_sheet_view(request):
-    return render_react_app(request, "purchase_order_sheet", "Purchase Order")
+    return render_react_app(
+        request, "purchase_order_sheet", "Purchase Order", hide_in_print_mode=False
+    )
+
+
+@login_required
+def stock_picking_sheet_view(request):
+    return render_react_app(
+        request, "stock_picking_sheet", "Stock Picking", hide_in_print_mode=False
+    )
 
 
 # TODO: find a way to keep this link secure but don't require a login

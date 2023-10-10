@@ -6,9 +6,10 @@ from django.shortcuts import render
 
 
 # Create your views here.
-def render_react_app(request, app_name, display_name):
+def render_react_app(request, app_name, display_name, hide_in_print_mode=True):
     context = {
-        "display_name" : display_name,
+        "display_name": display_name,
+        "hide_in_print_mode": hide_in_print_mode,
         "DEV": settings.DEVELOPMENT_MODE,
     }
 
@@ -23,4 +24,4 @@ def render_react_app(request, app_name, display_name):
                 context["js_filename"] = manifest[key]["file"]
                 context["css_filename"] = manifest[key]["css"][0]
 
-    return render(request, 'react/index.html', context)
+    return render(request, "react/index.html", context)

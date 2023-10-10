@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import {
   HEADER_HEIGHT,
   LINE_HEIGHT,
@@ -32,13 +32,13 @@ export const List = ({ order_details, order_lines }: ListProps) => {
         <span className="border-t border-r border-b border-black p-1 inline-block w-[5%]">
           CNT
         </span>
-        <span className="border-t border-r border-b border-black p-1 inline-block w-[calc(15%/3)]">
+        <span className="border-t border-r border-b border-black p-1 inline-block w-[5%]">
           ALM
         </span>
-        <span className="border-t border-r border-b border-black p-1 inline-block w-[calc(15%/3)]">
+        <span className="border-t border-r border-b border-black p-1 inline-block w-[5%]">
           VAL
         </span>
-        <span className="border-t border-r border-b border-black p-1 inline-block w-[calc(15%/3)]">
+        <span className="border-t border-r border-b border-black p-1 inline-block w-[5%]">
           OBS
         </span>
       </div>

@@ -5,6 +5,7 @@ from .views import (
     get_product_template,
     get_purchase_order,
     get_purchase_order_sheet,
+    get_stock_picking,
 )
 
 urlpatterns = [
@@ -27,5 +28,10 @@ urlpatterns = [
         "api/barcode/purchase-order-sheet/<int:po_id>",
         get_purchase_order_sheet,
         name="get_purchase_order_sheet",
+    ),
+    path(
+        "api/barcode/stock-picking/<int:sp_id>",
+        get_stock_picking,
+        name="get_stock_picking",
     ),
 ]

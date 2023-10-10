@@ -21,6 +21,7 @@ export default defineConfig({
         sales: "web/k_sales/index.tsx",
         barcode: "web/barcode/index.tsx",
         purchase_order_sheet: "web/purchase_order_sheet/index.tsx",
+        stock_picking_sheet: "web/stock_picking_sheet/index.tsx",
         product_rpc: "web/product_rpc/index.tsx",
         pos_close_control: "web/pos_close_control/index.tsx",
         misscellaneous: "web/miscellaneous/index.tsx",

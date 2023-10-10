@@ -376,3 +376,76 @@ def get_purchase_order_sheet(request, po_id):
     }
 
     return JsonResponse(data)
+
+
+def get_stock_picking(request, sp_id):
+    proxy = xmlrpclib.ServerProxy("{}/xmlrpc/2/object".format(settings.ODOO_URL))
+
+    # sp = stock.picking
+    sp_table = "stock.picking"
+    sp_filter = [[["id", "=", sp_id]]]
+    sp_fields = [
+        "name",
+        "picking_type_id",
+        "location_id",
+        "location_dest_id",
+        # seems like "move_line_nosuggest_ids", "move_line_ids_without_package", "move_ids_without_package"
+        # always have the same values
+        "move_ids_without_package",
+    ]
+    stock_picking = get_model(proxy, sp_table, sp_filter, sp_fields)[0]
+
+    # sml = stock.move.line
+    sml_table = "stock.move.line"
+    sml_filter = [[["id", "in", stock_picking["move_ids_without_package"]]]]
+    sml_fields = [
+        "product_id",
+        "location_id",
+        "location_dest_id",
+        "qty_done",
+    ]
+    stock_move_lines = get_model(proxy, sml_table, sml_filter, sml_fields)
+
+    # pp = product.product
+    pp_table = "product.product"
+    pp_filter = [
+        [["id", "in", [move_line["product_id"][0] for move_line in stock_move_lines]]]
+    ]
+    pp_fields = ["name", "lst_price", "price"]
+    products = get_model(proxy, pp_table, pp_filter, pp_fields)
+
+    # append product cost to stock_move_lines
+    for move_line in stock_move_lines:
+        product_matches = [
+            product
+            for product in products
+            if product["id"] == move_line["product_id"][0]
+        ]
+        if len(product_matches) == 1:
+            product = product_matches[0]
+            move_line["product_cost"] = product["price"]
+
+    del stock_picking["move_ids_without_package"]
+    data = {
+        "statusCode": 200,
+        "stock_picking_details": {
+            "id": stock_picking["id"],
+            "name": stock_picking["name"],
+            "picking_type": stock_picking["picking_type_id"][1],
+            "location": stock_picking["location_id"][1],
+            "location_dest": stock_picking["location_dest_id"][1],
+        },
+        "stock_move_lines": [
+            {
+                "id": stock_move["id"],
+                "product_name": stock_move["product_id"][1],
+                "product_cost": stock_move["product_cost"],
+                "location": stock_move["location_id"][1],
+                "location_dest": stock_move["location_dest_id"][1],
+                "qty_done": stock_move["qty_done"],
+            }
+            for stock_move in stock_move_lines
+        ],
+    }
+
+    return JsonResponse(data)
