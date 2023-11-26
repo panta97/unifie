@@ -411,8 +411,29 @@ def get_stock_picking(request, sp_id):
     pp_filter = [
         [["id", "in", [move_line["product_id"][0] for move_line in stock_move_lines]]]
     ]
-    pp_fields = ["name", "lst_price", "price"]
+    pp_fields = ["name", "lst_price", "price", "product_tmpl_id"]
     products = get_model(proxy, pp_table, pp_filter, pp_fields)
+
+    # pt = product.template
+    pt_table = "product.template"
+    pt_filter = [
+        [["id", "in", [product["product_tmpl_id"][0] for product in products]]]
+    ]
+    pt_fields = ["id", "seller_ids"]
+    product_templates = get_model(proxy, pt_table, pt_filter, pt_fields)
+
+    seller_ids = []
+    for seller_item in [p_template["seller_ids"] for p_template in product_templates]:
+        if len(seller_item) > 1:
+            seller_ids.append(seller_item[len(seller_item) - 1])
+        elif len(seller_item) == 1:
+            seller_ids.append(seller_item[0])
+
+    # ps = product.supplierinfo
+    ps_table = "product.supplierinfo"
+    ps_filter = [[["id", "in", seller_ids]]]
+    ps_fields = ["product_tmpl_id", "price"]
+    p_supplier_infos = get_model(proxy, ps_table, ps_filter, ps_fields)
 
     # append product cost to stock_move_lines
     for move_line in stock_move_lines:
@@ -423,7 +444,17 @@ def get_stock_picking(request, sp_id):
         ]
         if len(product_matches) == 1:
             product = product_matches[0]
-            move_line["product_cost"] = product["price"]
+            supplier_infos = [
+                supplier
+                for supplier in p_supplier_infos
+                if supplier["product_tmpl_id"][0] == product["product_tmpl_id"][0]
+            ]
+            product_cost = 0
+            if len(supplier_infos) > 0:
+                product_cost = supplier_infos[0]["price"]
+
+            product = product_matches[0]
+            move_line["product_cost"] = product_cost
 
     del stock_picking["move_ids_without_package"]
     data = {
