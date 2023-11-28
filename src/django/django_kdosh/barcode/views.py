@@ -391,13 +391,13 @@ def get_stock_picking(request, sp_id):
         "location_dest_id",
         # seems like "move_line_nosuggest_ids", "move_line_ids_without_package", "move_ids_without_package"
         # always have the same values
-        "move_ids_without_package",
+        "move_line_ids_without_package",
     ]
     stock_picking = get_model(proxy, sp_table, sp_filter, sp_fields)[0]
 
     # sml = stock.move.line
     sml_table = "stock.move.line"
-    sml_filter = [[["id", "in", stock_picking["move_ids_without_package"]]]]
+    sml_filter = [[["id", "in", stock_picking["move_line_ids_without_package"]]]]
     sml_fields = [
         "product_id",
         "location_id",
@@ -456,7 +456,7 @@ def get_stock_picking(request, sp_id):
             product = product_matches[0]
             move_line["product_cost"] = product_cost
 
-    del stock_picking["move_ids_without_package"]
+    del stock_picking["move_line_ids_without_package"]
     data = {
         "statusCode": 200,
         "stock_picking_details": {
