@@ -197,7 +197,7 @@ fieldset {
   --mask-size: 0.25;
   /* --font-size: clamp(2rem, 0.5vw + 1rem, 8rem); */
   --font-size: 1.563rem;
-  --line-height: calc(var(--font-size) * 1.5);
+  --line-height: calc(1.563rem * 1.5);
   padding: 0;
   --transition: 2;
 }
@@ -242,6 +242,8 @@ fieldset {
   /* background-attachment: fixed; */
   /* background-clip: text; */
   /* color: transparent; */
+  box-sizing: border-box;
+  height: 37.507px; /* setting hardcoded value so number alignment works in safari*/
 }
 
 .character {
@@ -262,7 +264,7 @@ fieldset {
 
 .characters {
   display: flex;
-  gap: 2px;
+  gap: 1px;
 }
 
 .fraction {
