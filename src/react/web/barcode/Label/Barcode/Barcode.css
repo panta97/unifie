@@ -1,4 +1,3 @@
-
 * {
   box-sizing: border-box;
 }
@@ -19,7 +18,7 @@
 }
 
 .type-1 p {
-  font-size: .7rem;
+  font-size: 0.7rem;
 }
 
 .type-1 .container {
@@ -28,7 +27,7 @@
   height: 225px;
   padding: 0 5px;
   display: grid;
-  grid-template: .5fr 1fr .5fr / auto;
+  grid-template: 0.5fr 1fr 0.5fr / auto;
   position: relative;
 }
 
@@ -61,7 +60,10 @@
   display: flex;
   justify-content: center;
   align-items: center;
+}
 
+.type-1 .d-attr {
+  height: 45px;
 }
 
 .type-1 .d-attr {
@@ -72,9 +74,13 @@
   left: 15px;
 }
 
+.type-1 .d-attr .attr {
+  font-size: 12.5px;
+}
+
 .type-1 .d-attr,
 .type-1 .d-fa-code {
-/*   width: 100px; */
+  /*   width: 100px; */
   transform: rotate(270deg);
   text-align: center;
 }
@@ -113,7 +119,6 @@
   margin: 0;
 }
 
-
 .type-2 p {
   font-size: 8px;
   font-weight: 400;
@@ -148,7 +153,6 @@
   margin: 1.5px 0;
 }
 
-
 .type-2 .code {
   margin-top: 4px;
 }
@@ -166,7 +170,6 @@
   justify-content: center;
 }
 
-
 /* TYPE 03 */
 
 .type-3 h2,
@@ -175,7 +178,7 @@
 }
 
 .type-3 .price {
-  font-size: .8rem;
+  font-size: 0.8rem;
   font-weight: 400;
 }
 
@@ -227,7 +230,6 @@
   margin: 0;
 }
 
-
 .type-4 p {
   font-size: 8px;
   font-weight: 400;
@@ -240,7 +242,7 @@
 
 .type-4 .price {
   height: 48px;
-  font-size: .8rem;
+  font-size: 0.8rem;
   font-weight: 500;
 }
 
@@ -270,7 +272,6 @@
   justify-content: center;
 }
 
-
 /* PRINTER */
 @media print {
   body {
@@ -285,7 +286,8 @@
     display: none;
   }
 
-  #section-to-print-type1, #section-to-print-type1 * {
+  #section-to-print-type1,
+  #section-to-print-type1 * {
     visibility: visible;
   }
 
@@ -296,7 +298,6 @@
     top: 0;
     padding: 0;
   }
-
 
   .type-1,
   .type-2,
@@ -310,7 +311,8 @@
     margin: 0;
   }
 
-  #section-to-print-type2, #section-to-print-type2 * {
+  #section-to-print-type2,
+  #section-to-print-type2 * {
     visibility: visible;
   }
 
@@ -323,7 +325,6 @@
     top: 0;
     padding: 0;
   }
-
 
   .type-2:nth-child(odd),
   .type-3:nth-child(odd),
@@ -345,5 +346,4 @@
   .type-4:nth-last-child(2) {
     margin-bottom: 0;
   }
-
 }
