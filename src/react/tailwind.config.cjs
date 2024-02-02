@@ -7,6 +7,7 @@ module.exports = {
     "./web/product_rpc/**/*.{js,ts,jsx,tsx}",
     "./web/pos_close_control/**/*.{js,ts,jsx,tsx}",
     "./web/miscellaneous/**/*.{js,ts,jsx,tsx}",
+    "./web/k_goals/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
     extend: {

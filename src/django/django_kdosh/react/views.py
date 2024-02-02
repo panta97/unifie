@@ -29,6 +29,10 @@ def k_sales_view(request):
     return render_react_app(request, "k_sales", "Ventas")
 
 
+def k_goals_view(request):
+    return render_react_app(request, "k_goals", "Metas")
+
+
 @login_required
 def product_rpc_view(request, param):
     # don't know what the second argument holds

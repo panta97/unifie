@@ -1,0 +1,22 @@
+.sync-icon {
+  display: inline-block;
+  width: 36px;
+  height: 36px;
+  -webkit-mask: url("./sync.svg");
+  mask: url("./sync.svg");
+  background-color: black;
+  cursor: pointer;
+}
+
+@keyframes rotating {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.rotating {
+  animation: rotating 2s linear infinite;
+}

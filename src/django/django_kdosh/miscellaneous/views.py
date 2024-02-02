@@ -1,6 +1,7 @@
 from django.http import JsonResponse
 from .move_lines import move_lines as move_lines_func
 from .sales import sales as sales_func
+from .goals import goals as goals_func
 from django.contrib.auth.decorators import login_required
 
 
@@ -24,6 +25,16 @@ def sales(request, date):
         #     raise Exception("Unauthorized request")
         sales = sales_func(date)
         response = JsonResponse({"body": sales}, status=200)
+    except Exception as e:
+        response = JsonResponse({"result": "ERROR", "message": str(e)}, status=400)
+
+    return response
+
+
+def goals(request, date):
+    try:
+        goals = goals_func(date)
+        response = JsonResponse({"body": goals, "statusCode": 200}, status=200)
     except Exception as e:
         response = JsonResponse({"result": "ERROR", "message": str(e)}, status=400)
 

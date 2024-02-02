@@ -1,6 +1,6 @@
 from django.urls import path
 
-from .views import move_lines, sales
+from .views import move_lines, sales, goals
 
 urlpatterns = [
     path(
@@ -12,5 +12,10 @@ urlpatterns = [
         "api/miscellaneous/sales/<str:date>",
         sales,
         name="sales",
+    ),
+    path(
+        "api/miscellaneous/goals/<str:date>",
+        goals,
+        name="goals",
     ),
 ]

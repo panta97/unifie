@@ -7,6 +7,7 @@ from .views import (
     purchase_order_sheet_view,
     stock_picking_sheet_view,
     k_sales_view,
+    k_goals_view,
     forward_static_files_view,
     pos_close_control_view,
     miscellaneous_view,
@@ -25,6 +26,7 @@ urlpatterns = [
         name="stock_picking_sheet",
     ),
     path("apps/k-sales/997e106", k_sales_view, name="k_sales"),
+    path("apps/k-goals/e001948", k_goals_view, name="k_goals"),
     re_path(
         r"^apps/product-rpc/(|product-product|purchase-order|reports|refunds)",
         product_rpc_view,
@@ -36,11 +38,13 @@ urlpatterns = [
         name="pos_close_control",
     ),
     path("apps/miscellaneous", miscellaneous_view, name="miscellaneous"),
-    re_path(
-        r"^react-static/web/.*",
-        forward_static_files_view,
-        name="forward_static_files_view",
-    )
-    if settings.DEBUG == True
-    else None,
+    (
+        re_path(
+            r"^react-static/web/.*",
+            forward_static_files_view,
+            name="forward_static_files_view",
+        )
+        if settings.DEBUG == True
+        else None
+    ),
 ]
