@@ -1,9 +1,13 @@
 import QRCode from "qrcode.react";
 import React from "react";
 import "./Barcode.css";
+import { KdoshLogo } from "./KdoshLogo";
 
-function Barcode({label: {code, desc, mCode, cats, price, attr}, type, id}) {
-
+function Barcode({
+  label: { code, desc, mCode, cats, price, attr },
+  type,
+  id,
+}) {
   if (type === 1) {
     return (
       <div className="type-1">
@@ -43,7 +47,7 @@ function Barcode({label: {code, desc, mCode, cats, price, attr}, type, id}) {
           <div className="left-side">
             <h2 className="price">{price}</h2>
             <p className="cat">{cats}</p>
-            <p className="fa-code">{mCode === '' ? '-' : mCode}</p>
+            <p className="fa-code">{mCode === "" ? "-" : mCode}</p>
             <p className="desc">{desc}</p>
             <p className="attr">{attr}</p>
           </div>
@@ -65,26 +69,37 @@ function Barcode({label: {code, desc, mCode, cats, price, attr}, type, id}) {
     return (
       <div className="type-4">
         <div className="container">
-          <div className="left-side">
-            <h2 className="price">{desc}</h2>
-            <p className="cat">{cats}</p>
-            <p className="fa-code">{code}</p>
-            <p className="fa-code">{mCode}</p>
+          <div className="top">
+            <div className="logo">
+              <KdoshLogo />
+            </div>
           </div>
-          <div className="right-side">
+          <div className="middle">
+            <p className="price">{price}</p>
+            <p className="desc">{desc}</p>
             <div className="barcode">
               <QRCode
                 value={code}
-                size={50}
+                size={100}
                 level={"H"}
                 renderAs={"svg"}
               ></QRCode>
+              <p className="code">{code}</p>
             </div>
           </div>
+
+          <div className="bottom">
+            <p className="roman">
+              <span>MCMLXXXIX</span>
+              <span>MCMLXXXIX</span>
+              <span>MCMLXXXIX</span>
+            </p>
+          </div>
         </div>
+        <div className="d-cats">{cats}</div>
+        <div className="d-attr">{mCode}</div>
       </div>
     );
-
   }
 }
 

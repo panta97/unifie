@@ -1,16 +1,14 @@
-import React from 'react';
-import Barcode from './Barcode/Barcode';
-import Barcode2 from './Barcode/Barcode2';
+import React from "react";
+import Barcode from "./Barcode/Barcode";
+import Barcode2 from "./Barcode/Barcode2";
 
-function Labels({bcType, labelsUniq}) {
-
+function Labels({ bcType, labelsUniq }) {
   function updateQuantities(lbls) {
     let labelsQ = [];
-    for(let i = 0; i< lbls.length; i++) {
+    for (let i = 0; i < lbls.length; i++) {
       let label = Object.assign({}, lbls[i]);
       // qttInMen
-      for (let l = 0; l < label.qtt; l++)
-        labelsQ.push(label);
+      for (let l = 0; l < label.qtt; l++) labelsQ.push(label);
     }
     return labelsQ;
   }
@@ -22,7 +20,7 @@ function Labels({bcType, labelsUniq}) {
     htmlType = (
       <div id="section-to-print-type1">
         {labels.map((label, index) => (
-          <Barcode key={index} label={label} type={bcType} id={index}/>
+          <Barcode key={index} label={label} type={bcType} id={index} />
         ))}
       </div>
     );
@@ -30,7 +28,7 @@ function Labels({bcType, labelsUniq}) {
     htmlType = (
       <div id="section-to-print-type2">
         {labels.map((label, index) => (
-          <Barcode key={index} label={label} type={bcType} id={index}/>
+          <Barcode key={index} label={label} type={bcType} id={index} />
         ))}
       </div>
     );
@@ -41,8 +39,8 @@ function Labels({bcType, labelsUniq}) {
     const lblsLen = labels.length; // OPTIMIZING ?
     for (let i = 0; i < lblsLen; i += 3) {
       lblsLeft.push(labels[i]);
-      lblsMid.push(labels[i+1]);
-      lblsRight.push(labels[i+2]);
+      lblsMid.push(labels[i + 1]);
+      lblsRight.push(labels[i + 2]);
     }
 
     htmlType = (
@@ -60,9 +58,9 @@ function Labels({bcType, labelsUniq}) {
     );
   } else if (bcType === 4) {
     htmlType = (
-      <div id="section-to-print-type2">
+      <div id="section-to-print-type1">
         {labels.map((label, index) => (
-          <Barcode key={index} label={label} type={bcType} id={index}/>
+          <Barcode key={index} label={label} type={bcType} id={index} />
         ))}
       </div>
     );

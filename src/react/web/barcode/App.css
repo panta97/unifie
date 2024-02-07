@@ -1,11 +1,11 @@
 body {
   margin: 0;
-  background-color: #EDF2F4;
+  background-color: #edf2f4;
 }
 
 .top-header {
-  background-color: #FAFCFC;
-  color: #2B2D42;
+  background-color: #fafcfc;
+  color: #2b2d42;
   padding: 20px;
 }
 
@@ -46,9 +46,9 @@ body {
   color: inherit;
   cursor: pointer;
   width: 90px;
-  border: 1px solid #2B2D42;
+  border: 1px solid #2b2d42;
   border-radius: 3px;
-  background-color: #FAFCFC;
+  background-color: #fafcfc;
   padding: 2px 4px;
 }
 
@@ -70,22 +70,22 @@ body {
 .img-type-1 {
   width: 66px;
   height: 66px;
-  background: #fff url('./img/type1.jpg');
+  background: #fff url("./img/type1.jpg");
 }
 .img-type-2 {
   width: 66px;
   height: 33px;
-  background: #fff url('./img/type2.jpg');
+  background: #fff url("./img/type2.jpg");
 }
 .img-type-3 {
   width: 66px;
   height: 33px;
-  background: #fff url('./img/type3.jpg');
+  background: #fff url("./img/type3.jpg");
 }
 .img-type-4 {
   width: 66px;
-  height: 33px;
-  background: #fff url('./img/type4.jpg');
+  height: 66px;
+  background: #fff url("./img/type4.jpg");
 }
 .img-type-1,
 .img-type-2,
