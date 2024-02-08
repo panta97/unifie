@@ -268,7 +268,6 @@
 
 .type-4 .logo {
   width: 100px;
-  /* margin: 0 auto; */
 }
 
 .type-4 .d-attr,
@@ -277,7 +276,6 @@
   top: 5cm;
   width: 300px;
   text-align: center;
-  font-weight: 300;
 }
 
 .type-4 .d-attr {
@@ -315,7 +313,6 @@
 .type-4 .desc {
   height: 30px;
   font-size: 14px;
-  font-weight: 300;
 }
 
 .type-4 .roman {
