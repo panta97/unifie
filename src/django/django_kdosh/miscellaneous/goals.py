@@ -317,7 +317,9 @@ def goals(date):
         goals_current = format_goals(goals_date)
         goals_cumulative = format_goals(goals_date, goals_rest)
 
-    store_section_goals = StoreSectionGoal.objects.filter(year=date_obj.year, month=2)
+    store_section_goals = StoreSectionGoal.objects.filter(
+        year=date_obj.year, month=date_obj.month
+    )
 
     cumulative_list = []
     for item in store_section_goals:
