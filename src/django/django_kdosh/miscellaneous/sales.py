@@ -39,7 +39,15 @@ def sales(date):
     total_tg = 0
 
     for invoice in invoices:
-        serie = re.search("^.+([B|F][A|0]\d{2})", invoice["journal_id"][1]).group(1)
+        regex_search = re.search("^.+([B|F][A|0]\d{2})", invoice["journal_id"][1])
+        serie = None
+        if regex_search:
+            serie = regex_search.group(1)
+        else:
+            print("bad invoice journal_id")
+            print(invoice["id"])
+            print(invoice["journal_id"])
+
         if serie in [
             "B001",
             "B003",
