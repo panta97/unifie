@@ -12,7 +12,7 @@ import {
   POSState,
 } from "./posType";
 
-export const FIXED_BALANCE_START = 600;
+export const FIXED_BALANCE_START = 300;
 
 const initialState: POSState = {
   posName: "",
