@@ -99,7 +99,17 @@ const App = () => {
           }}
         />
       </div>
-      <div className="flex justify-between mx-5 pt-[25vh] sm:max-w-[500px] sm:mx-auto">
+      <div className="flex justify-end mx-5 pt-[25vh] sm:max-w-[500px] sm:mx-auto">
+        <div className="w-[105.336px]">
+          <p className="text-[#2D1ED2]">ACUMULADO</p>
+          {selectedSectionGoalCumulative.amount !== 0 && (
+            <p className="text-[#1A3CD0]">
+              {currencyFormat(selectedSectionGoalCumulative.amount)}
+            </p>
+          )}
+        </div>
+      </div>
+      <div className="flex justify-between mt-2 mx-5 sm:max-w-[500px] sm:mx-auto">
         <div>
           <ul>
             {storeSectionGoalCumulativeList
