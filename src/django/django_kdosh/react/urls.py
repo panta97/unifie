@@ -26,7 +26,7 @@ urlpatterns = [
         name="stock_picking_sheet",
     ),
     path("apps/k-sales/997e106", k_sales_view, name="k_sales"),
-    path("apps/k-goals/e001948", k_goals_view, name="k_goals"),
+    path("apps/k-goals/eb38723", k_goals_view, name="k_goals"),
     re_path(
         r"^apps/product-rpc/(|product-product|purchase-order|reports|refunds)",
         product_rpc_view,
