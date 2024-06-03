@@ -103,7 +103,7 @@ const App = () => {
         <div className="w-[105.336px]">
           <p className="text-[#2D1ED2]">ACUMULADO</p>
           {selectedSectionGoalCumulative.amount !== 0 && (
-            <p className="text-[#1A3CD0]">
+            <p className="text-[#1A3CD0] text-right">
               {currencyFormat(selectedSectionGoalCumulative.amount)}
             </p>
           )}
