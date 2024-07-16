@@ -22,6 +22,8 @@ function App() {
   const [bt2Active, setBt2Active] = useState(false);
   const [bt3Active, setBt3Active] = useState(false);
   const [bt4Active, setBt4Active] = useState(false);
+  const [bt5Active, setBt5Active] = useState(false);
+  const [bt6Active, setBt6Active] = useState(false);
 
   const [modalActive, setModalActive] = useState(false);
 
@@ -111,12 +113,16 @@ function App() {
       2: false,
       3: false,
       4: false,
+      5: false,
+      6: false,
     };
     btns[String(type)] = true;
     setBt1Active(btns["1"]);
     setBt2Active(btns["2"]);
     setBt3Active(btns["3"]);
     setBt4Active(btns["4"]);
+    setBt5Active(btns["5"]);
+    setBt6Active(btns["6"]);
     setIsLoading(true);
     setLoaderType(Number(type));
     setTimeout(() => {
@@ -211,6 +217,20 @@ function App() {
                 tabIndex={modalActive ? -1 : 0}
               >
                 <div className="img-type-4" />
+              </button>
+              <button
+                className={bt5Active ? "btn-bctype active" : "btn-bctype"}
+                onClick={() => setActive(5)}
+                tabIndex={modalActive ? -1 : 0}
+              >
+                <div className="img-type-1" />
+              </button>
+              <button
+                className={bt6Active ? "btn-bctype active" : "btn-bctype"}
+                onClick={() => setActive(6)}
+                tabIndex={modalActive ? -1 : 0}
+              >
+                <div className="img-type-2" />
               </button>
             </div>
           </div>
