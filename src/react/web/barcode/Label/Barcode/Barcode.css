@@ -429,8 +429,8 @@
 /* TYPE 06 */
 .type-6 {
   background-color: white;
-  width: 5cm;
-  height: 2.5cm;
+  width: 6.5cm;
+  height: 2cm;
   margin-bottom: 5px;
 }
 
@@ -442,6 +442,7 @@
 .type-6 p {
   font-size: 8px;
   font-weight: 400;
+  margin-top: -2.5px;
 }
 
 .type-6 .cat,
@@ -470,7 +471,8 @@
 }
 
 .type-6 .fa-code {
-  margin: 1.5px 0;
+  margin: 1.5px;
+  margin-top: -9px;
 }
 
 .type-6 .code {
@@ -558,7 +560,7 @@
 }
 
 .type-7 .d-attr {
-  right: 15px;
+  right: 0;
 }
 
 .type-7 .d-fa-code {
