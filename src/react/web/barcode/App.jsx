@@ -194,53 +194,53 @@ function App() {
           <div className="col-3">
             <div className="btn-group">
               <button
-                className={bt1Active ? "btn-bctype active" : "btn-bctype"}
-                onClick={() => setActive(1)}
-                tabIndex={modalActive ? -1 : 0}
+                  className={bt1Active ? "btn-bctype active" : "btn-bctype"}
+                  onClick={() => setActive(1)}
+                  tabIndex={modalActive ? -1 : 0}
               >
-                <div className="img-type-1" />
+                <div className="img-type-1"/>
               </button>
               <button
-                className={bt2Active ? "btn-bctype active" : "btn-bctype"}
-                onClick={() => setActive(2)}
-                tabIndex={modalActive ? -1 : 0}
+                  className={bt2Active ? "btn-bctype active" : "btn-bctype"}
+                  onClick={() => setActive(2)}
+                  tabIndex={modalActive ? -1 : 0}
               >
-                <div className="img-type-2" />
+                <div className="img-type-2"/>
               </button>
               <button
-                className={bt3Active ? "btn-bctype active" : "btn-bctype"}
-                onClick={() => setActive(3)}
-                tabIndex={modalActive ? -1 : 0}
+                  className={bt3Active ? "btn-bctype active" : "btn-bctype"}
+                  onClick={() => setActive(3)}
+                  tabIndex={modalActive ? -1 : 0}
               >
-                <div className="img-type-3" />
+                <div className="img-type-3"/>
               </button>
               <button
-                className={bt4Active ? "btn-bctype active" : "btn-bctype"}
-                onClick={() => setActive(4)}
-                tabIndex={modalActive ? -1 : 0}
+                  className={bt4Active ? "btn-bctype active" : "btn-bctype"}
+                  onClick={() => setActive(4)}
+                  tabIndex={modalActive ? -1 : 0}
               >
-                <div className="img-type-4" />
+                <div className="img-type-4"/>
               </button>
               <button
-                className={bt5Active ? "btn-bctype active" : "btn-bctype"}
-                onClick={() => setActive(5)}
-                tabIndex={modalActive ? -1 : 0}
+                  className={bt5Active ? "btn-bctype active" : "btn-bctype"}
+                  onClick={() => setActive(5)}
+                  tabIndex={modalActive ? -1 : 0}
               >
-                <div className="img-type-1" />
+                <div className="img-type-1"/>
               </button>
               <button
-                className={bt6Active ? "btn-bctype active" : "btn-bctype"}
-                onClick={() => setActive(6)}
-                tabIndex={modalActive ? -1 : 0}
+                  className={bt6Active ? "btn-bctype active" : "btn-bctype"}
+                  onClick={() => setActive(6)}
+                  tabIndex={modalActive ? -1 : 0}
               >
-                <div className="img-type-2" />
+                <div className="img-type-2"/>
               </button>
               <button
-                className={bt7Active ? "btn-bctype active" : "btn-bctype"}
-                onClick={() => setActive(7)}
-                tabIndex={modalActive ? -1 : 0}
+                  className={bt7Active ? "btn-bctype active" : "btn-bctype"}
+                  onClick={() => setActive(7)}
+                  tabIndex={modalActive ? -1 : 0}
               >
-                <div className="img-type-2" />
+                <div className="img-type-7"/>
               </button>
             </div>
           </div>
@@ -248,8 +248,8 @@ function App() {
         <h1 className="lbl-total">
           Etiquetas:{" "}
           {isLoading
-            ? "cargando"
-            : labelsUniq.reduce((acc, curr) => (acc += curr.qtt), 0)}
+              ? "cargando"
+              : labelsUniq.reduce((acc, curr) => (acc += curr.qtt), 0)}
           {isLoading ? <div className="lds-dual-ring"></div> : null}
         </h1>
       </div>
@@ -278,7 +278,5 @@ function App() {
     </div>
   );
 }
-
-export default App;
 
 export default App;
