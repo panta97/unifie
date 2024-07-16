@@ -87,9 +87,15 @@ body {
   height: 66px;
   background: #fff url("./img/type4.jpg");
 }
+.img-type-7 {
+  width: 66px;
+  height: 66px;
+  background: url("./img/type7.png");
+}
 .img-type-1,
 .img-type-2,
 .img-type-3,
-.img-type-4 {
+.img-type-4,
+.img-type-7{
   background-size: contain;
 }
