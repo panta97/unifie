@@ -147,7 +147,7 @@ function Barcode({
             <div className="barcode">
               <QRCode
                 value={code}
-                size={51}
+                size={50}
                 level={"H"}
                 renderAs={"svg"}
               ></QRCode>
@@ -157,21 +157,12 @@ function Barcode({
         </div>
       </div>
     );
-  }
-  else if (type === 7) {
+  } else if (type === 7) {
     return (
       <div className="type-7">
         <div className="container">
           <div className="top">
-          <svg width="260" height="130">
-              <path id="curve" d="M 0 120 C 0 120, 130 0, 260 120"></path>
-              <text class="texr">
-              <textPath class="text__path" href="#curve"><h2 className="price">{price}</h2></textPath>
-              </text>
-            
-            </svg>
             <h2 className="price">{price}</h2>
-
             <p className="cat">{cats}</p>
           </div>
           <div className="middle">
@@ -181,7 +172,7 @@ function Barcode({
             <div className="barcode">
               <QRCode
                 value={code}
-                size={100}
+                size={80}
                 level={"H"}
                 renderAs={"svg"}
               ></QRCode>
@@ -201,4 +192,4 @@ function Barcode({
   }
 }
 
-export default Barcode;
+export default Barcode;
