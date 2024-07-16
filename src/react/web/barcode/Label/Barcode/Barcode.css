@@ -429,8 +429,8 @@
 /* TYPE 06 */
 .type-6 {
   background-color: white;
-  width: 5cm;
-  height: 2.5cm;
+  width: 6.5cm;
+  height: 2cm;
   margin-bottom: 5px;
 }
 
@@ -490,6 +490,115 @@
   justify-content: center;
 }
 
+
+/* TYPE 07 */
+.type-7 {
+  margin-bottom: 5px;
+}
+.type-7 .text {
+  font-size: 3rem;
+  fill: white;
+}
+
+.type-7 h2,
+.type-7 p {
+  margin: 0;
+}
+
+.type-7 h2 {
+  font-size: 2.5rem;
+  font-weight: 400;
+}
+
+.type-7 p {
+  font-size: 0.7rem;
+}
+
+.type-7 .container {
+  background-color: white;
+  width: 225px;
+  height: 225px;
+  padding: 0 5px;
+  display: grid;
+  grid-template: 0.5fr 1fr 0.5fr / auto;
+  position: relative;
+}
+
+.type-7 .top,
+.type-7 .bottom {
+  text-align: center;
+}
+
+.type-7 .middle {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 5px;
+}
+
+.type-7 .cat {
+  height: 26px;
+  word-break: break-all;
+  overflow: hidden;
+}
+
+.type-7 .d-attr,
+.type-7 .d-fa-code {
+  /* border: 1px solid magenta; */
+  position: relative;
+  height: 26px;
+  width: 100px;
+  word-break: break-all;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.type-7 .d-attr {
+  height: 45px;
+}
+
+.type-7 .d-attr {
+  right: 15px;
+}
+
+.type-7 .d-fa-code {
+  left: 15px;
+}
+
+.type-7 .d-attr .attr {
+  font-size: 12.5px;
+}
+
+.type-7 .d-attr,
+.type-7 .d-fa-code {
+  /*   width: 100px; */
+  transform: rotate(270deg);
+  text-align: center;
+}
+
+.type-7 .barcode {
+  position: absolute;
+  left: 62.5px;
+  width: 100px;
+  height: 100px;
+}
+
+.type-7 .bottom {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.type-7 .code {
+  margin-top: 5px;
+  margin-bottom: 2px;
+}
+
+.type-7 .desc {
+  height: 30px;
+}
+
 /* PRINTER */
 @media print {
   body {
@@ -522,7 +631,8 @@
   .type-3,
   .type-4,
   .type-5,
-  .type-6 {
+  .type-6,
+  .type-7 {
     margin: 0;
     -webkit-print-color-adjust: exact;
   }
@@ -562,6 +672,6 @@
   .type-3:nth-last-child(2),
   .type-6:nth-last-child(1),
   .type-6:nth-last-child(2) {
-    margin-bottom: 0;
-  }
+    margin-bottom: 0;
+  }
 }
