@@ -343,8 +343,8 @@
 
 .type-5 .container {
   background-color: white;
-  width: 225px;
-  height: 225px;
+  width: 215px;
+  height: 235px;
   padding: 0 0px;
   display: grid;
   grid-template: 0.5fr 1fr 0.5fr / auto;
