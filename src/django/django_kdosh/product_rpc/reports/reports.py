@@ -303,6 +303,7 @@ def get_eq_report(store, date_from, date_to):
     series = list(map(lambda e: "'{}'".format(e), series))
     series = ",".join(series)
 
+    # eq_all is None
     eq_all = get_eq_all(date_from, date_to, series)
     if eq_all.shape[0] == 0:
         raise Exception("Sin datos")

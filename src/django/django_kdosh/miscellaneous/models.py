@@ -1,5 +1,5 @@
 from django.db import models
-from .constants import EQ_CHOICES
+from .constants import EQ_CHOICES, STORE_CHOICES
 
 
 # Create your models here.
@@ -23,3 +23,12 @@ class StoreSectionGoal(models.Model):
 
     class Meta:
         unique_together = ("year", "month", "section")
+
+
+class StoreGoal(models.Model):
+    # store global goal
+    id = models.AutoField(primary_key=True)
+    year = models.IntegerField()
+    month = models.IntegerField()
+    goal = models.DecimalField(max_digits=12, decimal_places=2)
+    store = models.CharField(choices=STORE_CHOICES, max_length=15)

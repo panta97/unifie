@@ -19,7 +19,8 @@ export default defineConfig({
     rollupOptions: {
       input: {
         sales: "web/k_sales/index.tsx",
-        goals: "web/k_goals/index.tsx",
+        abtao_goals: "web/k_abtao_goals/index.tsx",
+        tingo_goals: "web/k_tingo_goals/index.tsx",
         barcode: "web/barcode/index.tsx",
         purchase_order_sheet: "web/purchase_order_sheet/index.tsx",
         stock_picking_sheet: "web/stock_picking_sheet/index.tsx",

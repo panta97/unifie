@@ -1,0 +1,22 @@
+{
+    "folders": [
+        {
+            "name": "django",
+            "path": "src/django"
+        },
+        {
+            "name": "react",
+            "path": "src/react"
+        },
+        {
+            "name": "unifie",
+            "path": "."
+        }
+    ],
+    "settings": {
+        "typescript.tsdk": "react/node_modules/typescript/lib",
+        "files.exclude": {
+            "**/__pycache__": true
+        }
+    }
+}

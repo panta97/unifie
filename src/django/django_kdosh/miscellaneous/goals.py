@@ -3,7 +3,7 @@ from django.conf import settings
 from functools import reduce
 from product_rpc.reports.connection import select_df
 from datetime import datetime, timedelta
-from .models import StoreSectionGoal
+from .models import StoreSectionGoal, StoreGoal
 from .constants import (
     ACCESSORIES,
     MEN,
@@ -13,10 +13,13 @@ from .constants import (
     CHILDREN,
     CLEARANCE,
     MISCELLANEOUS,
+    STORE_SAN_MARTIN,
+    STORE_ABTAO,
+    STORE_TINGO,
 )
 
 
-def get_goals_live(date):
+def get_goals_live(date, store):
     # GET ENVIRONMENT VARIABLES
     url = settings.ODOO_URL
     db = settings.ODOO_DB
@@ -26,30 +29,19 @@ def get_goals_live(date):
     models = xmlrpclib.ServerProxy("{}/xmlrpc/2/object".format(url))
 
     # MOVE
-    abtao_journal_ids = [
-        10,
-        12,
-        13,
-        14,
-        15,
-        16,
-        17,
-        22,
-        23,
-        25,
-        26,
-        27,
-        28,
-        29,
-        30,
-        35,
-    ]
+    if store == STORE_ABTAO:
+        journal_ids = [10, 12, 13, 14, 15, 16, 17, 22, 23, 25, 26, 27, 28, 29, 30, 35]
+    elif store == STORE_SAN_MARTIN:
+        journal_ids = [11, 24]
+    elif store == STORE_TINGO:
+        journal_ids = [34, 18, 19, 20, 21, 31, 32, 33]
+
     move_filters = [
         [
             ["date", "=", date],
             ["state", "=", "posted"],
             ["move_type", "in", ["out_invoice"]],
-            ["journal_id", "in", abtao_journal_ids],
+            ["journal_id", "in", journal_ids],
         ]
     ]
     move_fields = ["id"]
@@ -150,9 +142,9 @@ def get_goals_live(date):
     return lines_group_by_eqs
 
 
-def get_goals_db(date_from, date_to, store="AB"):
+def get_goals_db(date_from, date_to, store):
     series = []
-    if store == "AB":
+    if store == STORE_ABTAO:
         series = [
             "B001",
             "B003",
@@ -171,9 +163,9 @@ def get_goals_db(date_from, date_to, store="AB"):
             "F008",
             "F013",
         ]
-    elif store == "SM":
+    elif store == STORE_SAN_MARTIN:
         series = ["B002", "F002"]
-    elif store == "TG":
+    elif store == STORE_TINGO:
         series = ["B009", "B010", "B011", "B012", "F009", "F010", "F011", "F012"]
     series = list(map(lambda e: "'{}'".format(e), series))
     series = ",".join(series)
@@ -255,7 +247,7 @@ def format_goals(*arg):
     return total
 
 
-def goals(date):
+def goals(date, store):
     date_obj = datetime.strptime(date, "%Y-%m-%d")
     current_date = datetime.now()
 
@@ -269,14 +261,14 @@ def goals(date):
     goals_cumulative = None
 
     if day_difference == 0:
-        goals_today = get_goals_live(date)
+        goals_today = get_goals_live(date, store)
         goals_yesterday = None
         goals_rest = None
 
         # check month
         date_yesterday = date_obj - one_day
         if date_yesterday.month == date_obj.month:
-            goals_yesterday = get_goals_live(date_yesterday.strftime("%Y-%m-%d"))
+            goals_yesterday = get_goals_live(date_yesterday.strftime("%Y-%m-%d"), store)
 
             date_rest_from = datetime(date_obj.year, date_obj.month, 1)
             date_rest_to = date_yesterday - one_day
@@ -284,13 +276,14 @@ def goals(date):
                 goals_rest = get_goals_db(
                     date_rest_from.strftime("%Y-%m-%d"),
                     date_rest_to.strftime("%Y-%m-%d"),
+                    store,
                 )
 
         goals_current = format_goals(goals_today)
         goals_cumulative = format_goals(goals_today, goals_yesterday, goals_rest)
 
     elif day_difference == 1:
-        goals_yesterday = get_goals_live(date)
+        goals_yesterday = get_goals_live(date, store)
         goals_rest = None
 
         date_rest_from = datetime(date_obj.year, date_obj.month, 1)
@@ -299,12 +292,13 @@ def goals(date):
             goals_rest = get_goals_db(
                 date_rest_from.strftime("%Y-%m-%d"),
                 date_rest_to.strftime("%Y-%m-%d"),
+                store,
             )
         goals_current = format_goals(goals_yesterday)
         goals_cumulative = format_goals(goals_yesterday, goals_rest)
 
     else:
-        goals_date = get_goals_db(date, date)
+        goals_date = get_goals_db(date, date, store)
         goals_rest = None
 
         date_rest_from = datetime(date_obj.year, date_obj.month, 1)
@@ -313,25 +307,39 @@ def goals(date):
             goals_rest = get_goals_db(
                 date_rest_from.strftime("%Y-%m-%d"),
                 date_rest_to.strftime("%Y-%m-%d"),
+                store,
             )
         goals_current = format_goals(goals_date)
         goals_cumulative = format_goals(goals_date, goals_rest)
 
-    store_section_goals = StoreSectionGoal.objects.filter(
-        year=date_obj.year, month=date_obj.month
-    )
-
-    cumulative_list = []
-    for item in store_section_goals:
-        cumulative_list.append(
-            {
-                "section": item.section.section_name,
-                "manager": item.section.supervisor,
-                "year": item.year,
-                "month": item.month,
-                "goal": int(item.goal),
-                "amount": goals_cumulative.get(item.section.section_name, 0),
-            }
+    if store == STORE_ABTAO:
+        store_section_goals = StoreSectionGoal.objects.filter(
+            year=date_obj.year, month=date_obj.month
         )
+        cumulative_list = []
+        for item in store_section_goals:
+            cumulative_list.append(
+                {
+                    "section": item.section.section_name,
+                    "manager": item.section.supervisor,
+                    "year": item.year,
+                    "month": item.month,
+                    "goal": int(item.goal),
+                    "amount": goals_cumulative.get(item.section.section_name, 0),
+                }
+            )
 
-    return {"selected_day": goals_current, "cumulative": cumulative_list}
+        return {"selected_day": goals_current, "cumulative": cumulative_list}
+    elif store == STORE_TINGO:
+        store_goal = StoreGoal.objects.get(
+            year=date_obj.year, month=date_obj.month, store=STORE_TINGO
+        )
+        goals_current.pop("CLEARANCE")
+        goals_current.pop("MISCELLANEOUS")
+        goals_cumulative.pop("CLEARANCE")
+        goals_cumulative.pop("MISCELLANEOUS")
+        return {
+            "selected_day": goals_current,
+            "cumulative": goals_cumulative,
+            "global_goal": int(store_goal.goal),
+        }

@@ -1,9 +1,9 @@
-import { StoreSectionResponse } from "../types";
+import { StoreResponse } from "../types";
 
 export const fetchStoreGoals = async (
   date: string
-): Promise<StoreSectionResponse | undefined> => {
-  const ENDPOINT = `/api/miscellaneous/goals/${date}`;
+): Promise<StoreResponse | undefined> => {
+  const ENDPOINT = `/api/miscellaneous/goals/tingo/${date}`;
 
   try {
     const response = await (await fetch(ENDPOINT)).json();

@@ -29,8 +29,12 @@ def k_sales_view(request):
     return render_react_app(request, "k_sales", "Ventas")
 
 
-def k_goals_view(request):
-    return render_react_app(request, "k_goals", "Metas")
+def k_goals_abtao_view(request):
+    return render_react_app(request, "k_abtao_goals", "Abtao Metas")
+
+
+def k_goals_tingo_view(request):
+    return render_react_app(request, "k_tingo_goals", "TingoMetas")
 
 
 @login_required
