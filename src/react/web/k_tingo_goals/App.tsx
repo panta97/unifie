@@ -154,7 +154,7 @@ const App = () => {
                 <p className="text-black font-bold text-lg">
                   {storeSectionDisplay[key]}
                 </p>
-                <div className="flex w-[40%] justify-between">
+                <div className="flex w-[55%] sm:w-[40%] justify-between">
                   <p className="text-black font-bold text-lg">
                     {currencyFormat(value)}
                   </p>
@@ -168,7 +168,7 @@ const App = () => {
         <div className="px-5 py-3 bg-white">
           <div className="flex justify-between sm:max-w-[500px] sm:mx-auto">
             <p className="text-black font-bold text-lg">TOTAL</p>
-            <div className="flex w-[40%] justify-between">
+            <div className="flex w-[55%] sm:w-[40%] justify-between">
               <p className="text-black font-bold text-lg">
                 {currencyFormat(dailyTotal)}
               </p>
