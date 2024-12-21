@@ -28,7 +28,7 @@ urlpatterns = [
     ),
     path("apps/k-sales/997e106", k_sales_view, name="k_sales"),
     path("apps/k-goals/abtao/eb38723", k_goals_abtao_view, name="k_goals_abtao"),
-    path("apps/k-goals/tingo/8b60da4", k_goals_tingo_view, name="k_goals_tingo"),
+    path("apps/k-goals/tingo/87a4af9", k_goals_tingo_view, name="k_goals_tingo"),
     re_path(
         r"^apps/product-rpc/(|product-product|purchase-order|reports|refunds)",
         product_rpc_view,
