@@ -40,6 +40,8 @@ export const SummaryPrint = () => {
           <p>{getCurrencyFormat(summary.odooCard)}</p>
           <p className="font-bold mt-2">VENTA EN EFECTIVO</p>
           <p>{getCurrencyFormat(summary.profitTotal)}</p>
+          <p className="font-bold mt-2">NOTA DE CREDITO</p>
+          <p>{getCurrencyFormat(summary.odooCreditNote)}</p>
           <p className="h-6 border-b border-black mt-3"></p>
           <p className="font-bold">
             {cashier.first_name} {cashier.last_name}

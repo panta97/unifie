@@ -19,6 +19,7 @@ export interface POSSummary {
   balanceStartNextDay: number;
   odooCash: number;
   odooCard: number;
+  odooCreditNote: number;
   posCash: number;
   posCard: number;
   profitTotal: number;
@@ -93,6 +94,7 @@ export interface POSFetchResult {
   stop_at: string;
   cash: number;
   card: number;
+  credit_note: number;
   discounts: DiscountResult[];
   is_session_closed: boolean;
 }

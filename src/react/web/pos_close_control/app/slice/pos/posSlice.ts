@@ -21,6 +21,7 @@ const initialState: POSState = {
   summary: {
     odooCash: 0,
     odooCard: 0,
+    odooCreditNote: 0,
     posCash: 0,
     posCard: 0,
     profitTotal: 0,
@@ -305,6 +306,7 @@ export const POSSlice = createSlice({
       state.summary.stopAt = posDetails.stop_at;
       state.summary.odooCash = posDetails.cash;
       state.summary.odooCard = posDetails.card;
+      state.summary.odooCreditNote = posDetails.credit_note;
       state.summary.isSessionClosed = posDetails.is_session_closed;
 
       state.discounts = [];

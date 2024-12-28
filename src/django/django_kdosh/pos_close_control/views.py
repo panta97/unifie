@@ -106,12 +106,15 @@ def get_pos_details(request, session_id):
 
     card = 0
     cash = cash_in_outs_total
+    credit_note = 0
     # PAYMENT METHODS (1, 'Efectivo'), (2, 'BCP KDOSH'), (4, 'Nota de Credito')
     for payment in pos_payments:
         if payment["payment_method_id"][0] == 1:
             cash += payment["amount"]
         elif payment["payment_method_id"][0] == 2:
             card += payment["amount"]
+        elif payment["payment_method_id"][0] == 4:
+            credit_note += payment["amount"]
 
     opening = pos_session[0]["cash_register_balance_end"] - cash
     cash += opening
@@ -129,6 +132,7 @@ def get_pos_details(request, session_id):
         "stop_at": stop_at,
         "cash": cash,
         "card": card,
+        "credit_note": credit_note,
         # "discounts": get_discounts(session_id),
         "discounts": [],
         "is_session_closed": bool(pos_session[0]["stop_at"]),

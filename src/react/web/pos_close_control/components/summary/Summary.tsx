@@ -107,6 +107,23 @@ export const Summary = () => {
               className="border border-black px-2 text-center h-7"
               colSpan={4}
             >
+              NOTA DE CREDITO
+            </td>
+          </tr>
+          <tr>
+            <td
+              className="border border-black px-2 text-center h-7"
+              colSpan={4}
+            >
+              {getCurrencyFormat(summary.odooCreditNote)}
+            </td>
+          </tr>
+          <Divider />
+          <tr>
+            <td
+              className="border border-black px-2 text-center h-7"
+              colSpan={4}
+            >
               INICIO
             </td>
           </tr>
