@@ -18,7 +18,7 @@ import posReducer from "./slice/pos/posSlice";
 import securityReducer from "./slice/security/securitySlice";
 
 const persistConfigPos = {
-  key: "pos-v4",
+  key: "pos-v5",
   storage,
   stateReconciler: hardSet,
 };
@@ -29,7 +29,7 @@ const persistedReducerPos = persistReducer<ReturnType<typeof posReducer>>(
 );
 
 const persistConfigSecurity = {
-  key: "security-v4",
+  key: "security-v5",
   version: 1,
   storage,
 };
