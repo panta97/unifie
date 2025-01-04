@@ -4,6 +4,7 @@ from .connection import select_df, select
 from ..models import Report
 from datetime import datetime
 from .constants import DB_ODOO_V15, DB_ODOO_V11
+from product_rpc.utils.invoices import get_series_list
 
 
 MIGRATION_DATE = "2023-02-27"
@@ -276,30 +277,14 @@ def get_eq_all(date_from, date_to, series):
 
 
 def get_eq_report(store, date_from, date_to):
+    year = date_from.split("-")[0]
     series = []
     if store == "AB":
-        series = [
-            "B001",
-            "B003",
-            "B004",
-            "B005",
-            "B006",
-            "B007",
-            "B008",
-            "B013",
-            "F001",
-            "F003",
-            "F004",
-            "F005",
-            "F006",
-            "F007",
-            "F008",
-            "F013",
-        ]
+        series = get_series_list("abtao", year)
     elif store == "SM":
-        series = ["B002", "F002"]
+        series = get_series_list("san_martin", year)
     elif store == "TG":
-        series = ["B009", "B010", "B011", "B012", "F009", "F010", "F011", "F012"]
+        series = get_series_list("tingo", year)
     series = list(map(lambda e: "'{}'".format(e), series))
     series = ",".join(series)
 

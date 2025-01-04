@@ -17,6 +17,7 @@ from .constants import (
     STORE_ABTAO,
     STORE_TINGO,
 )
+from product_rpc.utils.invoices import get_series_list
 
 
 def get_goals_live(date, store):
@@ -30,11 +31,30 @@ def get_goals_live(date, store):
 
     # MOVE
     if store == STORE_ABTAO:
-        journal_ids = [10, 12, 13, 14, 15, 16, 17, 22, 23, 25, 26, 27, 28, 29, 30, 35]
+        journal_ids = [
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            23,
+            24,
+            25,
+            26,
+            27,
+            28,
+            29,
+            30,
+            31,
+        ]
     elif store == STORE_SAN_MARTIN:
-        journal_ids = [11, 24]
+        journal_ids = [19, 32]
     elif store == STORE_TINGO:
-        journal_ids = [34, 18, 19, 20, 21, 31, 32, 33]
+        journal_ids = [20, 21, 22, 33, 34, 35]
 
     move_filters = [
         [
@@ -143,30 +163,14 @@ def get_goals_live(date, store):
 
 
 def get_goals_db(date_from, date_to, store):
+    year = date_from.split("-")[0]
     series = []
     if store == STORE_ABTAO:
-        series = [
-            "B001",
-            "B003",
-            "B004",
-            "B005",
-            "B006",
-            "B007",
-            "B008",
-            "B013",
-            "F001",
-            "F003",
-            "F004",
-            "F005",
-            "F006",
-            "F007",
-            "F008",
-            "F013",
-        ]
+        series = get_series_list("abtao", year)
     elif store == STORE_SAN_MARTIN:
-        series = ["B002", "F002"]
+        series = get_series_list("san_martin", year)
     elif store == STORE_TINGO:
-        series = ["B009", "B010", "B011", "B012", "F009", "F010", "F011", "F012"]
+        series = get_series_list("tingo", year)
     series = list(map(lambda e: "'{}'".format(e), series))
     series = ",".join(series)
 
