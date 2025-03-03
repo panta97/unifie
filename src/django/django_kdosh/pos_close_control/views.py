@@ -65,17 +65,14 @@ def get_pos_details(request, session_id):
         "config_id",
         "start_at",
         "stop_at",
+        "cash_register_balance_start",
         "cash_register_balance_end",  # EFECTIVO ODOO (opening + cash sales)
-        "statement_ids",
-        "total_payments_amount",
-        "cash_real_difference",
-        "cash_real_expected",
     ]
     proxy = get_proxy()
     pos_session = get_model(ps_table, ps_filter, ps_fields, proxy=proxy)
 
     # ACCOUNT BANK STATEMENT
-    abs_table = "account.bank.statement"
+    abs_table = "account.bank.statement.line"
     abs_filter = [[["pos_session_id", "=", session_id]]]
     abs_fields = ["id"]
     account_bank_statements = get_model(abs_table, abs_filter, abs_fields, proxy=proxy)
@@ -107,14 +104,17 @@ def get_pos_details(request, session_id):
     card = 0
     cash = cash_in_outs_total
     credit_note = 0
-    # PAYMENT METHODS (1, 'Efectivo'), (2, 'BCP KDOSH'), (4, 'Nota de Credito')
+    # PAYMENT METHODS (16, 'Efectivo'), (8, 'YAPE'), (10, 'Nota de Credito')
     for payment in pos_payments:
-        if payment["payment_method_id"][0] == 1:
-            cash += payment["amount"]
-        elif payment["payment_method_id"][0] == 2:
-            card += payment["amount"]
-        elif payment["payment_method_id"][0] == 4:
-            credit_note += payment["amount"]
+        method_id = payment["payment_method_id"][0]
+        amount = payment["amount"]
+
+        if method_id in {1, 9, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 22, 23, 24, 25, 27, 28}:
+            cash += amount
+        elif method_id in {2, 4, 6}:
+            card += amount
+        elif method_id in {10, 21, 26}:
+            credit_note += amount
 
     opening = pos_session[0]["cash_register_balance_end"] - cash
     cash += opening
@@ -127,7 +127,7 @@ def get_pos_details(request, session_id):
         "pos_name": pos_session[0]["config_id"][1].split()[0],
         "session_id": pos_session[0]["id"],
         "session_name": pos_session[0]["display_name"],
-        "balance_start": opening,
+        "balance_start": pos_session[0]["cash_register_balance_start"],
         "start_at": start_at,
         "stop_at": stop_at,
         "cash": cash,
@@ -144,7 +144,6 @@ def get_pos_details(request, session_id):
     }
 
     return JsonResponse(data)
-
 
 @csrf_exempt
 @require_http_methods(["POST"])
