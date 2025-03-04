@@ -31,9 +31,11 @@ SECRET_KEY = os.getenv(
 # DEBUG = os.getenv("DEBUG", "True") != "False"
 DEBUG = True
 
-ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", "127.0.0.1,localhost,0.0.0.0").split(
+ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", "127.0.0.1,localhost,localhost:9000,0.0.0.0,").split(
     ","
 )
+
+CORS_ALLOW_CREDENTIALS = True
 
 
 # Application definition
@@ -49,6 +51,7 @@ INSTALLED_APPS = [
     "react",
     "barcode",
     "product_rpc",
+    "corsheaders",
     "pos_close_control",
     "miscellaneous",
 ]
