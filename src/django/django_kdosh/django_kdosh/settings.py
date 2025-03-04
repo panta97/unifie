@@ -27,13 +27,9 @@ SECRET_KEY = os.getenv(
     "DJANGO_SECRET_KEY", "LKJAS(8sj8SH*HW&*7356f3gilh8s793h963tg8s3g8s#GH*63gs36"
 )
 
-# SECURITY WARNING: don't run with debug turned on in production!
-# DEBUG = os.getenv("DEBUG", "True") != "False"
-DEBUG = True
+DEBUG = os.getenv("DEBUG", "False") == "True"
 
-ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", "127.0.0.1,localhost,localhost:9000,0.0.0.0,").split(
-    ","
-)
+ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", "127.0.0.1,localhost,localhost:9000,0.0.0.0,cierre.kdoshstore.com,cuadre.kdoshstore.com").split(",")
 
 CORS_ALLOW_CREDENTIALS = True
 
