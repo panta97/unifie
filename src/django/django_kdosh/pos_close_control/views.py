@@ -1,5 +1,6 @@
 import json
 from .rpc import get_proxy, get_model, get_closing_control_data
+import logging
 from datetime import datetime
 from django.conf import settings
 from django.http import JsonResponse
@@ -7,6 +8,7 @@ from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_exempt
 from .models import PosSession, Employee
 
+logger = logging.getLogger(__name__)
 
 def get_discounts(session_id):
     porder_table = "pos.order"
@@ -148,74 +150,64 @@ def get_pos_details(request, session_id):
 @csrf_exempt
 @require_http_methods(["POST"])
 def pos_persist(request):
-    json_data = json.loads(request.body)
-
-    cashier = Employee.objects.get(id=json_data["cashier"]["id"])
-    manager = Employee.objects.get(id=json_data["manager"]["id"])
-    start_at = datetime.strptime(json_data["summary"]["startAt"], "%Y-%m-%d %H:%M:%S")
-    stop_at = datetime.strptime(json_data["summary"]["stopAt"], "%Y-%m-%d %H:%M:%S")
-
-    json_end_state = json_data["endState"]["state"]
-    end_state = None
-    if json_end_state == "stable":
-        end_state = PosSession.STABLE
-    elif json_end_state == "extra":
-        end_state = PosSession.EXTRA
-    elif json_end_state == "missing":
-        end_state = PosSession.MISSING
-
-    # check if session is already created
-
     try:
-        pos_session = PosSession.objects.get(
-            odoo_session_id=json_data["summary"]["sessionId"]
-        )
-        pos_session.pos_name = json_data["posName"]
-        pos_session.cashier = cashier
-        pos_session.manager = manager
-        pos_session.odoo_session_id = json_data["summary"]["sessionId"]
-        pos_session.odoo_cash = json_data["summary"]["odooCash"]
-        pos_session.odoo_card = json_data["summary"]["odooCard"]
-        pos_session.pos_cash = json_data["summary"]["posCash"]
-        pos_session.pos_card = json_data["summary"]["posCard"]
-        pos_session.profit_total = json_data["summary"]["profitTotal"]
-        pos_session.balance_start = json_data["summary"]["balanceStart"]
-        pos_session.balance_start_next_day = json_data["summary"]["balanceStartNextDay"]
-        pos_session.session_name = json_data["summary"]["sessionName"]
-        pos_session.start_at = start_at
-        pos_session.stop_at = stop_at
-        pos_session.end_state = end_state
-        pos_session.end_state_amount = json_data["endState"]["amount"]
-        pos_session.end_state_note = json_data["endState"]["note"]
-        pos_session.json = request.body.decode("utf-8")
-        pos_session.save()
-    except PosSession.DoesNotExist:
-        new_pos_session = PosSession(
-            pos_name=json_data["posName"],
+        # Registrar el cuerpo de la solicitud
+        logger.info(f"📥 Data recibida: {request.body}")
+
+        data = json.loads(request.body)
+
+        cashier_id = data["cashier"]["id"]
+        manager_id = data["manager"]["id"]
+
+        logger.info(f"📌 Buscando Cajero ID: {cashier_id}, Gerente ID: {manager_id}")
+
+        # Verificar si existen los empleados
+        cashier = Employee.objects.filter(id=cashier_id, is_used=True).first()
+        manager = Employee.objects.filter(id=manager_id, is_used=True).first()
+
+        if not cashier:
+            logger.error(f"Cajero con ID {cashier_id} no encontrado o inactivo")
+        if not manager:
+            logger.error(f"Gerente con ID {manager_id} no encontrado o inactivo")
+
+        if not cashier or not manager:
+            return JsonResponse({"error": "Cajero o gerente inválido"}, status=400)
+
+        # Mapear endState
+        end_state_map = {"extra": "EX", "stable": "ST", "missing": "MS"}
+        end_state = end_state_map.get(data["endState"]["state"], "ST")
+
+        # Crear la sesión
+        pos_session = PosSession.objects.create(
+            pos_name=data["posName"],
             cashier=cashier,
             manager=manager,
-            odoo_session_id=json_data["summary"]["sessionId"],
-            odoo_cash=json_data["summary"]["odooCash"],
-            odoo_card=json_data["summary"]["odooCard"],
-            pos_cash=json_data["summary"]["posCash"],
-            pos_card=json_data["summary"]["posCard"],
-            profit_total=json_data["summary"]["profitTotal"],
-            balance_start=json_data["summary"]["balanceStart"],
-            balance_start_next_day=json_data["summary"]["balanceStartNextDay"],
-            session_name=json_data["summary"]["sessionName"],
-            start_at=start_at,
-            stop_at=stop_at,
+            odoo_session_id=data["summary"]["sessionId"],
+            odoo_cash=data["summary"]["odooCash"],
+            odoo_card=data["summary"]["odooCard"],
+            pos_cash=data["summary"]["posCash"],
+            pos_card=data["summary"]["posCard"],
+            profit_total=data["summary"]["profitTotal"],
+            balance_start=data["summary"]["balanceStart"],
+            balance_start_next_day=data["summary"]["balanceStartNextDay"],
+            session_name=data["summary"]["sessionName"],
+            start_at=data["summary"]["startAt"],
+            stop_at=data["summary"]["stopAt"],
             end_state=end_state,
-            end_state_amount=json_data["endState"]["amount"],
-            end_state_note=json_data["endState"]["note"],
-            json=request.body.decode("utf-8"),
+            end_state_amount=data["endState"]["amount"],
+            end_state_note=data["endState"]["note"],
+            json=json.dumps(data),  # Guardamos todo el JSON
         )
-        new_pos_session.save()
 
-    data = {"msj": "POS Details Saved!"}
+        logger.info(f"✅ Sesión creada con éxito: {pos_session.id}")
+        return JsonResponse({"message": "Sesión guardada", "id": pos_session.id}, status=201)
 
-    return JsonResponse(data)
-
+    except json.JSONDecodeError:
+        logger.error("❌ JSON inválido")
+        return JsonResponse({"error": "JSON inválido"}, status=400)
+    except KeyError as e:
+        logger.error(f"❌ Falta el campo: {str(e)}")
+        return JsonResponse({"error": f"Falta el campo: {str(e)}"}, status=400)
 
 def employee(request, type):
     if type == Employee.CASHIER:
