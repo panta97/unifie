@@ -55,4 +55,4 @@ class PosSession(models.Model):
     end_state_note = models.TextField()
     end_state_amount = models.DecimalField(max_digits=12, decimal_places=2)
     json = models.TextField()
-    odoo_version = models.IntegerField(default=15)
+    odoo_version = models.IntegerField(default=17)
