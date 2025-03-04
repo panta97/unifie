@@ -1,7 +1,7 @@
 def get_series_list(store, year):
     series = []
     year = int(year)
-    if year <= 2024:
+    if year <= 2025:
         if store == "abtao":
             series = [
                 "B001",
@@ -11,7 +11,7 @@ def get_series_list(store, year):
                 "B006",
                 "B007",
                 "B008",
-                "B013",
+                "B009",
                 "F001",
                 "F003",
                 "F004",
@@ -19,12 +19,12 @@ def get_series_list(store, year):
                 "F006",
                 "F007",
                 "F008",
-                "F013",
+                "F009",
             ]
         elif store == "san_martin":
             series = ["B002", "F002"]
         elif store == "tingo":
-            series = ["B009", "B010", "B011", "B012", "F009", "F010", "F011", "F012"]
+            series = ["B011", "B012", "B013", "F011", "F012", "F013"]
     else:
         if store == "abtao":
             series = [
@@ -48,7 +48,7 @@ def get_series_list(store, year):
                 "F009",
             ]
         elif store == "san_martin":
-            series = ["B010", "F010"]
+            series = ["B002", "F002"]
         elif store == "tingo":
             series = ["B011", "B012", "B013", "F011", "F012", "F013"]
 
