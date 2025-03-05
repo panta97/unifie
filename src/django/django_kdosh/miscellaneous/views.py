@@ -3,7 +3,7 @@ from .move_lines import move_lines as move_lines_func
 from .sales import sales as sales_func
 from .goals import goals as goals_func
 from django.contrib.auth.decorators import login_required
-from .constants import STORE_ABTAO, STORE_TINGO
+from .constants import STORE_ABTAO, STORE_TINGO_MARIA
 
 
 def move_lines(request, invoice_number):
@@ -44,7 +44,7 @@ def goals_abtao(request, date):
 
 def goals_tingo(request, date):
     try:
-        goals = goals_func(date, STORE_TINGO)
+        goals = goals_func(date, STORE_TINGO_MARIA)
         response = JsonResponse({"body": goals, "statusCode": 200}, status=200)
     except Exception as e:
         response = JsonResponse({"result": "ERROR", "message": str(e)}, status=400)
