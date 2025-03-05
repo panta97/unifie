@@ -42,7 +42,7 @@ def sales(date):
     year = date.split("-")[0]
     abtao_series = get_series_list("abtao", year)
     san_martin_series = get_series_list("san_martin", year)
-    tingo_series = get_series_list("tingo", year)
+    tingo_maria_series = get_series_list("tingo_maria", year)
 
     for invoice in invoices:
         regex_search = re.search("^.+([B|F][A|0]\d{2})", invoice["journal_id"][1])
@@ -62,7 +62,7 @@ def sales(date):
         #     total_ab -= invoice["amount_total"]
         # elif serie == "BA02":
         #     total_sm -= invoice["amount_total"]
-        elif serie in tingo_series:
+        elif serie in tingo_maria_series:
             total_tg += invoice["amount_total"]
     # elif company_id == 3:  ## olympo
     #     if serie in ["B001", "F001"]:
@@ -81,7 +81,7 @@ def sales(date):
         },
         {
             "code": "tg-store",
-            "name": "tingo",
+            "name": "tingo maria",
             "amount": total_tg,
         },
     ]

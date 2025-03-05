@@ -62,6 +62,8 @@ export interface ProductProductForm {
   category_family_id: number;
   category_brand_name: string;
   category_brand_id: number;
+  category_last_name: string;
+  category_last_id: number;
   pos_categ_id: number;
   pos_categ_name: string;
   attrs: AttributeForm[];

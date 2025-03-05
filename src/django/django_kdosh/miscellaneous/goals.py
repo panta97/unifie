@@ -15,7 +15,7 @@ from .constants import (
     MISCELLANEOUS,
     STORE_SAN_MARTIN,
     STORE_ABTAO,
-    STORE_TINGO,
+    STORE_TINGO_MARIA,
 )
 from product_rpc.utils.invoices import get_series_list
 
@@ -53,7 +53,7 @@ def get_goals_live(date, store):
         ]
     elif store == STORE_SAN_MARTIN:
         journal_ids = [19, 32]
-    elif store == STORE_TINGO:
+    elif store == STORE_TINGO_MARIA:
         journal_ids = [20, 21, 22, 33, 34, 35]
 
     move_filters = [
@@ -169,8 +169,8 @@ def get_goals_db(date_from, date_to, store):
         series = get_series_list("abtao", year)
     elif store == STORE_SAN_MARTIN:
         series = get_series_list("san_martin", year)
-    elif store == STORE_TINGO:
-        series = get_series_list("tingo", year)
+    elif store == STORE_TINGO_MARIA:
+        series = get_series_list("tingo_maria", year)
     series = list(map(lambda e: "'{}'".format(e), series))
     series = ",".join(series)
 
@@ -334,9 +334,9 @@ def goals(date, store):
             )
 
         return {"selected_day": goals_current, "cumulative": cumulative_list}
-    elif store == STORE_TINGO:
+    elif store == STORE_TINGO_MARIA:
         store_goal = StoreGoal.objects.get(
-            year=date_obj.year, month=date_obj.month, store=STORE_TINGO
+            year=date_obj.year, month=date_obj.month, store=STORE_TINGO_MARIA
         )
         goals_current.pop("CLEARANCE")
         goals_current.pop("MISCELLANEOUS")
