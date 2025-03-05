@@ -284,7 +284,7 @@ def get_eq_report(store, date_from, date_to):
     elif store == "SM":
         series = get_series_list("san_martin", year)
     elif store == "TG":
-        series = get_series_list("tingo", year)
+        series = get_series_list("tingo_maria", year)
     series = list(map(lambda e: "'{}'".format(e), series))
     series = ",".join(series)
 
