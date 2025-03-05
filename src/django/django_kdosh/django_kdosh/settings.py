@@ -31,7 +31,7 @@ SECRET_KEY = os.getenv(
 # DEBUG = os.getenv("DEBUG", "True") != "False"
 DEBUG = True
 
-ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", "127.0.0.1,localhost,localhost:9000,0.0.0.0,cierre.kdoshstore.com,cuadre.kdoshstore.com,").split(
+ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", "127.0.0.1,localhost,0.0.0.0").split(
     ","
 )
 
@@ -151,9 +151,7 @@ STATICFILES_DIRS = (os.path.join(BASE_DIR, "static"),)  # your static/ files fol
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # ODOO_CONFIG
-ODOO_URL = os.getenv(
-    "ODOO_URL", "https://marvinh10-kdosh-bd.odoo.com/"
-)
+ODOO_URL = os.getenv("ODOO_URL", "https://marvinh10-kdosh-bd.odoo.com/")
 ODOO_DB = os.getenv("ODOO_DB", "marvinh10-kdosh-bd-17-0-0-17332055")
 ODOO_PWD = os.getenv("ODOO_PWD", "4e94bb1f5aa83b518b04c1a45f7a894585ad474b")
 ODOO_UID = os.getenv("ODOO_UID", "2")
