@@ -17,7 +17,7 @@ class Migration(migrations.Migration):
                 ('year', models.IntegerField()),
                 ('month', models.IntegerField()),
                 ('goal', models.DecimalField(decimal_places=2, max_digits=12)),
-                ('store', models.CharField(choices=[('san martin', 'san martin'), ('abtao', 'abtao'), ('tingo', 'tingo')], max_length=15)),
+                ('store', models.CharField(choices=[('san martin', 'san martin'), ('abtao', 'abtao'), ('tingo maria', 'tingo maria')], max_length=15)),
             ],
         ),
     ]
