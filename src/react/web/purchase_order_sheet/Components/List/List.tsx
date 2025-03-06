@@ -54,7 +54,7 @@ export const List = ({ order_details, order_lines }: ListProps) => {
             <span className="">{line.name}</span>
           </div>
           <div className="border-r border-b border-black p-1 inline-flex items-center break-all w-[15%]">
-            <span className="">{line.cats.split(" / ")[2]}</span>
+            <span className="">{line.cats.split(" / ")[3]}</span>
           </div>
           <div className="border-r border-b border-black p-1 inline-flex items-center w-[5%]">
             <span className="">{line.quantity}</span>
