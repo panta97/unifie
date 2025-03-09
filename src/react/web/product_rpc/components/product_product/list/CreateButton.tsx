@@ -57,6 +57,12 @@ export const CreateButton = () => {
           "/api/product-rpc/product_product",
           params
         );
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error("Error en la solicitud:", response.status, errorText);
+          alert(`Error ${response.status}: ${errorText}`);
+          return;
+        }
         dispatch(
           updateProductListFetchStatus({
             productIds,
@@ -117,7 +123,7 @@ export const CreateButton = () => {
     </button>
   ) : (
     <div className="space-x-1">
-      <button
+      {/* <button
         onClick={(e) => {
           handleCreatePurchaseOrder();
           e.currentTarget.blur();
@@ -125,6 +131,15 @@ export const CreateButton = () => {
         className="rounded text-white bg-blue-400 px-2 py-1 cursor-pointer"
       >
         Crear Orden
+      </button> */}
+      <button
+        onClick={(e) => {
+          handleCreatePurchaseOrder();
+          e.currentTarget.blur();
+        }}
+        className="rounded text-white bg-blue-400 px-2 py-1 cursor-pointer"
+      >
+        Ir a Importar Orden
       </button>
       <button
         onClick={(e) => {

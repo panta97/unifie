@@ -151,7 +151,8 @@ STATICFILES_DIRS = (os.path.join(BASE_DIR, "static"),)  # your static/ files fol
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # ODOO_CONFIG
-ODOO_URL = os.getenv("ODOO_URL", "https://marvinh10-kdosh-bd.odoo.com/")
-ODOO_DB = os.getenv("ODOO_DB", "marvinh10-kdosh-bd-17-0-0-17332055")
-ODOO_PWD = os.getenv("ODOO_PWD", "4e94bb1f5aa83b518b04c1a45f7a894585ad474b")
+ODOO_URL = os.getenv("ODOO_URL", "https://marvinh10-kdosh-bd-dev-18885593.dev.odoo.com")
+ODOO_DB = os.getenv("ODOO_DB", "marvinh10-kdosh-bd-dev-18885593")
+ODOO_PWD = os.getenv("ODOO_PWD", "4c3c731b620a3242d27a9017f9b5d57eb28ec3eb")
+# ODOO_PWD = os.getenv("ODOO_PWD", "4c3c731b620a3242d27a9017f9b5d57eb28ec3eb")
 ODOO_UID = os.getenv("ODOO_UID", "2")

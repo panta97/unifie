@@ -249,7 +249,7 @@ def update_order_catalogs():
         password,
         "res.partner",
         "search_read",
-        [[["supplier_rank", ">", 0]]],
+        [[["is_company", "=", True]]],
         {"fields": ["id", "name", "vat"], "context": {"lang": "es_PE"}},
     )
 

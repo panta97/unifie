@@ -41,12 +41,13 @@ const productSchema = object({
     .positive()
     .min(0.0001, "Peso en kg debe ser positivo")
     .required(),
-  category_line_id: number().positive("Debe seleccionar una Línea").required(),
+  category_line_id: number().positive("Debe seleccionar una categoría principal").required(),
   category_family_id: number()
-    .positive("Debe seleccinar una Familia")
+    .positive("Debe seleccinar una categoría 1")
     .required(),
-  category_brand_id: number().positive("Debe seleccionar una Marca").required(),
-  pos_categ_id: number()
+  category_brand_id: number().positive("Debe seleccionar una categoría 2").required(),
+  category_last_id: number().positive("Debe seleccionar una categoría 3").required(),
+  pos_categ_ids: number()
     .positive("Debe seleccionar una Categoría POS")
     .required(),
   attrs: array(attrSchema).min(0).required(),

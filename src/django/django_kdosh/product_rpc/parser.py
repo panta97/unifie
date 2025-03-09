@@ -31,8 +31,9 @@ def transform_product_json(data):
             "name": prod["name"].strip(),
             "default_code": prod["default_code"].strip(),
             "list_price": prod["list_price"],
-            "categ_id": prod["category_brand_id"],
-            "pos_categ_id": prod["pos_categ_id"],
+            # ACA ES DONDE SE TOMA EL ULTIMO VALOR DE LA CATEGORIA
+            "categ_id": prod["category_last_id"],
+            "pos_categ_ids": [(6, 0, [prod["pos_categ_ids"]])] if isinstance(prod["pos_categ_ids"], int) else [(6, 0, prod["pos_categ_ids"])],
             "attribute_line_ids": [],
         }
         for attr in prod["attrs"]:
@@ -76,7 +77,7 @@ def product_client_result(product_tmpl_ids):
         product_results.append(
             {
                 "odoo_id": result[0],
-                "odoo_link": "{}/web#id={}&menu_id=193&cids=1&action=321&model=product.template&view_type=form".format(
+                "odoo_link": "{}/web#id={}&cids=1&menu_id=206&action=354&model=product.template&view_type=form".format(
                     settings.ODOO_URL, result[0]
                 ),
                 "client_id": result[1],

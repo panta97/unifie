@@ -27,7 +27,7 @@ export const CategoryLastField = () => {
     return (
         <div className="inline-flex flex-col w-40 mr-1">
             <label htmlFor="cat_last" className="text-xs">
-                Categoría 4
+                Categoría 3
             </label>
             <Select
                 id={lastId}
