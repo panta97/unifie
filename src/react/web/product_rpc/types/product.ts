@@ -15,7 +15,7 @@ export interface ProductProduct {
   name: string;
   list_price: number;
   categ_id: number;
-  pos_categ_id: number;
+  pos_categ_ids: number;
   attrs: Attr[];
   attr_default_code_map: AttrDefaultCodeMap[];
 }
@@ -64,7 +64,7 @@ export interface ProductProductForm {
   category_brand_id: number;
   category_last_name: string;
   category_last_id: number;
-  pos_categ_id: number;
+  pos_categ_ids: number;
   pos_categ_name: string;
   attrs: AttributeForm[];
   attr_default_code: AttributeDefaultCodeForm[];

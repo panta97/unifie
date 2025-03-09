@@ -57,7 +57,7 @@ export const Table = () => {
                 )}
               </td>
 
-              <td className="p-1">{`${product.category_line_name} / ${product.category_family_name} / ${product.category_brand_name}`}</td>
+              <td className="p-1">{`${product.category_line_name} / ${product.category_family_name} / ${product.category_brand_name} / ${product.category_last_name}`}</td>
               <td className="p-1">{product.pos_categ_name}</td>
               <td className="p-1">
                 {product.attr_list_price.length > 0 ? (

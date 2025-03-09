@@ -188,7 +188,7 @@ def get_eq(date_from, date_to, series, odoo_version):
                 left join product_template pt
                     on pp.product_tmpl_id = pt.id
                 left join pos_category pc
-                    on pt.pos_categ_id = pc.id
+                    on pt.pos_categ_ids = pc.id
                 where ai.company_id = 1 -- kdosh company
                 and ai.type = 'out_invoice' -- boletas y facturas
                 )
@@ -215,7 +215,7 @@ def get_eq(date_from, date_to, series, odoo_version):
                             when pc_imd.v11_id in (8) then 'EQ DEPORTIVO'
                             when pc_imd.v11_id in (3, 13, 15) then 'EQ ACCESORIO'
                             when pc_imd.v11_id in (6, 7, 12, 16) then 'EQ DAMA'
-                            when pc_imd.v11_id in (9) or pt.pos_categ_id in (46, 50, 51, 52) then 'EQ HOME'
+                            when pc_imd.v11_id in (9) or pt.pos_categ_ids in (46, 50, 51, 52) then 'EQ HOME'
                             when pc_imd.v11_id in (10, 14) then 'EQ NINO'
                             when pc_imd.v11_id in (1) then 'LIQUIDACION'
                             else 'OTROS'
@@ -234,7 +234,7 @@ def get_eq(date_from, date_to, series, odoo_version):
                     left join product_template pt
                         on pp.product_tmpl_id = pt.id
                     left join pos_category pc
-                        on pt.pos_categ_id = pc.id
+                        on pt.pos_categ_ids = pc.id
                     left join (
                         select
                             cast(substring(name, 'pos_category_(\d+)') as integer) v11_id,

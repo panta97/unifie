@@ -27,7 +27,7 @@ export const CategoryBrandField = () => {
   return (
     <div className="inline-flex flex-col w-40 mr-1">
       <label htmlFor="cat_brand" className="text-xs">
-        Categoría 3
+        Categoría 2
       </label>
       <Select
         id={brandId}

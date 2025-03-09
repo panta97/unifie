@@ -36,7 +36,7 @@ export const CategoryFamilyField = () => {
   return (
     <div className="inline-flex flex-col w-40 mr-1">
       <label htmlFor="cat_family" className="text-xs">
-        Categoría 2
+        Categoría 1
       </label>
       <Select
         id={familyId}

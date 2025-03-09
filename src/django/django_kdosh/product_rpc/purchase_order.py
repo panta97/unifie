@@ -180,7 +180,7 @@ def get_order_item(product_id, type):
     attrs = list(attrs_dic.values())
     # RETURN OBJECT
     order_item = {
-        "odoo_link": "{}/web#id={}&menu_id=193&cids=1&action=321&model=product.template&view_type=form".format(
+        "odoo_link": "{}/web#id={}&cids=1&menu_id=206&action=354&model=product.template&view_type=form".format(
             settings.ODOO_URL, product_tmpl_id
         ),
         "is_in_list": False,
