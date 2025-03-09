@@ -33,7 +33,11 @@ def transform_product_json(data):
             "list_price": prod["list_price"],
             # ACA ES DONDE SE TOMA EL ULTIMO VALOR DE LA CATEGORIA
             "categ_id": prod["category_last_id"],
-            "pos_categ_ids": [(6, 0, [prod["pos_categ_ids"]])] if isinstance(prod["pos_categ_ids"], int) else [(6, 0, prod["pos_categ_ids"])],
+            "pos_categ_ids": (
+                [(6, 0, [prod["pos_categ_ids"]])]
+                if isinstance(prod["pos_categ_ids"], int)
+                else [(6, 0, prod["pos_categ_ids"])]
+            ),
             "attribute_line_ids": [],
         }
         for attr in prod["attrs"]:
@@ -61,11 +65,14 @@ def product_stats_get(product_tmpl_ids):
     sql = """
         select odoo_id, client_id
         from rpc_product_stats
-        where odoo_id in ({});
+        where odoo_id in ({}); 
     """.format(
         ",".join(map(str, product_tmpl_ids))
     )
+
+    print(f"SQL ejecutado: {sql}")
     res = select(sql)
+    print(f"Resultados obtenidos: {res}")
     return res
 
 
@@ -105,9 +112,9 @@ def transform_order_json(data):
                         "date_planned": order_item["date"],
                         "product_qty": product_item["qty"],
                         "price_unit": product_item["price"],
-                        "tax_id": TAX_ID
-                        if data["order_details"]["is_taxed"]
-                        else UNTAX_ID,
+                        "tax_id": (
+                            TAX_ID if data["order_details"]["is_taxed"] else UNTAX_ID
+                        ),
                     }
                 )
                 total_price += product_item["price"] * product_item["qty"]

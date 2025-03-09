@@ -271,24 +271,24 @@ def get_order_item(product_id, type):
 
 class Order:
     def __init__(self):
-        self.priority = "0"
-        self.partner_id = None
-        self.partner_ref = None
-        self.currency_id = 154
+        self.company_id = 1
+        self.currency_id = 157
         self.date_order = None
         self.date_planned = None
+        self.dest_address_id = False
+        self.fiscal_position_id = 1
+        self.incoterm_id = False
+        self.notes = "<p><br></p>"
+        self.order_line = []
+        self.origin = False
+        self.partner_id = None
+        self.partner_ref = None
+        self.payment_term_id = False
+        self.picking_type_id = 1
+        self.priority = "0"
+        self.user_id = None
         self.receipt_reminder_email = False
         self.reminder_date_before_receipt = 1
-        self.picking_type_id = 1
-        self.dest_address_id = False
-        self.order_line = []
-        self.notes = "<p><br></p>"
-        self.user_id = None
-        self.company_id = 1
-        self.origin = False
-        self.incoterm_id = False
-        self.payment_term_id = False
-        self.fiscal_position_id = 1
         self.message_follower_ids = []
         self.activity_ids = []
         self.message_ids = []
