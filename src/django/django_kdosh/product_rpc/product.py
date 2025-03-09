@@ -18,7 +18,7 @@ class Product:
         self.type = "product"
         self.image_1920 = False
         # self.__last_update =  False
-        self.priority = "1"
+        self.priority = "0"
         self.sale_ok = True
         self.purchase_ok = True
         self.active = True
