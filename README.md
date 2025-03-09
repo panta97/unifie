@@ -10,3 +10,6 @@ npm cache clean --force
 yarn install
 
 Agregate in component: `import React from 'react'`
+
+
+## odoo 17
