@@ -134,6 +134,7 @@ def update_product_catalogs():
 def get_product_catalogs():
     catalogs = {}
     # ------------ GET PRODUCT_CATEGORY ------------
+    # ACA ES
     query_product_category = """
         with recursive category (level, id, parent_id, name) as (
             select 1, pc.id, pc.parent_id, pc."name"
@@ -165,6 +166,9 @@ def get_product_catalogs():
     ]
     catalogs["product_category_brand"] = [
         tuple_to_dictionary(cat, cat_mapper) for cat in product_category if cat[0] == 3
+    ]
+    catalogs["product_category_last"] = [
+        tuple_to_dictionary(cat, cat_mapper) for cat in product_category if cat[0] == 4
     ]
 
     # ------------ GET POS_CATEGORY ------------

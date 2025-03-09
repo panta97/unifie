@@ -12,6 +12,10 @@ export interface ProductCategoryBrand extends CatalogGeneric {
   parent_id: number;
 }
 
+export interface ProductCategoryLast extends CatalogGeneric {
+  parent_id: number;
+}
+
 export interface PosCategory extends CatalogGeneric {
   parent_id: number;
 }
@@ -34,6 +38,7 @@ export interface Catalogs {
   product_category_line: ProductCategoryLine[];
   product_category_family: ProductCategoryFamily[];
   product_category_brand: ProductCategoryBrand[];
+  product_category_last: ProductCategoryLast[];
   pos_category: PosCategory[];
   product_attribute: ProductAttribute[];
   product_attribute_value: ProductAttributeValue[];

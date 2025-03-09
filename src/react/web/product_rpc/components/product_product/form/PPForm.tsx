@@ -5,6 +5,7 @@ import { DefaultCodeTable } from "./DefaultCodeTable";
 import { CategoryLineField } from "./fields/CategoryLineField";
 import { CategoryFamilyField } from "./fields/CategoryFamilyField";
 import { CategoryBrandField } from "./fields/CategoryBrandField";
+import { CategoryLastField } from "./fields/CategoryLastField";
 import { NameField } from "./fields/NameField";
 import { PosCategoryField } from "./fields/PosCategoryField";
 import { PriceField } from "./fields/PriceField";
@@ -24,6 +25,7 @@ export const PPForm = () => {
           <CategoryLineField />
           <CategoryFamilyField />
           <CategoryBrandField />
+          <CategoryLastField />
           <PosCategoryField />
           <PriceField />
           <DefaultCodeField />
