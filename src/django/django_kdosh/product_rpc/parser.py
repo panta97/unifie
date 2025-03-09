@@ -125,7 +125,7 @@ def transform_order_json(data):
 
 def order_client_result(order_id):
     result = {
-        "odoo_link": "{}/web#id={}&menu_id=260&cids=1&action=399&model=purchase.order&view_type=form".format(
+        "odoo_link": "{}/web#id={}&cids=1&menu_id=407&action=599&model=purchase.order&view_type=form".format(
             settings.ODOO_URL, order_id
         ),
         "odoo_id": order_id,
