@@ -123,15 +123,6 @@ export const CreateButton = () => {
     </button>
   ) : (
     <div className="space-x-1">
-      {/* <button
-        onClick={(e) => {
-          handleCreatePurchaseOrder();
-          e.currentTarget.blur();
-        }}
-        className="rounded text-white bg-blue-400 px-2 py-1 cursor-pointer"
-      >
-        Crear Orden
-      </button> */}
       <button
         onClick={(e) => {
           handleCreatePurchaseOrder();
@@ -139,7 +130,7 @@ export const CreateButton = () => {
         }}
         className="rounded text-white bg-blue-400 px-2 py-1 cursor-pointer"
       >
-        Ir a Importar Orden
+        Crear Orden
       </button>
       <button
         onClick={(e) => {
