@@ -28,6 +28,7 @@ class PosSession(models.Model):
         Employee, on_delete=models.CASCADE, related_name="manager"
     )
     odoo_session_id = models.IntegerField()
+    odoo_config_id = models.IntegerField(default=0)
     odoo_cash = models.DecimalField(max_digits=12, decimal_places=2)
     odoo_card = models.DecimalField(max_digits=12, decimal_places=2)
     pos_cash = models.DecimalField(max_digits=12, decimal_places=2)

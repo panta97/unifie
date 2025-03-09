@@ -4,7 +4,8 @@ from .parser import product_client_result, transform_product_json
 from .models import ProductStats, WeightMap, ProductCategory
 from .utils import rpc
 from django.conf import settings
-
+import time
+import xml.etree.ElementTree as ET
 
 class ProductResult(Enum):
     ALL = 1
@@ -24,7 +25,7 @@ class Product:
         self.detailed_type = "product"
         self.uom_id = 1
         self.uom_po_id = 1
-        self.taxes_id = [[6, False, [3]]]
+        self.taxes_id = [[6, False, [6]]]
         self.l10n_pe_withhold_code = False
         self.l10n_pe_withhold_percentage = 0
         self.standard_price = 0
@@ -35,7 +36,7 @@ class Product:
         self.to_weight = False
         self.description_sale = False
         self.seller_ids = []
-        self.supplier_taxes_id = [[6, False, [6]]]
+        self.supplier_taxes_id = [[6, False, [4]]]
         self.purchase_method = "receive"
         self.description_purchase = False
         self.purchase_line_warn = "no-message"
@@ -65,7 +66,7 @@ class Product:
         self.default_code = None
         self.list_price = None
         self.categ_id = None
-        self.pos_categ_id = None
+        self.pos_categ_ids = None
         self.attribute_line_ids = []
 
     def __set_attrs(self, attr_lines):
@@ -93,7 +94,7 @@ class Product:
         self.default_code = dict["default_code"]
         self.list_price = dict["list_price"]
         self.categ_id = dict["categ_id"]
-        self.pos_categ_id = dict["pos_categ_id"]
+        self.pos_categ_ids = dict.get("pos_categ_ids", [])
         self.attribute_line_ids = []
         self.__set_attrs(dict["attribute_line_ids"])
 
@@ -102,7 +103,7 @@ class Product:
         self.default_code = None
         self.list_price = None
         self.categ_id = None
-        self.pos_categ_id = None
+        self.pos_categ_ids = None
         self.attribute_line_ids = []
 
 
@@ -204,6 +205,7 @@ def create_product_new(
     proxy,
     user,
 ):
+
     # CREATE PRODUCT
     tmpl_id = rpc.create_model("product.template", product_template, uid, proxy=proxy)
     # CREATE COMMENT
@@ -291,9 +293,80 @@ def product_new(transf_list, uid, pid, user):
 def create_products_v2(raw_data, curr_user):
     transf_list = transform_product_json(raw_data)
     product_tmpl_ids = product_new(transf_list, int(settings.ODOO_UID), 0, curr_user)
+    # Se genera el XML de exportación y se puede registrar o utilizar según convenga
+    create_export_xml(product_tmpl_ids, int(settings.ODOO_UID), rpc.get_proxy())
+    # Aquí se podría guardar o enviar xml_export si es necesario
     product_results = product_client_result(product_tmpl_ids)
     return product_results
 
 
 def get_weight_list():
     return {"weight_list": list(WeightMap.objects.values())}
+
+def create_export_xml(created_product_ids, uid, proxy):
+    """
+    Genera un archivo XML de exportación para los registros de product.template y product.product
+    y registra el xml_id en ir.model.data.
+    """
+    root = ET.Element("odoo")
+
+    for product_id in created_product_ids:
+        timestamp = int(time.time())
+        unique_xml_id_template = f"product_template_{product_id}_{timestamp}"
+        
+        # Registrar en ir.model.data
+        rpc.create_model("ir.model.data", {
+            "name": unique_xml_id_template,
+            "module": "kdosh_module",
+            "model": "product.template",
+            "res_id": product_id,
+            "noupdate": False
+        }, uid, proxy=proxy)
+
+        record_template = ET.SubElement(root, "record", {
+            "id": unique_xml_id_template,
+            "model": "product.template",
+            "noupdate": "0"
+        })
+        record_template.set("res_id", str(product_id))
+
+        variant_data = rpc.get_model(
+            "product.product",
+            [[["product_tmpl_id", "=", product_id]]],
+            ["id"],
+            proxy=proxy
+        )
+
+        if not variant_data:
+            continue
+
+        variant_ids = [record["id"] for record in variant_data]
+
+        for variant_id in variant_ids:
+            timestamp_variant = int(time.time())
+            unique_xml_id_product = f"product_product_{variant_id}_{timestamp_variant}"
+
+            rpc.create_model("ir.model.data", {
+                "name": unique_xml_id_product,
+                "module": "kdosh_module",
+                "model": "product.product",
+                "res_id": variant_id,
+                "noupdate": False
+            }, uid, proxy=proxy)
+
+            record_variant = ET.SubElement(root, "record", {
+                "id": unique_xml_id_product,
+                "model": "product.product",
+                "noupdate": "0"
+            })
+            record_variant.set("res_id", str(variant_id))
+
+    xml_str = ET.tostring(root, encoding="utf-8", method="xml").decode("utf-8")
+
+    try:
+        with open("export.xml", "w", encoding="utf-8") as f:
+            f.write(xml_str)
+    except IOError as e:
+        print(f"Error al escribir el archivo XML: {e}")
+
+    return xml_str

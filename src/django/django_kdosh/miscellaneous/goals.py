@@ -93,7 +93,7 @@ def get_goals_live(date, store):
 
     # PRODUCT_PRODUCT
     product_product_filters = [[["id", "in", product_product_ids]]]
-    product_product_fields = ["product_tmpl_id", "pos_categ_id"]
+    product_product_fields = ["product_tmpl_id", "pos_categ_ids"]
     product_products = models.execute_kw(
         db,
         uid,
@@ -110,7 +110,7 @@ def get_goals_live(date, store):
             for product in product_products
             if product["id"] == item["product_id"][0]
         ][0]
-        item["pos_categ_id"] = product_product["pos_categ_id"]
+        item["pos_categ_ids"] = product_product["pos_categ_ids"]
 
     eqs = {
         ACCESSORIES: [31, 39, 33],
@@ -135,10 +135,10 @@ def get_goals_live(date, store):
     }
 
     for item in move_lines:
-        if item["pos_categ_id"] == False:
+        if item["pos_categ_ids"] == False:
             continue
 
-        categ_id = item["pos_categ_id"][0]
+        categ_id = item["pos_categ_ids"][0]
         if categ_id in eqs[ACCESSORIES]:
             lines_group_by_eqs[ACCESSORIES].append(item)
         elif categ_id in eqs[MEN]:
@@ -203,7 +203,7 @@ def get_goals_db(date_from, date_to, store):
                     left join product_template pt
                         on pp.product_tmpl_id = pt.id
                     left join pos_category pc
-                        on pt.pos_categ_id = pc.id
+                        on pt.pos_categ_ids = pc.id
                     where am.company_id = 1 -- kdosh company
                     and am.move_type = 'out_invoice' -- boletas y facturas
                 )

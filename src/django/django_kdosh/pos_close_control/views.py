@@ -128,6 +128,7 @@ def get_pos_details(request, session_id):
     result = {
         "pos_name": pos_session[0]["config_id"][1].split()[0],
         "session_id": pos_session[0]["id"],
+        "config_id": pos_session[0]["config_id"][0],
         "session_name": pos_session[0]["display_name"],
         "balance_start": pos_session[0]["cash_register_balance_start"],
         "start_at": start_at,
@@ -183,6 +184,7 @@ def pos_persist(request):
             cashier=cashier,
             manager=manager,
             odoo_session_id=data["summary"]["sessionId"],
+            odoo_config_id=data["summary"]["configId"],
             odoo_cash=data["summary"]["odooCash"],
             odoo_card=data["summary"]["odooCard"],
             pos_cash=data["summary"]["posCash"],

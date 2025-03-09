@@ -57,6 +57,12 @@ export const CreateButton = () => {
           "/api/product-rpc/product_product",
           params
         );
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error("Error en la solicitud:", response.status, errorText);
+          alert(`Error ${response.status}: ${errorText}`);
+          return;
+        }
         dispatch(
           updateProductListFetchStatus({
             productIds,

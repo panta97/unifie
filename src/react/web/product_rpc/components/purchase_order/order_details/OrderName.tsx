@@ -20,7 +20,7 @@ export const OrderName = () => {
             rel="noopener noreferrer"
             href={orderDetails.odoo_link}
           >
-            <span>{`PO${String(orderDetails.odoo_id!).padStart(5, "0")}`}</span>
+            <span>{`PO${String(orderDetails.odoo_id! - 7).padStart(5, "0")}`}</span>
             <Svg.ExternalLink className="h-5 w-5 inline-block" />
           </a>
         </div>

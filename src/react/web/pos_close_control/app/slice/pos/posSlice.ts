@@ -28,6 +28,7 @@ const initialState: POSState = {
     balanceStart: 0,
     balanceStartNextDay: 0,
     sessionId: 0,
+    configId: 0,
     sessionName: "",
     startAt: "",
     stopAt: "",

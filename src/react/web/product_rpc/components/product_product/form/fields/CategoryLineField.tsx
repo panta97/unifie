@@ -25,7 +25,7 @@ export const CategoryLineField = () => {
   return (
     <div className="inline-flex flex-col w-40 mr-1">
       <label htmlFor="cat_line" className="text-xs">
-        Línea
+        Categoría Principal
       </label>
       <Select
         id={lineId}

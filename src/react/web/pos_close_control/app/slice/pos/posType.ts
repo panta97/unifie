@@ -24,6 +24,7 @@ export interface POSSummary {
   posCard: number;
   profitTotal: number;
   sessionId: number;
+  configId: number;
   sessionName: string;
   startAt: string;
   stopAt: string;

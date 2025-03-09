@@ -180,7 +180,7 @@ def get_order_item(product_id, type):
     attrs = list(attrs_dic.values())
     # RETURN OBJECT
     order_item = {
-        "odoo_link": "{}/web#id={}&menu_id=193&cids=1&action=321&model=product.template&view_type=form".format(
+        "odoo_link": "{}/web#id={}&cids=1&menu_id=206&action=354&model=product.template&view_type=form".format(
             settings.ODOO_URL, product_tmpl_id
         ),
         "is_in_list": False,
@@ -271,24 +271,24 @@ def get_order_item(product_id, type):
 
 class Order:
     def __init__(self):
-        self.priority = "0"
-        self.partner_id = None
-        self.partner_ref = None
-        self.currency_id = 154
+        self.company_id = 1
+        self.currency_id = 157
         self.date_order = None
         self.date_planned = None
+        self.dest_address_id = False
+        self.fiscal_position_id = 1
+        self.incoterm_id = False
+        self.notes = "<p><br></p>"
+        self.order_line = []
+        self.origin = False
+        self.partner_id = None
+        self.partner_ref = None
+        self.payment_term_id = False
+        self.picking_type_id = 1
+        self.priority = "0"
+        self.user_id = None
         self.receipt_reminder_email = False
         self.reminder_date_before_receipt = 1
-        self.picking_type_id = 1
-        self.dest_address_id = False
-        self.order_line = []
-        self.notes = "<p><br></p>"
-        self.user_id = None
-        self.company_id = 1
-        self.origin = False
-        self.incoterm_id = False
-        self.payment_term_id = False
-        self.fiscal_position_id = 1
         self.message_follower_ids = []
         self.activity_ids = []
         self.message_ids = []
@@ -308,8 +308,8 @@ class Order:
                         "name": line["name"],
                         "date_planned": line["date_planned"],
                         "move_dest_ids": [],
-                        "account_analytic_id": False,
-                        "analytic_tag_ids": [[6, False, []]],
+                        # "account_analytic_id": False,
+                        # "analytic_tag_ids": [[6, False, []]],
                         "product_qty": line["product_qty"],
                         "qty_received_manual": 0,
                         "product_uom": 1,

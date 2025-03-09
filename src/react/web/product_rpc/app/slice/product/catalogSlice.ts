@@ -8,6 +8,7 @@ const initialState: CatalogState = {
   product_category_line: [],
   product_category_family: [],
   product_category_brand: [],
+  product_category_last: [],
   pos_category: [],
   product_attribute: [],
   product_attribute_value: [],
@@ -25,6 +26,7 @@ export const catalogSlice = createSlice({
       state.product_category_line = catalogs.product_category_line;
       state.product_category_family = catalogs.product_category_family;
       state.product_category_brand = catalogs.product_category_brand;
+      state.product_category_last = catalogs.product_category_last;
       state.pos_category = catalogs.pos_category;
       state.product_attribute = catalogs.product_attribute;
       state.product_attribute_value = catalogs.product_attribute_value;

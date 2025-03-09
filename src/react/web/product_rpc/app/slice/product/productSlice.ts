@@ -2,6 +2,7 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import {
   PosCategory,
   ProductAttribute,
+  ProductCategoryLast,
   ProductCategoryBrand,
   ProductCategoryFamily,
   ProductCategoryLine,
@@ -28,7 +29,9 @@ const initialState: ProductState = {
   category_family_id: 0,
   category_brand_name: "",
   category_brand_id: 0,
-  pos_categ_id: 0,
+  category_last_name: "",
+  category_last_id: 0,
+  pos_categ_ids: 0,
   pos_categ_name: "",
   attrs: [],
   attr_default_code: [],
@@ -77,6 +80,8 @@ export const productSlice = createSlice({
       state.category_family_name = "";
       state.category_brand_id = 0;
       state.category_brand_name = "";
+      state.category_last_id = 0;
+      state.category_last_name = "";
     },
     updateWeight: (
       state,
@@ -109,6 +114,8 @@ export const productSlice = createSlice({
       }
       state.category_brand_id = 0;
       state.category_brand_name = "";
+      state.category_last_id = 0;
+      state.category_last_name = "";
     },
     updateBrand: (
       state,
@@ -129,6 +136,28 @@ export const productSlice = createSlice({
         state.category_brand_id = 0;
         state.category_brand_name = "Seleccione";
       }
+      state.category_last_id = 0;
+      state.category_last_name = "";
+    },
+    updateLast: (
+      state,
+      {
+        payload,
+      }: PayloadAction<{
+        categoryLastId: number;
+        categoryLasts: ProductCategoryLast[];
+      }>
+    ) => {
+      const categoryLast = payload.categoryLasts.find(
+        (last) => last.id === payload.categoryLastId
+      );
+      if (categoryLast) {
+        state.category_last_id = categoryLast.id;
+        state.category_last_name = categoryLast.name;
+      } else {
+        state.category_last_id = 0;
+        state.category_last_name = "Seleccione";
+      }
     },
     updatePosCat: (
       state,
@@ -140,10 +169,10 @@ export const productSlice = createSlice({
         (posCat) => posCat.id === payload.posCatId
       );
       if (posCat) {
-        state.pos_categ_id = posCat.id;
+        state.pos_categ_ids = posCat.id;
         state.pos_categ_name = posCat.name;
       } else {
-        state.pos_categ_id = 0;
+        state.pos_categ_ids = 0;
         state.pos_categ_name = "Seleccione";
       }
     },
@@ -324,7 +353,9 @@ export const productSlice = createSlice({
       state.category_family_id = product.category_family_id;
       state.category_brand_name = product.category_brand_name;
       state.category_brand_id = product.category_brand_id;
-      state.pos_categ_id = product.pos_categ_id;
+      state.category_last_name = product.category_last_name;
+      state.category_last_id = product.category_last_id;
+      state.pos_categ_ids = product.pos_categ_ids;
       state.pos_categ_name = product.pos_categ_name;
       state.attrs = product.attrs;
       state.attr_default_code = product.attr_default_code;
@@ -343,7 +374,9 @@ export const productSlice = createSlice({
       state.category_family_id = 0;
       state.category_brand_name = "";
       state.category_brand_id = 0;
-      state.pos_categ_id = 0;
+      state.category_last_name = "";
+      state.category_last_id = 0;
+      state.pos_categ_ids = 0;
       state.pos_categ_name = "";
       state.attrs = [];
       state.attr_default_code = [];
@@ -359,6 +392,7 @@ export const {
   updateLine,
   updateFamily,
   updateBrand,
+  updateLast,
   updatePosCat,
   updateAttr,
   updateAttrVal,
@@ -387,8 +421,10 @@ export const selectProductFamilyId = (state: RootState) =>
   state.product.product.category_family_id;
 export const selectProductBrandId = (state: RootState) =>
   state.product.product.category_brand_id;
+export const selectProductLastId = (state: RootState) =>
+  state.product.product.category_last_id;
 export const selectProductPosId = (state: RootState) =>
-  state.product.product.pos_categ_id;
+  state.product.product.pos_categ_ids;
 export const selectProductAttribute = (state: RootState) =>
   state.product.product.attrs;
 export const selectProductAttrDefaultCode = (state: RootState) =>
