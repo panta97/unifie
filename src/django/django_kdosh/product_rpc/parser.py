@@ -96,8 +96,8 @@ def product_client_result(product_tmpl_ids):
 def transform_order_json(data):
     order_lines = []
     total_price = 0
-    TAX_ID = 7
-    UNTAX_ID = 6
+    TAX_ID = 10
+    UNTAX_ID = 17
     PERUVIAN_TAX = 0.18
 
     for order_item in data["order_list"]:

@@ -3,7 +3,7 @@ import pandas as pd
 from .connection import select_df, select
 from ..models import Report
 from datetime import datetime
-from .constants import DB_ODOO_V15, DB_ODOO_V11
+from .constants import DB_ODOO_V17, DB_ODOO_V15, DB_ODOO_V11
 from product_rpc.utils.invoices import get_series_list
 
 
@@ -48,7 +48,7 @@ def get_cpe(date_from, date_to, odoo_version):
                     substring(regexp_replace(am.name, '\s+', ''), '[B|F]\w{{3}}-(\d{{8}})') doc_number,
                     rp.vat rp_vat,
                     rp.id rp_id,
-                    rp.display_name rp_display_name,
+                    rp.rp_display_name rp_display_name,
                     am.amount_total,
                     am2.date date2,
                     substring(regexp_replace(am2.sequence_prefix, '\s+', ''), '([B|F])\w{{3}}-') doc_type2,
@@ -96,6 +96,64 @@ def get_cpe(date_from, date_to, odoo_version):
         )
         cpe_all = select_df(sql, 15)
         return cpe_all
+    elif odoo_version == 17:
+        sql = """
+            with invoice as (
+                select
+                    am.date,
+                    substring(regexp_replace(am.sequence_prefix, '\s+', ''), '([B|F])\w{{3}}-') doc_type,
+                    substring(regexp_replace(am.sequence_prefix, '\s+', ''), '([B|F]\w{{3}})-') serie,
+                    substring(regexp_replace(am.name, '\s+', ''), '[B|F]\w{{3}}-(\d{{8}})') doc_number,
+                    rp.vat rp_vat,
+                    rp.id rp_id,
+                    rp.name rp_display_name,
+                    am.amount_total,
+                    am2.date date2,
+                    substring(regexp_replace(am2.sequence_prefix, '\s+', ''), '([B|F])\w{{3}}-') doc_type2,
+                    substring(regexp_replace(am2.sequence_prefix, '\s+', ''), '([B|F]\w{{3}})-') serie2,
+                    substring(regexp_replace(am2.name, '\s+', ''), '[B|F]\w{{3}}-(\d{{8}})') doc_number2
+                from account_move am
+                left join account_move am2
+                    on am.reversed_entry_id = am2.id
+                left join res_partner rp
+                    on am.partner_id = rp.id
+                where am.move_type in ('out_invoice', 'out_refund')
+            )
+            select
+                date FECHAE,
+                date FECHAV,
+                case
+                    when doc_type = 'B' then '03'
+                    when doc_type = 'F' then '01'
+                else '-' end TIPOC,
+                serie "SERIE",
+                doc_number NUMERO,
+                case
+                    when doc_type = 'B' then '1'
+                    when doc_type = 'F' then '6'
+                else '-' end TIPODOC,
+                rp_vat DOCUMENTO,
+                rp_display_name NOMBRE,
+                0 BASEI,
+                0 IGV,
+                amount_total EXONERADO,
+                0 RETENCION,
+                amount_total TOTAL,
+                case
+                    when doc_type2 = 'B' then '03'
+                    when doc_type2 = 'F' then '01'
+                else '' end TIPOC2,
+                serie2 "SERIE2",
+                doc_number2 NUMERO2,
+                date2 FECHA2
+            from invoice
+            where date between '{}' and '{}' and serie is not null
+            order by serie, doc_number;
+        """.format(
+            date_from, date_to
+        )
+        cpe_all = select_df(sql, 17)
+        return cpe_all
 
 
 def get_cpe_all(date_from, date_to):
@@ -108,10 +166,11 @@ def get_cpe_all(date_from, date_to):
     elif date_from_obj < date_migration_obj <= date_to_obj:
         cpe_all_11 = get_cpe(date_from, "2023-02-26", 11)
         cpe_all_15 = get_cpe(MIGRATION_DATE, date_to, 15)
-        cpe_all = pd.concat([cpe_all_11, cpe_all_15], ignore_index=True)
+        cpe_all_17 = get_cpe(MIGRATION_DATE, date_to, 17)
+        cpe_all = pd.concat([cpe_all_11, cpe_all_15, cpe_all_17], ignore_index=True)
         return cpe_all
     elif date_migration_obj <= date_from_obj:
-        return get_cpe(date_from, date_to, 15)
+        return get_cpe(date_from, date_to, 17)
 
 
 def get_cpe_report(company_id, date_from, date_to):
@@ -258,6 +317,60 @@ def get_eq(date_from, date_to, series, odoo_version):
         )
         eq_all = select_df(sql, 15)
         return eq_all
+    elif odoo_version == 17:
+        sql = """
+            with temp as
+                (
+                    select
+                        am.invoice_date fecha,
+                        case
+                            when pc_imd.v11_id in (2, 4, 5, 11, 17) then 'EQ CABALLERO'
+                            when pc_imd.v11_id in (8) then 'EQ DEPORTIVO'
+                            when pc_imd.v11_id in (3, 13, 15) then 'EQ ACCESORIO'
+                            when pc_imd.v11_id in (6, 7, 12, 16) then 'EQ DAMA'
+                            when pc_imd.v11_id in (9) or pt.pos_categ_ids in (46, 50, 51, 52) then 'EQ HOME'
+                            when pc_imd.v11_id in (10, 14) then 'EQ NINO'
+                            when pc_imd.v11_id in (1) then 'LIQUIDACION'
+                            else 'OTROS'
+                        end eq,
+                        case
+                            when pc.name = 'DESCUENTOS' then 'EN.LIQUIDACION'
+                            else pc.name
+                        end categoria,
+                        aml.price_total venta,
+                        substr(am.sequence_prefix, 0, 5) serie
+                    from account_move am
+                    left join account_move_line aml
+                        on am.id = aml.move_id
+                    left join product_product pp
+                        on aml.product_id = pp.id
+                    left join product_template pt
+                        on pp.product_tmpl_id = pt.id
+                    left join pos_category pc
+                        on pt.pos_categ_ids = pc.id
+                    left join (
+                        select
+                            cast(substring(name, 'pos_category_(\d+)') as integer) v11_id,
+                            res_id
+                        from ir_model_data imd
+                        where imd.model = 'pos.category'
+                    ) as pc_imd
+                        on pc.id = pc_imd.res_id
+                    where am.company_id = 1 -- kdosh company
+                    and am.move_type = 'out_invoice' -- boletas y facturas
+                )
+            select fecha, eq, categoria, sum(venta) venta
+            from temp
+            where eq <> 'OTROS'
+                and serie in ({})
+                and fecha between '{}' and '{}'
+            group by fecha, eq, categoria
+            order by fecha;
+        """.format(
+            series, date_from, date_to
+        )
+        eq_all = select_df(sql, 17)
+        return eq_all
 
 
 def get_eq_all(date_from, date_to, series):
@@ -270,10 +383,11 @@ def get_eq_all(date_from, date_to, series):
     elif date_from_obj < date_migration_obj <= date_to_obj:
         eq_all_11 = get_eq(date_from, "2023-02-26", series, 11)
         eq_all_15 = get_eq(MIGRATION_DATE, date_to, series, 15)
-        eq_all = pd.concat([eq_all_11, eq_all_15], ignore_index=True)
+        eq_all_17 = get_eq(MIGRATION_DATE, date_to, series, 17)
+        eq_all = pd.concat([eq_all_11, eq_all_15, eq_all_17], ignore_index=True)
         return eq_all
     elif date_migration_obj <= date_from_obj:
-        return get_eq(date_from, date_to, series, 15)
+        return get_eq(date_from, date_to, series, 17)
 
 
 def get_eq_report(store, date_from, date_to):
@@ -410,6 +524,51 @@ def get_fc(date_from, date_to, odoo_version):
         )
         fc_all = select_df(sql, 15)
         return fc_all
+    elif odoo_version == 17:
+        sql = """
+            select  numero_odoo,
+            ruc,
+            proveedor,
+            referencia_proveedor,
+            numero_op,
+            numero_factura,
+            fecha_factura,
+            fecha_vencimiento,
+            venta,
+            igv,
+            importe,
+            case
+                when estado = 'not_paid' then 'abierto'
+                when estado = 'in_payment' then 'pagado'
+                when estado = 'paid' then 'pagado'
+                else estado end estado
+            from (select concat('FP01-', am.id) numero_odoo,
+                    rp.vat                 ruc,
+                    rp.name                proveedor,
+                    am.ref                 referencia_proveedor,
+                    am.invoice_origin      numero_op,
+                    am.payment_reference   numero_factura,
+                    am.invoice_date        fecha_factura,
+                    am.invoice_date_due    fecha_vencimiento,
+                    am.amount_untaxed      venta,
+                    am.amount_tax          igv,
+                    am.amount_total        importe,
+                    am.payment_state       estado
+            from account_move am
+                    left join purchase_order po
+                                on am.invoice_origin = po.name
+                    left join res_partner rp
+                                on am.partner_id = rp.id
+            where am.move_type = 'in_invoice'
+                and am.journal_id = 2
+            ) t
+            where fecha_factura between '{}' and '{}'
+            order by fecha_factura
+        """.format(
+            date_from, date_to
+        )
+        fc_all = select_df(sql, 17)
+        return fc_all
 
 
 def get_fc_all(date_from, date_to):
@@ -422,10 +581,11 @@ def get_fc_all(date_from, date_to):
     elif date_from_obj < date_migration_obj <= date_to_obj:
         fc_all_11 = get_fc(date_from, "2023-02-26", 11)
         fc_all_15 = get_fc(MIGRATION_DATE, date_to, 15)
-        fc_all = pd.concat([fc_all_11, fc_all_15], ignore_index=True)
+        fc_all_17 = get_fc(MIGRATION_DATE, date_to, 17)
+        fc_all = pd.concat([fc_all_11, fc_all_15, fc_all_17], ignore_index=True)
         return fc_all
     elif date_migration_obj <= date_from_obj:
-        return get_fc(date_from, date_to, 15)
+        return get_fc(date_from, date_to, 17)
 
 
 def get_fc_report(date_from, date_to):
@@ -460,6 +620,8 @@ def get_report_dynamic(report):
         odoo_db_version = 11
     elif report_obj.db_target == DB_ODOO_V15:
         odoo_db_version = 15
+    elif report_obj.db_target == DB_ODOO_V17:
+        odoo_db_version = 17
 
     query_result = select(report_obj.query, odoo_db_version, param_dict)
 
