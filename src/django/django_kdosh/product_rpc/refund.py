@@ -683,7 +683,7 @@ def invoice_refund(invoice_details, stock_location):
                             "virtual_1089",
                             {
                                 "name": "IGV 18% Venta",
-                                "tax_id": 2,
+                                "tax_id": 4,
                                 "account_id": 576,
                                 "account_analytic_id": false,
                                 "amount": 0,

@@ -2,7 +2,7 @@ from django.db import models
 from .reports.constants import (
     REPORT_DATATYPE_CHOICES,
     DATABASE_TARGET_CHOICES,
-    DB_ODOO_V15,
+    DB_ODOO_V17,
 )
 
 
@@ -98,7 +98,7 @@ class Report(models.Model):
     name = models.CharField(max_length=200)
     query = models.TextField(blank=False)
     db_target = models.CharField(
-        choices=DATABASE_TARGET_CHOICES, max_length=20, default=DB_ODOO_V15
+        choices=DATABASE_TARGET_CHOICES, max_length=20, default=DB_ODOO_V17
     )
 
     def __str__(self):

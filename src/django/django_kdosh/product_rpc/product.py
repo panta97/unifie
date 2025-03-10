@@ -41,7 +41,7 @@ class Product:
         self.description_purchase = False
         self.purchase_line_warn = "no-message"
         self.route_ids = [[6, False, [5]]]
-        self.weight = 0
+        # self.weight = 0
         self.volume = 0
         self.sale_delay = 0
         self.tracking = "none"
@@ -199,7 +199,7 @@ def create_product_new(
     product_template,
     default_code_map,
     list_price_map,
-    weight,
+    # weight,
     client_id,
     uid,
     proxy,
@@ -253,13 +253,13 @@ def create_product_new(
         default_code_map, product_product_list, product_template, uid, proxy
     )
     edit_product_list_price(list_price_map, tmpl_id, uid, proxy)
-    edit_product_weight(weight, product_product_list, uid, proxy)
+    # edit_product_weight(weight, product_product_list, uid, proxy)
 
     # SAVE PRODUCT ODOO ID AND REACT ID IN DB
     ProductStats.objects.create(odoo_id=tmpl_id, client_id=client_id, user_id=uid)
 
     # SAVE OR UPDATE WEIGHT IN DB
-    update_weightmap(weight, product_template["categ_id"])
+    # update_weightmap(weight, product_template["categ_id"])
 
     return tmpl_id
 
@@ -278,7 +278,7 @@ def product_new(transf_list, uid, pid, user):
             product_template.__dict__,
             transf["default_code_map"],
             transf["list_price_map"],
-            transf["weight_map"],
+            # transf["weight_map"],
             transf["client_id"],
             uid,
             proxy,
