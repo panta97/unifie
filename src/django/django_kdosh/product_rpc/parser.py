@@ -27,12 +27,19 @@ def transform_product_json(data):
                     "list_price": attr_lp["list_price"],
                 }
             )
+        category_id = 0
+        if prod["category_last_id"]:
+            category_id = prod["category_last_id"]
+        elif prod["category_brand_id"]:
+            category_id = prod["category_brand_id"]
+        elif prod["category_family_id"]:
+            category_id = prod["category_family_id"]
         product = {
             "name": prod["name"].strip(),
             "default_code": prod["default_code"].strip(),
             "list_price": prod["list_price"],
             # ACA ES DONDE SE TOMA EL ULTIMO VALOR DE LA CATEGORIA
-            "categ_id": prod["category_last_id"],
+            "categ_id": category_id,
             "pos_categ_ids": (
                 [(6, 0, [prod["pos_categ_ids"]])]
                 if isinstance(prod["pos_categ_ids"], int)
