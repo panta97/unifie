@@ -29,7 +29,7 @@ export const PPForm = () => {
           <PosCategoryField />
           <PriceField />
           <DefaultCodeField />
-          <WeightField/>
+          {/* <WeightField/> */}
         </div>
         <div className="mb-2">
           <AttributeTable />
