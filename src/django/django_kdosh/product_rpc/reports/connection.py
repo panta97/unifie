@@ -10,7 +10,7 @@ def get_connstr(odoo_version):
         db_name = os.getenv("PG_NAME_V11")
     elif odoo_version == 15:
         db_name = os.getenv("PG_NAME_V15")
-    elif odoo_version == 15:
+    elif odoo_version == 17:
         db_name = os.getenv("PG_NAME_V17")
     connstr = "dbname='{}' user='{}' host='{}' password='{}'".format(
         db_name,
