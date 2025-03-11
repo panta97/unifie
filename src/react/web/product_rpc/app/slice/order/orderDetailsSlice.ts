@@ -16,7 +16,7 @@ const initialState: OrderDetailsState = {
   partner_id: 0,
   partner_name: "",
   partner_ref: "",
-  is_taxed: false,
+  is_taxed: true,
 };
 
 export const orderDetailsSlice = createSlice({
