@@ -32,29 +32,30 @@ def get_goals_live(date, store):
     # MOVE
     if store == STORE_ABTAO:
         journal_ids = [
-            10,
-            11,
-            12,
-            13,
-            14,
-            15,
-            16,
-            17,
-            18,
-            23,
-            24,
-            25,
-            26,
-            27,
-            28,
-            29,
-            30,
-            31,
+            # LO COMENTADO ES JOURNAL_ID DE LA VERSION 15
+            24, # 10,
+            25, # 11,
+            26, # 12,
+            27, # 13,
+            28, # 14,
+            29, # 15,
+            30, # 16,
+            33, # 17,
+            31, # 18,
+            40, # 23,
+            83, # 24,
+            84, # 25,
+            85, # 26,
+            86, # 27,
+            87, # 28,
+            88, # 29,
+            89, # 30,
+            90, # 31,
         ]
     elif store == STORE_SAN_MARTIN:
-        journal_ids = [19, 32]
+        journal_ids = [32, 91] # [19, 32]
     elif store == STORE_TINGO_MARIA:
-        journal_ids = [20, 21, 22, 33, 34, 35]
+        journal_ids = [34, 35, 36, 92, 93, 94] # [20, 21, 22, 33, 34, 35]
 
     move_filters = [
         [
@@ -113,14 +114,14 @@ def get_goals_live(date, store):
         item["pos_categ_ids"] = product_product["pos_categ_ids"]
 
     eqs = {
-        ACCESSORIES: [31, 39, 33],
-        MEN: [29, 34, 27, 35, 41],
-        WOMEN: [40, 30, 36, 37],
-        SPORTS: [38],
-        HOME: [26],
-        CHILDREN: [32, 28],
-        CLEARANCE: [42],
-        MISCELLANEOUS: [43, 44, 45, 46, 47, 48, 49, 50, 52, 51],
+        ACCESSORIES: [64, 67, 45], # [31, 39, 33],
+        MEN: [62, 48, 44, 49, 70], # [29, 34, 27, 35, 41],
+        WOMEN: [69, 63, 51, 52], # [40, 30, 36, 37],
+        SPORTS: [55], # [38],
+        HOME: [58, 59, 60], # [26],
+        CHILDREN: [65, 61], # [32, 28],
+        CLEARANCE: [57], # [42],
+        MISCELLANEOUS: [44, 45, 46, 47, 48, 49, 50, 52, 51], # [43, 44, 45, 46, 47, 48, 49, 50, 52, 51],
     }
 
     lines_group_by_eqs = {
@@ -177,35 +178,32 @@ def get_goals_db(date_from, date_to, store):
     sql = """
             with temp as
                 (
-                    select
-                        am.invoice_date fecha,
-                        case
-                            when pc.id in (29, 34, 27, 35, 41) then 'MEN'
-                            when pc.id in (38) then 'SPORTS'
-                            when pc.id in (31, 39, 33) then 'ACCESSORIES'
-                            when pc.id in (40, 30, 36, 37) then 'WOMEN'
-                            when pc.id in (26) then 'HOME'
-                            when pc.id in (32, 28) then 'CHILDREN'
-                            when pc.id in (42) then 'CLEARANCE'
-                            else 'MISCELLANEOUS'
-                        end eq,
-                        case
-                            when pc.name = 'DESCUENTOS' then 'EN.LIQUIDACION'
-                            else pc.name
-                        end categoria,
-                        aml.price_total venta,
-                        substr(am.sequence_prefix, 0, 5) serie
-                    from account_move am
-                    left join account_move_line aml
-                        on am.id = aml.move_id
-                    left join product_product pp
-                        on aml.product_id = pp.id
-                    left join product_template pt
-                        on pp.product_tmpl_id = pt.id
-                    left join pos_category pc
-                        on pt.pos_categ_ids = pc.id
-                    where am.company_id = 1 -- kdosh company
-                    and am.move_type = 'out_invoice' -- boletas y facturas
+                    SELECT 
+                        am.invoice_date AS fecha,
+                        CASE
+                            WHEN pc.id IN (62, 48, 44, 49, 70) THEN 'MEN'
+                            WHEN pc.id IN (55) THEN 'SPORTS'
+                            WHEN pc.id IN (64, 67, 45) THEN 'ACCESSORIES'
+                            WHEN pc.id IN (69, 63, 51, 52) THEN 'WOMEN'
+                            WHEN pc.id IN (58, 59, 60) THEN 'HOME'
+                            WHEN pc.id IN (65, 61) THEN 'CHILDREN'
+                            WHEN pc.id IN (57) THEN 'CLEARANCE'
+                            ELSE 'MISCELLANEOUS'
+                        END AS eq,
+                        CASE
+                            WHEN pc.name::TEXT = '"DESCUENTOS"' THEN 'EN.LIQUIDACION'
+                            ELSE pc.name::TEXT
+                        END AS categoria,
+                        aml.price_total AS venta,
+                        SUBSTR(am.sequence_prefix, 0, 5) AS serie
+                    FROM account_move am
+                    LEFT JOIN account_move_line aml ON am.id = aml.move_id
+                    LEFT JOIN product_product pp ON aml.product_id = pp.id
+                    LEFT JOIN product_template pt ON pp.product_tmpl_id = pt.id
+                    LEFT JOIN pos_category_product_template_rel ptpc ON pt.id = ptpc.product_template_id
+                    LEFT JOIN pos_category pc ON ptpc.pos_category_id = pc.id
+                    WHERE am.company_id = 1  -- kdosh company
+                    AND am.move_type = 'out_invoice'
                 )
             select eq, sum(venta) venta
             from temp

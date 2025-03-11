@@ -7,6 +7,7 @@ export const fetchStoreGoals = async (
 
   try {
     const response = await (await fetch(ENDPOINT)).json();
+    console.log(response);
     return response.statusCode === 200 ? response.body : undefined;
   } catch (error) {
     alert(error);
