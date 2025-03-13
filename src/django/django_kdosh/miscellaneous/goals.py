@@ -61,7 +61,7 @@ def get_goals_live(date, store):
         [
             ["date", "=", date],
             ["state", "=", "posted"],
-            ["move_type", "in", ["out_invoice"]],
+            ["move_type", "=", "out_invoice"],
             ["journal_id", "in", journal_ids],
         ]
     ]
@@ -114,14 +114,14 @@ def get_goals_live(date, store):
         item["pos_categ_ids"] = product_product["pos_categ_ids"]
 
     eqs = {
-        ACCESSORIES: [64, 67, 45], # [31, 39, 33],
-        MEN: [62, 48, 44, 49, 70], # [29, 34, 27, 35, 41],
-        WOMEN: [69, 63, 51, 52], # [40, 30, 36, 37],
-        SPORTS: [55], # [38],
-        HOME: [58, 59, 60], # [26],
-        CHILDREN: [65, 61], # [32, 28],
+        ACCESSORIES: [38, 45, 46, 50, 64, 67, 43], # [31, 39, 33],
+        MEN: [39, 44, 48, 49, 62, 70], # [29, 34, 27, 35, 41],
+        WOMEN: [40, 51, 52, 53, 63, 69], # [40, 30, 36, 37],
+        SPORTS: [41, 54, 55], # [38],
+        HOME: [36, 37, 58, 59, 60], # [26],
+        CHILDREN: [42, 61, 65], # [32, 28],
         CLEARANCE: [57], # [42],
-        MISCELLANEOUS: [44, 45, 46, 47, 48, 49, 50, 52, 51], # [43, 44, 45, 46, 47, 48, 49, 50, 52, 51],
+        MISCELLANEOUS: [44, 47, 48, 49, 52, 51], # [43, 44, 45, 46, 47, 48, 49, 50, 52, 51],
     }
 
     lines_group_by_eqs = {
@@ -181,17 +181,17 @@ def get_goals_db(date_from, date_to, store):
                     SELECT 
                         am.invoice_date AS fecha,
                         CASE
-                            WHEN pc.id IN (62, 48, 44, 49, 70) THEN 'MEN'
-                            WHEN pc.id IN (55) THEN 'SPORTS'
-                            WHEN pc.id IN (64, 67, 45) THEN 'ACCESSORIES'
-                            WHEN pc.id IN (69, 63, 51, 52) THEN 'WOMEN'
-                            WHEN pc.id IN (58, 59, 60) THEN 'HOME'
-                            WHEN pc.id IN (65, 61) THEN 'CHILDREN'
+                            WHEN pc.id IN (39, 44, 48, 49, 62, 70) THEN 'MEN'
+                            WHEN pc.id IN (41, 54, 55) THEN 'SPORTS'
+                            WHEN pc.id IN (38, 45, 46, 50, 64, 67, 43) THEN 'ACCESSORIES'
+                            WHEN pc.id IN (40, 51, 52, 53, 63, 69) THEN 'WOMEN'
+                            WHEN pc.id IN (36, 37, 58, 59, 60) THEN 'HOME'
+                            WHEN pc.id IN (42, 61, 65) THEN 'CHILDREN'
                             WHEN pc.id IN (57) THEN 'CLEARANCE'
                             ELSE 'MISCELLANEOUS'
                         END AS eq,
                         CASE
-                            WHEN pc.name::TEXT = '"DESCUENTOS"' THEN 'EN.LIQUIDACION'
+                            WHEN pc.name::TEXT = '"DESCUENTOS"' THEN 'EN LIQUIDACION'
                             ELSE pc.name::TEXT
                         END AS categoria,
                         aml.price_total AS venta,
@@ -208,14 +208,17 @@ def get_goals_db(date_from, date_to, store):
             select eq, sum(venta) venta
             from temp
             where eq <> 'OTROS'
-                and serie in ({})
                 and fecha between '{}' and '{}'
             group by fecha, eq, categoria
             order by fecha;
         """.format(
-        series, date_from, date_to
+        date_from, date_to
     )
-    eq_all = select_df(sql, 15)
+    # and serie in ({})
+    #     .format(
+    #     series, date_from, date_to
+    # )
+    eq_all = select_df(sql, 17)
     eq_all = eq_all.groupby(["eq"]).sum()
     eq_all = eq_all.to_dict()["venta"]
     return eq_all
