@@ -29,20 +29,20 @@ export const InvoiceSummaryTable = ({
           </tr>
         </thead>
         <tbody>
-          {invoiceSummaries.map((invoice) => (
-            <tr key={invoice.id}>
+          {invoiceSummaries.map((refund_invoice) => (
+            <tr key={refund_invoice.id}>
               <td className="border border-gray-300 px-1">
                 <a
                   className="inline-flex items-center cursor-pointer hover:underline"
                   target="_blank"
                   rel="noopener noreferrer"
-                  href={invoice.odoo_link}
+                  href={refund_invoice.odoo_link ?? "#"}
                 >
-                  {invoice.number}
+                  {refund_invoice.number}
                 </a>
               </td>
               <td className="border border-gray-300 px-1">
-                {invoice.create_date}
+                {refund_invoice.create_date}
               </td>
             </tr>
           ))}

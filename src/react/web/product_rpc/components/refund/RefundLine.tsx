@@ -25,8 +25,8 @@ const stockLocations: StockLocation[] = [
   {
     id: 1,
     name: "ABTAO - KD01/ALMACEN/TIENDA",
-    parent_location_id: 11,
-    original_location_id: 30,
+    parent_location_id: 5,
+    original_location_id: 22,
   },
   {
     id: 2,
@@ -61,7 +61,9 @@ export const RefundLine = () => {
   };
 
   const handleCreateRefund = async () => {
-    if (!invoiceDetails.lines.some((line) => line.qty_refund > 0)) {
+    const selectedLines = invoiceDetails.lines.filter((line) => line.qty_refund > 0);
+
+    if (selectedLines.length === 0) {
       alert("Debe seleccionar al menos un producto");
       return;
     }
@@ -90,9 +92,16 @@ export const RefundLine = () => {
           Authorization: `Bearer ${window.localStorage.getItem("token")}`,
         },
         body: JSON.stringify({
-          invoice_details: invoiceDetails,
+          invoice_details: {
+            ...invoiceDetails,
+            lines: selectedLines,
+          },
           stock_location: stockLocation,
         }),
+        // body: JSON.stringify({
+        //   invoice_details: invoiceDetails,
+        //   stock_location: stockLocation,
+        // }),
       };
       const response = await fetch(`/api/product-rpc/refund/create`, params);
       const json = await response.json();
