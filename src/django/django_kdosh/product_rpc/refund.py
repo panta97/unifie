@@ -120,16 +120,8 @@ def get_invoice(invoice_number, company_ids=None, uid=2):
             "journal_id": invoice_details["journal_id"],
             "amount_untaxed": invoice_details["amount_untaxed"],
             "amount_total": invoice_details["amount_total"],
-            "user": (
-                invoice_details["user_id"][1]
-                if invoice_details.get("user_id")
-                else None
-            ),
-            "currency": (
-                invoice_details["currency_id"][1]
-                if invoice_details.get("currency_id")
-                else None
-            ),
+            "user": invoice_details.get("user_id", ["", ""])[1],
+            "currency": invoice_details.get("currency_id", ["", ""])[1],
         }
     )
 
@@ -142,7 +134,7 @@ def get_invoice(invoice_number, company_ids=None, uid=2):
                     51605
                 ],
                 [
-                    "doc_number"
+                    "vat"
                 ]
             ],
             "model": "res.partner",
@@ -170,7 +162,7 @@ def get_invoice(invoice_number, company_ids=None, uid=2):
     invoice_result["partner"] = {
         "id": invoice_details["partner_id"][0],
         "name": invoice_details["partner_id"][1],
-        "doc_number": partner_details["doc_number"],
+        "doc_number": partner_details["vat"],
         "odoo_link": f"{settings.ODOO_URL}/web#id={invoice_details['partner_id'][0]}&cids=1&menu_id=117&model=res.partner&view_type=form",
     }
 
@@ -401,7 +393,7 @@ def get_invoice(invoice_number, company_ids=None, uid=2):
     return invoice_result
 
 
-def invoice_refund(invoice_details, stock_location):
+def invoice_refund(invoice_details):
     uid = 2
     proxy = rpc.get_proxy()
     _invoice_id = invoice_details["id"]
@@ -441,7 +433,7 @@ def invoice_refund(invoice_details, stock_location):
     line_ids = response[0]["invoice_line_ids"]
     invoice_number = response[0].get("name", "Factura desconocida") or ""
     invoice_number = invoice_number.replace("\u200b", "")
-    company_id = response[0].get("company_id", [None])[0]
+    company_id = response[0].get("company_id", [0])[0] or 0
 
     # Determinar el journal_id basado en el número de boleta
     journal_mapping = {
@@ -476,36 +468,16 @@ def invoice_refund(invoice_details, stock_location):
         print(f"Error: La factura {_invoice_id} no tiene líneas de productos.")
         return None
 
+    # Si la factura no está en 'draft', simplemente informamos que no lo está y continuamos.
     if invoice_state != "draft":
-        print(f"La factura {_invoice_id} no está en 'draft'. Se cambiará.")
-
-        json_model = json.dumps(
-            {
-                "jsonrpc": "2.0",
-                "method": "call",
-                "params": {
-                    "args": [[_invoice_id]],
-                    "model": "account.move",
-                    "method": "button_draft",
-                    "kwargs": {
-                        "context": {"lang": "es_PE", "tz": "America/Lima", "uid": 1}
-                    },
-                },
-                "id": 987654,
-            }
-        )
-
-        rpc.execute_json_model(json.loads(json_model), uid, proxy=proxy)
-        print(f"Factura {_invoice_id} cambiada a estado 'draft'.")
+        print(f"La factura {_invoice_id} no está en 'draft'. Se creará la nota de crédito de todas formas.")
 
     selected_line_ids = [
         line["id"] for line in invoice_details["lines"] if line["qty_refund"] > 0
     ]
 
     if not selected_line_ids:
-        print(
-            f"Error: No se seleccionaron productos para la nota de crédito de la factura {_invoice_id}."
-        )
+        print(f"Error: No se seleccionaron productos para la nota de crédito de la factura {_invoice_id}.")
         return None
 
     json_model = json.dumps(
@@ -863,35 +835,29 @@ def invoice_refund(invoice_details, stock_location):
             "id": 999998,
         }
     )
-    result_action = rpc.execute_json_model(json.loads(json_wizard_action), uid, proxy=proxy)
+    result_action = rpc.execute_json_model(
+        json.loads(json_wizard_action), uid, proxy=proxy
+    )
     # print(f"RESULTADO action_create_payments: {result_action}")
 
     # endregion
     # region --------- UPDATE STOCK INVENTORY --------- #
 
     # 1. Leer las líneas de la nota de crédito directamente desde account.move.line
-    json_warehouse = json.dumps(
-        {
-            "jsonrpc": "2.0",
-            "method": "call",
-            "params": {
-                "model": "stock.warehouse",
-                "domain": [["company_id", "=", company_id]],
-                "fields": ["lot_stock_id"],
-                "limit": 1,
-                "context": {"lang": "es_PE", "tz": "America/Lima", "uid": uid},
-            },
-            "id": 111000,
-        }
-    )
-    warehouses = rpc.execute_json_model(json.loads(json_warehouse), uid, proxy=proxy)
-    if not warehouses:
-        raise Exception("No se encontró un almacén para la empresa de la factura.")
-    ID_EMPRESA = warehouses[0]["lot_stock_id"][0]
-    # FALTA APLICAR LA LOGICA PARA DIRECCIONAR EL LOCATION ID DEL ORIGIN Y DEST RESPECTO AL ID DE LA EMPRESA
-    ORIGIN_LOCATION_ID = 5
-    DEST_LOCATION_ID = 22
-    RETURN_PICKING_TYPE_ID = 7
+    if company_id == 1:  # ABTAO
+        ORIGIN_LOCATION_ID = 5
+        DEST_LOCATION_ID = 8
+        RETURN_PICKING_TYPE_ID = 1
+    elif company_id == 3:  # SAN MARTIN
+        ORIGIN_LOCATION_ID = 5
+        DEST_LOCATION_ID = 32
+        RETURN_PICKING_TYPE_ID = 13
+    elif company_id == 2:  # TINGO MARIA
+        ORIGIN_LOCATION_ID = 5
+        DEST_LOCATION_ID = 22
+        RETURN_PICKING_TYPE_ID = 7
+    else:
+        raise Exception("La empresa de la factura no tiene mapeo de almacén definido.")
 
     json_model_lines = json.dumps(
         {
@@ -1889,22 +1855,3 @@ def invoice_refund(invoice_details, stock_location):
     #     },
     #     "id": 383760606
     # }
-    # """
-    # dict_model = json.loads(json_model)
-    # dict_model["params"]["kwargs"]["context"]["uid"] = uid
-    # dict_model["params"]["args"][0][0] = invoice_details["partner"]["id"]
-
-    # loyalty_points_to_refund = 0
-    # for line in _invoice_lines:
-    #     loyalty_points_to_refund += (line["qty_refund"] * line["price_unit"] )
-    # loyalty_points_to_refund *= 0.03
-
-    # loyalty_points_left = loyalty_points - loyalty_points_to_refund
-    # if loyalty_points_left < 0: loyalty_points_left = 0
-
-    # dict_model["params"]["args"][1]["loyalty_points"] = loyalty_points_left
-    # result_list = rpc.execute_json_model(dict_model, uid, proxy=proxy)
-    # print("19. update partner's loyalty points")
-    # endregion
-
-    return _result

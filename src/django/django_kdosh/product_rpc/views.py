@@ -188,9 +188,10 @@ def get_invoice_details(request):
 def create_refund_invoice(request):
     try:
         raw_json = json.loads(request.body)
-        invoice_summaries = invoice_refund(
-            raw_json["invoice_details"], raw_json["stock_location"]
-        )
+        # invoice_summaries = invoice_refund(
+        #     raw_json["invoice_details"], raw_json["stock_location"]
+        # )
+        invoice_summaries = invoice_refund(raw_json["invoice_details"])
         response = JsonResponse(
             {
                 "result": "SUCCESS",

@@ -1,4 +1,4 @@
-import React, { Fragment } from "react";
+import React, { Fragment, useEffect } from "react";
 import QRCode from "react-qr-code";
 import { useAppDispatch, useAppSelector } from "../../app/hooks";
 import { selectFormIvoiceStatus } from "../../app/slice/refund/formSlice";
@@ -19,6 +19,10 @@ export const InvoiceTicket = () => {
   const invoiceStatus = useAppSelector(selectFormIvoiceStatus);
   const invoiceDetails = useAppSelector(selectInvoiceItem);
   const dispatch = useAppDispatch();
+
+  // useEffect(() => {
+  //   console.log("invoiceDetails:", invoiceDetails);
+  // }, [invoiceDetails]);
 
   const handleRefund = (lineId: number, qty: number) => {
     dispatch(updateRefund({ lineId, qty }));
@@ -79,11 +83,10 @@ export const InvoiceTicket = () => {
                     }}
                     onClick={() => handleRefund(line.id, 1)}
                     onDoubleClick={() => handleRefund(line.id, -1)}
-                    className={`hover:bg-gray-200 hover:cursor-pointer ${
-                      line.qty_refund > 0
+                    className={`hover:bg-gray-200 hover:cursor-pointer ${line.qty_refund > 0
                         ? "bg-[#F4BF50] hover:bg-[#F4BF50]"
                         : ""
-                    }`}
+                      }`}
                   >
                     <td className="p-0">
                       {line.name}
