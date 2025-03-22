@@ -165,13 +165,22 @@ def sort_attribute_vals(request):
 
 def get_invoice_details(request):
     try:
-        invoice_details = get_invoice(request.GET.get("number"))
-        response = JsonResponse(
+        invoice_number = request.GET.get("number")
+        invoice_details = get_invoice(invoice_number)
+
+        if not invoice_details:
+            raise Exception("Invoice not found")
+
+        invoice_details["number"] = (
+            invoice_details.get("number") or invoice_details.get("name") or "SIN_NUMERO"
+        )
+
+        return JsonResponse(
             {"result": "SUCCESS", "invoice_details": invoice_details}, status=200
         )
+
     except Exception as e:
-        response = JsonResponse({"result": "ERROR", "message": str(e)}, status=400)
-    return response
+        return JsonResponse({"result": "ERROR", "message": str(e)}, status=400)
 
 
 @csrf_exempt
@@ -179,14 +188,15 @@ def get_invoice_details(request):
 def create_refund_invoice(request):
     try:
         raw_json = json.loads(request.body)
-        invoice_summaries = invoice_refund(
-            raw_json["invoice_details"], raw_json["stock_location"]
-        )
+        # invoice_summaries = invoice_refund(
+        #     raw_json["invoice_details"], raw_json["stock_location"]
+        # )
+        invoice_summaries = invoice_refund(raw_json["invoice_details"])
         response = JsonResponse(
             {
                 "result": "SUCCESS",
                 "refund_invoice": invoice_summaries["refund_invoice"],
-                "stock_move": invoice_summaries["stock_move"],
+                # "stock_move": invoice_summaries["stock_move"],
             },
             status=200,
         )

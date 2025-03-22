@@ -4,6 +4,7 @@ import { updateInvoiceStatus } from "../../app/slice/refund/formSlice";
 import { replaceInvoice } from "../../app/slice/refund/invoiceSlice";
 import { fetchResult, FetchStatus } from "../../types/fetch";
 import { InvoiceTicket } from "./InvoiceTicket";
+import { BlockInventory } from "./selectBlockInventory";
 
 const getInvoiceFromQR = (qr: string) => {
   let separator: string | RegExp = "";
@@ -61,7 +62,7 @@ export const InvoiceSearch = () => {
         dispatch(replaceInvoice({ invoice: json.invoice_details }));
         setInvoiceNumber("");
       } else {
-        alert(json.message);
+        alert("Esta boleta/factura ya tiene una nota de crédito. " + json.message);
       }
     } catch (error) {
       alert(error);
@@ -93,6 +94,8 @@ export const InvoiceSearch = () => {
           Buscar
         </button>
       </form>
+      <BlockInventory />
+      <br />
       <InvoiceTicket />
     </div>
   );

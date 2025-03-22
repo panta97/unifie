@@ -134,14 +134,20 @@ export const invoiceItemSlice = createSlice({
     updateRefundManual: (
       state,
       {
-        payload: { lineId, priceSubtotalRefund },
-      }: PayloadAction<{ lineId: number; priceSubtotalRefund: number }>
+        payload: { lineId, priceSubtotalRefund, remove = false },
+      }: PayloadAction<{ lineId: number; priceSubtotalRefund: number; remove?: boolean }>
     ) => {
       for (let i = 0; i < state.lines.length; i++) {
         const line = state.lines[i];
         if (line.id === lineId) {
-          line.price_subtotal_refund = priceSubtotalRefund;
-          line.price_unit_refund = priceSubtotalRefund / line.qty_refund;
+          if (remove) {
+            line.qty_refund = 0;
+            line.price_subtotal_refund = 0;
+            line.price_unit_refund = 0;
+          } else {
+            line.price_subtotal_refund = priceSubtotalRefund;
+            line.price_unit_refund = priceSubtotalRefund / line.qty_refund;
+          }
           break;
         }
       }

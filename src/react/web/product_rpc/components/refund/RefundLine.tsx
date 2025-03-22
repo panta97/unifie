@@ -1,6 +1,6 @@
 import React, { useRef } from "react";
-import { useLocalStorage } from "../../../shared/hooks/useLocalStorage";
 import { useAppDispatch, useAppSelector } from "../../app/hooks";
+import { Trash2 } from "lucide-react";
 import {
   selectFormRefundStatus,
   updateRefundStatus,
@@ -13,39 +13,20 @@ import {
 } from "../../app/slice/refund/invoiceSlice";
 import { useOnClickOutside } from "../../hooks/useOnClickOutside";
 import { fetchResult, FetchStatus } from "../../types/fetch";
-import { StockLocation } from "../../types/refund";
 import { Loader } from "../shared/Loader";
-import { Select } from "../shared/Select";
 import { getCurrencyFormat, getQtyFormat } from "./format";
 import { InvoiceSummaryTable } from "./InvoiceSummaryTable";
 import { linesSchema } from "./validation";
 
-// TODO: this list should not be hardcoded
-const stockLocations: StockLocation[] = [
-  {
-    id: 1,
-    name: "ABTAO - KD01/ALMACEN/TIENDA",
-    parent_location_id: 11,
-    original_location_id: 30,
-  },
-  {
-    id: 2,
-    name: "SAN MARTIN - KD02/TIENDA",
-    parent_location_id: 18,
-    original_location_id: 19,
-  },
-];
-
 export const RefundLine = () => {
-  const { storedValue: stockLocation, setValue: setStockLocation } =
-    useLocalStorage<StockLocation>("r-state-stock-location", stockLocations[0]);
   const refundStatus = useAppSelector(selectFormRefundStatus);
   const invoiceDetails = useAppSelector(selectInvoiceItem);
   const tableSectionRef = useRef<HTMLTableSectionElement>(null);
+  const dispatch = useAppDispatch();
+
   useOnClickOutside(tableSectionRef, () =>
     dispatch(updateRefundEditing({ lineId: 0, isEditing: false }))
   );
-  const dispatch = useAppDispatch();
 
   const handleEditRefund = (lineId: number, isEditing: boolean) => {
     dispatch(updateRefundEditing({ lineId, isEditing }));
@@ -60,22 +41,25 @@ export const RefundLine = () => {
     dispatch(updateRefundManual({ lineId, priceSubtotalRefund }));
   };
 
+  const handleRemoveProduct = (lineId: number) => {
+    dispatch(updateRefundManual({ lineId, priceSubtotalRefund: 0, remove: true }));
+  };
+
   const handleCreateRefund = async () => {
-    if (!invoiceDetails.lines.some((line) => line.qty_refund > 0)) {
+    const selectedLines = invoiceDetails.lines.filter(
+      (line) => line.qty_refund > 0
+    );
+
+    if (selectedLines.length === 0) {
       alert("Debe seleccionar al menos un producto");
       return;
     }
 
     if (invoiceDetails.has_refund) {
       const isConfirmed = window.confirm(
-        "Esta factura ya tiene nota(s) de crédito,\n está seguro que quiere crear uno nuevo?"
+        "Esta factura ya tiene nota(s) de crédito,\n ¿está seguro que quiere crear uno nuevo?"
       );
       if (!isConfirmed) return;
-    }
-
-    if (stockLocation.id === 0) {
-      alert("Debe elegir un almacen destino");
-      return;
     }
 
     try {
@@ -90,10 +74,14 @@ export const RefundLine = () => {
           Authorization: `Bearer ${window.localStorage.getItem("token")}`,
         },
         body: JSON.stringify({
-          invoice_details: invoiceDetails,
-          stock_location: stockLocation,
+          invoice_details: {
+            ...invoiceDetails,
+            lines: selectedLines,
+          },
+          // Se elimina stock_location ya que no se utiliza en este flujo
         }),
       };
+      console.log("Datos enviados en el body:", params.body);
       const response = await fetch(`/api/product-rpc/refund/create`, params);
       const json = await response.json();
       if (json.result === fetchResult.SUCCESS) {
@@ -112,24 +100,6 @@ export const RefundLine = () => {
     } finally {
       dispatch(updateRefundStatus({ refundStatus: FetchStatus.IDLE }));
     }
-  };
-
-  const handleUpdateStockLocation = (
-    e: React.ChangeEvent<HTMLSelectElement>
-  ) => {
-    const selectedStock = stockLocations.find(
-      (stock) => stock.id === Number(e.target.value)
-    );
-    if (!selectedStock) {
-      setStockLocation({
-        id: 0,
-        name: "Seleccione",
-        parent_location_id: 0,
-        original_location_id: 0,
-      });
-      return;
-    }
-    setStockLocation(selectedStock);
   };
 
   return (
@@ -157,6 +127,7 @@ export const RefundLine = () => {
                 <th className="w-[20%] text-center">Cant.</th>
                 <th className="w-[20%] text-center">Unit</th>
                 <th className="w-[20%] text-center">Subtotal</th>
+                <th className="w-[20%] text-center">Acción</th>
               </tr>
             </thead>
             <tbody ref={tableSectionRef}>
@@ -166,7 +137,7 @@ export const RefundLine = () => {
                   <tr
                     key={line.id}
                     onClick={() => handleEditRefund(line.id, true)}
-                    className={`hover:bg-gray-200 hover:cursor-pointer`}
+                    className="hover:bg-gray-200 hover:cursor-pointer"
                   >
                     <td className="p-0">
                       {line.name}
@@ -187,13 +158,24 @@ export const RefundLine = () => {
                           onChange={(e) =>
                             handleUpdateRefundSubtotal(e, line.id)
                           }
-                          autoFocus={true}
+                          autoFocus
                           className="border border-black w-[45px]"
                           type="number"
                         />
                       ) : (
                         getCurrencyFormat(line.price_subtotal_refund)
                       )}
+                    </td>
+                    <td className="p-0 text-center">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleRemoveProduct(line.id);
+                        }}
+                        className="text-black hover:text-black"
+                      >
+                        <Trash2 size={16} />
+                      </button>
                     </td>
                   </tr>
                 ))}
@@ -212,7 +194,7 @@ export const RefundLine = () => {
                 <td colSpan={2} className="text-right">
                   {getCurrencyFormat(
                     invoiceDetails.lines.reduce(
-                      (curr, line) => (curr += line.price_subtotal_refund),
+                      (curr, line) => curr + line.price_subtotal_refund,
                       0
                     )
                   )}
@@ -229,23 +211,10 @@ export const RefundLine = () => {
             Crear nota de crédito
           </button>
         </div>
-        <div className="mt-3">
-          <div className="inline-flex flex-col mr-1">
-            <label htmlFor="cat_line" className="text-sm">
-              Almacen destino
-            </label>
-            <Select
-              id={stockLocation.id}
-              handler={handleUpdateStockLocation}
-              catalog={stockLocations}
-              name={"cat_line"}
-              autoFocus={false}
-              className="w-[250px]"
-            />
-          </div>
-        </div>
       </div>
       <Loader fetchStatus={refundStatus} portal={true} />
     </div>
   );
 };
+
+export default RefundLine;
