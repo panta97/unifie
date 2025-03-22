@@ -62,7 +62,7 @@ export const InvoiceSearch = () => {
         dispatch(replaceInvoice({ invoice: json.invoice_details }));
         setInvoiceNumber("");
       } else {
-        alert(json.message);
+        alert("Esta boleta/factura ya tiene una nota de crédito. " + json.message);
       }
     } catch (error) {
       alert(error);

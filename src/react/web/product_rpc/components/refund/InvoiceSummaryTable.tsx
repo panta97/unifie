@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from "react";
 import { InvoiceSummary } from "../../types/refund";
 
 export interface InvoiceSummaryTableProps {
@@ -10,12 +10,23 @@ export const InvoiceSummaryTable = ({
   title,
   invoiceSummaries,
 }: InvoiceSummaryTableProps) => {
+  
+  const validInvoices = invoiceSummaries.filter((invoice) => invoice !== undefined);
+
+  useEffect(() => {
+    console.log("InvoiceSummaryTable recibe:", { title, validInvoices });
+  }, [title, validInvoices]);
+
+  if (validInvoices.length === 0) {
+    return null;
+  }
+
   return (
     <div>
       <table className="w-[298px]">
         <thead>
           <tr>
-            <th className="border border-gray-300 text-left px-1" colSpan={2}>
+            <th className="border border-gray-300 font-invoice text-left px-1" colSpan={2}>
               {title}
             </th>
           </tr>
@@ -29,7 +40,7 @@ export const InvoiceSummaryTable = ({
           </tr>
         </thead>
         <tbody>
-          {invoiceSummaries.map((refund_invoice) => (
+          {validInvoices.map((refund_invoice) => (
             <tr key={refund_invoice.id}>
               <td className="border border-gray-300 px-1">
                 <a

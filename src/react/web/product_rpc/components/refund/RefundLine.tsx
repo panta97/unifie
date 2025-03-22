@@ -1,5 +1,6 @@
 import React, { useRef } from "react";
 import { useAppDispatch, useAppSelector } from "../../app/hooks";
+import { Trash2 } from "lucide-react";
 import {
   selectFormRefundStatus,
   updateRefundStatus,
@@ -38,6 +39,10 @@ export const RefundLine = () => {
     let priceSubtotalRefund = Math.max(0, e.target.valueAsNumber);
     if (isNaN(priceSubtotalRefund)) priceSubtotalRefund = 0;
     dispatch(updateRefundManual({ lineId, priceSubtotalRefund }));
+  };
+
+  const handleRemoveProduct = (lineId: number) => {
+    dispatch(updateRefundManual({ lineId, priceSubtotalRefund: 0, remove: true }));
   };
 
   const handleCreateRefund = async () => {
@@ -122,6 +127,7 @@ export const RefundLine = () => {
                 <th className="w-[20%] text-center">Cant.</th>
                 <th className="w-[20%] text-center">Unit</th>
                 <th className="w-[20%] text-center">Subtotal</th>
+                <th className="w-[20%] text-center">Acción</th>
               </tr>
             </thead>
             <tbody ref={tableSectionRef}>
@@ -159,6 +165,17 @@ export const RefundLine = () => {
                       ) : (
                         getCurrencyFormat(line.price_subtotal_refund)
                       )}
+                    </td>
+                    <td className="p-0 text-center">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleRemoveProduct(line.id);
+                        }}
+                        className="text-black hover:text-black"
+                      >
+                        <Trash2 size={16} />
+                      </button>
                     </td>
                   </tr>
                 ))}

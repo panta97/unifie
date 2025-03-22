@@ -163,7 +163,7 @@ def get_invoice(invoice_number, company_ids=None, uid=2):
         "id": invoice_details["partner_id"][0],
         "name": invoice_details["partner_id"][1],
         "doc_number": partner_details["vat"],
-        "odoo_link": f"{settings.ODOO_URL}/web#id={invoice_details['partner_id'][0]}&cids=1&menu_id=117&model=res.partner&view_type=form",
+        "odoo_link": f"{settings.ODOO_URL}/web#id={invoice_details['partner_id'][0]}&cids=1-2-3&menu_id=117&model=res.partner&view_type=form",
     }
 
     json_model = """{
@@ -260,7 +260,7 @@ def get_invoice(invoice_number, company_ids=None, uid=2):
     for refund in refund_invoices:
         refund["create_date"] = utils.get_invoice_datetime_format(refund["create_date"])
         refund["odoo_link"] = (
-            f"{settings.ODOO_URL}/web#id={refund['id']}&cids=1&menu_id=174&action=341&active_id=5&model=stock.picking&view_type=form"
+            f"{settings.ODOO_URL}/web#id={refund['id']}&cids=1-2-3&menu_id=174&action=341&active_id=5&model=stock.picking&view_type=form"
         )
         if not refund["number"]:
             refund["number"] = "BORRADOR"
@@ -364,7 +364,7 @@ def get_invoice(invoice_number, company_ids=None, uid=2):
                     "create_date": utils.get_invoice_datetime_format(
                         stock_move["create_date"]
                     ),
-                    "odoo_link": f"{settings.ODOO_URL}/web#id={stock_move['id']}&cids=1&menu_id=174&action=341&active_id=5&model=stock.picking&view_type=form",
+                    "odoo_link": f"{settings.ODOO_URL}/web#id={stock_move['id']}&cids=1-2-3&menu_id=174&action=341&active_id=5&model=stock.picking&view_type=form",
                 }
             )
     invoice_result["stock_moves"] = stock_moves
@@ -470,14 +470,18 @@ def invoice_refund(invoice_details):
 
     # Si la factura no está en 'draft', simplemente informamos que no lo está y continuamos.
     if invoice_state != "draft":
-        print(f"La factura {_invoice_id} no está en 'draft'. Se creará la nota de crédito de todas formas.")
+        print(
+            f"La factura {_invoice_id} no está en 'draft'. Se creará la nota de crédito de todas formas."
+        )
 
     selected_line_ids = [
         line["id"] for line in invoice_details["lines"] if line["qty_refund"] > 0
     ]
 
     if not selected_line_ids:
-        print(f"Error: No se seleccionaron productos para la nota de crédito de la factura {_invoice_id}.")
+        print(
+            f"Error: No se seleccionaron productos para la nota de crédito de la factura {_invoice_id}."
+        )
         return None
 
     json_model = json.dumps(
@@ -722,7 +726,7 @@ def invoice_refund(invoice_details):
     )
     _result["refund_invoice"][
         "odoo_link"
-    ] = f"{settings.ODOO_URL}/web#id={refund_id}&cids=1&menu_id=117&action=244&model=account.move&view_type=form"
+    ] = f"{settings.ODOO_URL}/web#id={refund_id}&cids=1-2-3&menu_id=117&action=244&model=account.move&view_type=form"
 
     # --- Paso 4: Preparar los datos para el wizard de pago ---
     json_model = json.dumps(
@@ -1050,7 +1054,7 @@ def invoice_refund(invoice_details):
             "id": refund_id,
             "number": refund_invoice_details["name"],
             "create_date": refund_invoice_details["create_date"],
-            "odoo_link": f"{settings.ODOO_URL}/web#id={refund_id}&cids=1&menu_id=117&action=244&model=account.move&view_type=form",
+            "odoo_link": f"{settings.ODOO_URL}/web#id={refund_id}&cids=1-2-3&menu_id=117&action=244&model=account.move&view_type=form",
         },
         "payment_wizard_id": wizard_id,
         "payment_result": result_action,

@@ -29,7 +29,7 @@ export const BlockInventory = () => {
       {stockLocationName ? (
         <p className="text-sm">{stockLocationName}</p>
       ) : (
-        <p className="text-sm text-red-600">Aún no se definió un almacén.</p>
+        <p className="text-sm text-black">Aún no se definió un almacén.</p>
       )}
     </div>
   );
