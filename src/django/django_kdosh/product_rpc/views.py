@@ -9,6 +9,7 @@ from rest_framework import generics
 from .models import Report
 from .serializers import ReportSerializer
 from .refund import get_invoice, invoice_refund
+from .credit import get_credit_note
 from .attribute import get_attribute_vals as get_attr_vals, update_attribute_vals
 from .reports.reports import (
     get_cpe_report,
@@ -177,6 +178,29 @@ def get_invoice_details(request):
 
         return JsonResponse(
             {"result": "SUCCESS", "invoice_details": invoice_details}, status=200
+        )
+
+    except Exception as e:
+        return JsonResponse({"result": "ERROR", "message": str(e)}, status=400)
+
+
+def get_credit_note_details(request):
+    try:
+        credit_note_number = request.GET.get("number")
+        credit_note_details = get_credit_note(credit_note_number)
+
+        if not credit_note_details:
+            raise Exception("Credit Note not found")
+
+        credit_note_details["number"] = (
+            credit_note_details.get("number")
+            or credit_note_details.get("name")
+            or "SIN_NUMERO"
+        )
+
+        return JsonResponse(
+            {"result": "SUCCESS", "credit_note_details": credit_note_details},
+            status=200,
         )
 
     except Exception as e:

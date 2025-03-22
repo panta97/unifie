@@ -13,6 +13,7 @@ const ProductProduct = React.lazy(
 const PurchaseOrder = React.lazy(
   () => import("../purchase_order/PurchaseOrder")
 );
+const Credit = React.lazy(() => import("../credit/Credit"));
 const Refund = React.lazy(() => import("../refund/Refund"));
 const Report = React.lazy(() => import("../report/Report"));
 
@@ -89,6 +90,19 @@ export const Navbar = () => {
                 Cambios
               </NavLink>
             </li>
+            <li>
+              <NavLink
+                to={`${basePath}/credit-notes`}
+                className={(navData) =>
+                  `inline-block px-2 py-1 ${
+                    navData.isActive ? "bg-gray-100 text-gray-900" : ""
+                  }`
+                }
+                tabIndex={-1}
+              >
+                Validar Nota de Crédito
+              </NavLink>
+            </li>
           </ul>
         </nav>
         <Suspense fallback={<div />}>
@@ -104,6 +118,7 @@ export const Navbar = () => {
             />
             <Route path={`${basePath}/reports`} element={<Report />} />
             <Route path={`${basePath}/refunds`} element={<Refund />} />
+            <Route path={`${basePath}/credit-notes`} element={<Credit />} />
           </Routes>
         </Suspense>
       </div>
