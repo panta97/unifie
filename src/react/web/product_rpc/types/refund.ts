@@ -59,6 +59,27 @@ export interface InvoiceDetails {
   lines: Line[];
 }
 
+export interface CreditDetails {
+  id: number;
+  // helper props
+  has_refund: boolean;
+  refund_invoices: InvoiceSummary[];
+  stock_moves: InvoiceSummary[];
+
+  journal: string;
+  number: string;
+  create_date: string;
+  date_invoice: string;
+  journal_sunat_type: string;
+  amount_untaxed: number;
+  amount_total: number;
+  payments: Payment[];
+  user: string;
+  currency: string;
+  partner: Partner;
+  lines: Line[];
+}
+
 export interface StockLocation extends CatalogGeneric {
   parent_location_id: number;
   original_location_id: number;
