@@ -29,16 +29,20 @@ const getInvoiceFromQR = (qr: string) => {
 
 export const InvoiceSearch = () => {
   const [invoiceNumber, setInvoiceNumber] = useState("");
+  const [notFound, setNotFound] = useState(false);
   const dispatch = useAppDispatch();
 
   const handleInvoiceNumber = (e: React.ChangeEvent<HTMLInputElement>) => {
     setInvoiceNumber(e.target.value);
+    setNotFound(false);
   };
 
   const handleFindInvoice = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
       dispatch(updateInvoiceStatus({ invoiceStatus: FetchStatus.LOADING }));
+      setNotFound(false);
+
       const params = {
         method: "GET",
         headers: {
@@ -46,26 +50,28 @@ export const InvoiceSearch = () => {
           Authorization: `Bearer ${window.localStorage.getItem("token")}`,
         },
       };
+
       let invoiceNumberSearch = invoiceNumber;
       const invoiceNumberQR = getInvoiceFromQR(invoiceNumberSearch);
       if (invoiceNumberQR) {
         invoiceNumberSearch = invoiceNumberQR;
         setInvoiceNumber(invoiceNumberSearch);
       }
+
       const response = await fetch(
         `/api/product-rpc/credit-note/invoice?number=${invoiceNumberSearch}`,
         params
       );
       const json = await response.json();
-      // console.log("API Response:", json);
+
       if (json.result === fetchResult.SUCCESS) {
         dispatch(replaceInvoice({ invoice: json.credit_note_details }));
         setInvoiceNumber("");
       } else {
-        alert("Esta boleta/factura ya tiene una nota de crédito. " + json.message);
+        setNotFound(true);
       }
     } catch (error) {
-      alert(error);
+      alert("Error en la búsqueda de la factura: " + error);
     } finally {
       dispatch(updateInvoiceStatus({ invoiceStatus: FetchStatus.IDLE }));
     }
@@ -94,7 +100,14 @@ export const InvoiceSearch = () => {
           Buscar
         </button>
       </form>
-      <InvoiceTicket />
+
+      {notFound && (
+        <div className="mt-2 text-sm text-red-600">
+          No se encontró una nota de crédito con ese número.
+        </div>
+      )}
+
+      {!notFound && <InvoiceTicket />}
     </div>
   );
 };
