@@ -1,9 +1,10 @@
 import React, { useState } from "react";
 import { useAppDispatch } from "../../app/hooks";
 import { updateInvoiceStatus } from "../../app/slice/refund/formSlice";
-import { replaceInvoice } from "../../app/slice/refund/creditSlice";
+import { replaceInvoice } from "../../app/slice/refund/invoiceSlice";
 import { fetchResult, FetchStatus } from "../../types/fetch";
 import { InvoiceTicket } from "./InvoiceTicket";
+import { BotonPago } from "./BotonPago";
 
 const getInvoiceFromQR = (qr: string) => {
   let separator: string | RegExp = "";
@@ -30,18 +31,16 @@ const getInvoiceFromQR = (qr: string) => {
 export const InvoiceSearch = () => {
   const [invoiceNumber, setInvoiceNumber] = useState("");
   const [notFound, setNotFound] = useState(false);
+  const [creditNoteStatus, setCreditNoteStatus] = useState<string | null>(null);
+  const [creditNoteId, setCreditNoteId] = useState<number | null>(null);
   const dispatch = useAppDispatch();
 
-  const handleInvoiceNumber = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setInvoiceNumber(e.target.value);
-    setNotFound(false);
-  };
-
-  const handleFindInvoice = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  const handleFindInvoice = async (e?: React.FormEvent<HTMLFormElement>) => {
+    e?.preventDefault();
     try {
       dispatch(updateInvoiceStatus({ invoiceStatus: FetchStatus.LOADING }));
       setNotFound(false);
+      setCreditNoteStatus(null);
 
       const params = {
         method: "GET",
@@ -63,17 +62,61 @@ export const InvoiceSearch = () => {
         params
       );
       const json = await response.json();
+      // console.log("API Response:", json);
 
-      if (json.result === fetchResult.SUCCESS) {
+      if (json.result === fetchResult.SUCCESS && json.credit_note_details) {
         dispatch(replaceInvoice({ invoice: json.credit_note_details }));
+        setCreditNoteStatus(json.credit_note_details.payment_state);
         setInvoiceNumber("");
+
+        if (json.credit_note_details.id) {
+          setCreditNoteId(Number(json.credit_note_details.id));
+        } else {
+          console.warn("⚠️ El ID de la nota de crédito no está presente en la respuesta.");
+        }
       } else {
         setNotFound(true);
       }
     } catch (error) {
+      console.error("Error en la búsqueda de la factura:", error);
       alert("Error en la búsqueda de la factura: " + error);
     } finally {
       dispatch(updateInvoiceStatus({ invoiceStatus: FetchStatus.IDLE }));
+    }
+  };
+
+  const getStatusColor = (status: string | null) => {
+    switch (status) {
+      case "in_payment":
+      case "paid":
+        return "text-green-600 bg-green-200";
+      case "not_paid":
+        return "text-red-600 bg-red-200";
+      case "pending":
+        return "text-yellow-600 bg-yellow-200";
+      default:
+        return "text-gray-600 bg-gray-200";
+    }
+  };
+
+  const translateStatus = (status: string | null) => {
+    switch (status) {
+      case "not_paid":
+        return "No pagado";
+      case "in_payment":
+        return "En proceso de pago";
+      case "paid":
+        return "Pagado";
+      case "partial":
+        return "Pago parcial";
+      case "reversed":
+        return "Revertido";
+      case "invoicing_error":
+        return "Error en facturación";
+      case "invoicing_pending":
+        return "Facturación pendiente";
+      default:
+        return "Desconocido";
     }
   };
 
@@ -92,7 +135,10 @@ export const InvoiceSearch = () => {
               name="invoice_number"
               value={invoiceNumber}
               onFocus={(e) => e.target.select()}
-              onChange={handleInvoiceNumber}
+              onChange={(e) => {
+                setInvoiceNumber(e.target.value);
+                setNotFound(false);
+              }}
             />
           </label>
         </div>
@@ -107,7 +153,23 @@ export const InvoiceSearch = () => {
         </div>
       )}
 
-      {!notFound && <InvoiceTicket />}
+      {!notFound && (
+        <div className="flex flex-col items-center gap-2 mt-5">
+          <div className="flex items-start gap-4 mt-5">
+            <div className="flex flex-col items-center gap-2">
+              {creditNoteStatus && (
+                <span className={`px-3 py-2 rounded text-sm font-semibold ${getStatusColor(creditNoteStatus)}`}>
+                  {translateStatus(creditNoteStatus)}
+                </span>
+              )}
+              <InvoiceTicket />
+            </div>
+            {creditNoteStatus === "not_paid" && creditNoteId && (
+              <BotonPago creditNoteId={creditNoteId} fetchUpdatedInvoice={handleFindInvoice} />
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

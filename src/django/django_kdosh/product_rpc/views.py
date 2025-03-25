@@ -9,7 +9,7 @@ from rest_framework import generics
 from .models import Report
 from .serializers import ReportSerializer
 from .refund import get_invoice, invoice_refund
-from .credit import get_credit_note
+from .credit import get_credit_note, pay_credit_note
 from .attribute import get_attribute_vals as get_attr_vals, update_attribute_vals
 from .reports.reports import (
     get_cpe_report,
@@ -233,6 +233,24 @@ def create_refund_invoice(request):
     except Exception as e:
         response = JsonResponse({"result": "ERROR", "message": str(e)}, status=400)
     return response
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def pay_credit_note_view(request):
+    try:
+        body_json = json.loads(request.body)
+        credit_note_id = body_json.get("credit_note_id")
+
+        if not credit_note_id:
+            raise ValueError("No se proporcionó 'credit_note_id' en el body.")
+
+        pay_result = pay_credit_note(credit_note_id)
+
+        return JsonResponse(pay_result, status=200)
+
+    except Exception as e:
+        return JsonResponse({"result": "ERROR", "message": str(e)}, status=400)
 
 
 class ReportList(generics.ListAPIView):

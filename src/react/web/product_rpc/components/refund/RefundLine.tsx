@@ -79,10 +79,9 @@ export const RefundLine = ({ isPaying }) => {
             lines: selectedLines,
           },
           accion: isPaying ? "pagar" : "no_pagar",
-          // Se elimina stock_location ya que no se utiliza en este flujo
         }),
       };
-      console.log("Datos enviados en el body:", params.body);
+      // console.log("Datos enviados en el body:", params.body);
       const response = await fetch(`/api/product-rpc/refund/create`, params);
       const json = await response.json();
       if (json.result === fetchResult.SUCCESS) {

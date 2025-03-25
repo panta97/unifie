@@ -62,7 +62,7 @@ export const InvoiceSearch: React.FC<InvoiceSearchProps> = ({ isPaying, setIsPay
       }
 
       const accion = isPaying ? "pagar" : "no_pagar";
-      console.log("Acción enviada:", accion);
+      // console.log("Acción enviada:", accion);
 
       const response = await fetch(
         `/api/product-rpc/refund/invoice?number=${invoiceNumberSearch}&accion=${accion}`,
