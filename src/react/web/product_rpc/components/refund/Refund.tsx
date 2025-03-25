@@ -1,16 +1,18 @@
-import React from "react";
+import React, { useState } from "react";
 import { Wrapper } from "../shared/Wrapper";
 import { InvoiceSearch } from "./InvoiceSearch";
 import { InvoiceTicketPrint } from "./InvoiceTicketPrint";
 import { RefundLine } from "./RefundLine";
 
 const Refund = () => {
+  const [isPaying, setIsPaying] = useState(true);
+
   return (
     <Wrapper>
       <div className="w-[620px] mx-auto">
         <div className="flex justify-between">
-          <InvoiceSearch />
-          <RefundLine />
+          <InvoiceSearch isPaying={isPaying} setIsPaying={setIsPaying} />
+          <RefundLine isPaying={isPaying} />
         </div>
       </div>
       <InvoiceTicketPrint />

@@ -11,7 +11,7 @@ export const InvoiceSummaryTable = ({
   invoiceSummaries,
 }: InvoiceSummaryTableProps) => {
   
-  const validInvoices = invoiceSummaries.filter((invoice) => invoice !== undefined);
+  const validInvoices = invoiceSummaries.filter((refundInvoice) => refundInvoice !== undefined);
 
   useEffect(() => {
     // console.log("InvoiceSummaryTable recibe:", { title, validInvoices });

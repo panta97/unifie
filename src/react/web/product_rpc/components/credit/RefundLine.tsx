@@ -10,7 +10,7 @@ import {
   updateRefundEditing,
   updateRefundManual,
   updateRefundResult,
-} from "../../app/slice/refund/invoiceSlice";
+} from "../../app/slice/refund/creditSlice";
 import { useOnClickOutside } from "../../hooks/useOnClickOutside";
 import { fetchResult, FetchStatus } from "../../types/fetch";
 import { Loader } from "../shared/Loader";
@@ -18,7 +18,7 @@ import { getCurrencyFormat, getQtyFormat } from "./format";
 import { InvoiceSummaryTable } from "./InvoiceSummaryTable";
 import { linesSchema } from "./validation";
 
-export const RefundLine = ({ isPaying }) => { 
+export const RefundLine = () => {
   const refundStatus = useAppSelector(selectFormRefundStatus);
   const invoiceDetails = useAppSelector(selectInvoiceItem);
   const tableSectionRef = useRef<HTMLTableSectionElement>(null);
@@ -78,10 +78,10 @@ export const RefundLine = ({ isPaying }) => {
             ...invoiceDetails,
             lines: selectedLines,
           },
-          accion: isPaying ? "pagar" : "no_pagar",
+          // Se elimina stock_location ya que no se utiliza en este flujo
         }),
       };
-      // console.log("Datos enviados en el body:", params.body);
+      console.log("Datos enviados en el body:", params.body);
       const response = await fetch(`/api/product-rpc/refund/create`, params);
       const json = await response.json();
       if (json.result === fetchResult.SUCCESS) {

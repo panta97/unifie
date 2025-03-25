@@ -9,6 +9,7 @@ from rest_framework import generics
 from .models import Report
 from .serializers import ReportSerializer
 from .refund import get_invoice, invoice_refund
+from .credit import get_credit_note, pay_credit_note
 from .attribute import get_attribute_vals as get_attr_vals, update_attribute_vals
 from .reports.reports import (
     get_cpe_report,
@@ -165,9 +166,69 @@ def sort_attribute_vals(request):
 
 def get_invoice_details(request):
     try:
-        invoice_details = get_invoice(request.GET.get("number"))
-        response = JsonResponse(
+        invoice_number = request.GET.get("number")
+        invoice_details = get_invoice(invoice_number)
+
+        if not invoice_details:
+            raise Exception("Invoice not found")
+
+        invoice_details["number"] = (
+            invoice_details.get("number") or invoice_details.get("name") or "SIN_NUMERO"
+        )
+
+        return JsonResponse(
             {"result": "SUCCESS", "invoice_details": invoice_details}, status=200
+        )
+
+    except Exception as e:
+        return JsonResponse({"result": "ERROR", "message": str(e)}, status=400)
+
+
+def get_credit_note_details(request):
+    try:
+        credit_note_number = request.GET.get("number")
+        credit_note_details = get_credit_note(credit_note_number)
+
+        if not credit_note_details:
+            raise Exception("Credit Note not found")
+
+        credit_note_details["number"] = (
+            credit_note_details.get("number")
+            or credit_note_details.get("name")
+            or "SIN_NUMERO"
+        )
+
+        return JsonResponse(
+            {"result": "SUCCESS", "credit_note_details": credit_note_details},
+            status=200,
+        )
+
+    except Exception as e:
+        return JsonResponse({"result": "ERROR", "message": str(e)}, status=400)
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def create_refund_invoice(request):
+    try:
+        raw_json = json.loads(request.body)
+        # invoice_summaries = invoice_refund(
+        #     raw_json["invoice_details"], raw_json["stock_location"]
+        # )
+        accion = raw_json.get("accion", None)
+        if accion is None:
+            return JsonResponse(
+                {"result": "ERROR", "message": "Falta el parámetro 'accion'"},
+                status=400,
+            )
+        invoice_summaries = invoice_refund(raw_json["invoice_details"], accion)
+        response = JsonResponse(
+            {
+                "result": "SUCCESS",
+                "refund_invoice": invoice_summaries["refund_invoice"],
+                # "stock_move": invoice_summaries["stock_move"],
+            },
+            status=200,
         )
     except Exception as e:
         response = JsonResponse({"result": "ERROR", "message": str(e)}, status=400)
@@ -176,23 +237,20 @@ def get_invoice_details(request):
 
 @csrf_exempt
 @require_http_methods(["POST"])
-def create_refund_invoice(request):
+def pay_credit_note_view(request):
     try:
-        raw_json = json.loads(request.body)
-        invoice_summaries = invoice_refund(
-            raw_json["invoice_details"], raw_json["stock_location"]
-        )
-        response = JsonResponse(
-            {
-                "result": "SUCCESS",
-                "refund_invoice": invoice_summaries["refund_invoice"],
-                "stock_move": invoice_summaries["stock_move"],
-            },
-            status=200,
-        )
+        body_json = json.loads(request.body)
+        credit_note_id = body_json.get("credit_note_id")
+
+        if not credit_note_id:
+            raise ValueError("No se proporcionó 'credit_note_id' en el body.")
+
+        pay_result = pay_credit_note(credit_note_id)
+
+        return JsonResponse(pay_result, status=200)
+
     except Exception as e:
-        response = JsonResponse({"result": "ERROR", "message": str(e)}, status=400)
-    return response
+        return JsonResponse({"result": "ERROR", "message": str(e)}, status=400)
 
 
 class ReportList(generics.ListAPIView):

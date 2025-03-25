@@ -4,6 +4,7 @@ import { updateInvoiceStatus } from "../../app/slice/refund/formSlice";
 import { replaceInvoice } from "../../app/slice/refund/invoiceSlice";
 import { fetchResult, FetchStatus } from "../../types/fetch";
 import { InvoiceTicket } from "./InvoiceTicket";
+import { BlockInventory } from "./selectBlockInventory";
 
 const getInvoiceFromQR = (qr: string) => {
   let separator: string | RegExp = "";
@@ -27,7 +28,12 @@ const getInvoiceFromQR = (qr: string) => {
   return `${serie}-${number}`.toUpperCase();
 };
 
-export const InvoiceSearch = () => {
+interface InvoiceSearchProps {
+  isPaying: boolean;
+  setIsPaying: React.Dispatch<React.SetStateAction<boolean>>;
+}
+
+export const InvoiceSearch: React.FC<InvoiceSearchProps> = ({ isPaying, setIsPaying }) => {
   const [invoiceNumber, setInvoiceNumber] = useState("");
   const dispatch = useAppDispatch();
 
@@ -39,6 +45,7 @@ export const InvoiceSearch = () => {
     e.preventDefault();
     try {
       dispatch(updateInvoiceStatus({ invoiceStatus: FetchStatus.LOADING }));
+
       const params = {
         method: "GET",
         headers: {
@@ -46,22 +53,28 @@ export const InvoiceSearch = () => {
           Authorization: `Bearer ${window.localStorage.getItem("token")}`,
         },
       };
+
       let invoiceNumberSearch = invoiceNumber;
       const invoiceNumberQR = getInvoiceFromQR(invoiceNumberSearch);
       if (invoiceNumberQR) {
         invoiceNumberSearch = invoiceNumberQR;
         setInvoiceNumber(invoiceNumberSearch);
       }
+
+      const accion = isPaying ? "pagar" : "no_pagar";
+      // console.log("Acción enviada:", accion);
+
       const response = await fetch(
-        `/api/product-rpc/refund/invoice?number=${invoiceNumberSearch}`,
+        `/api/product-rpc/refund/invoice?number=${invoiceNumberSearch}&accion=${accion}`,
         params
       );
+
       const json = await response.json();
       if (json.result === fetchResult.SUCCESS) {
         dispatch(replaceInvoice({ invoice: json.invoice_details }));
         setInvoiceNumber("");
       } else {
-        alert(json.message);
+        alert("Esta boleta/factura ya tiene una nota de crédito. " + json.message);
       }
     } catch (error) {
       alert(error);
@@ -92,7 +105,32 @@ export const InvoiceSearch = () => {
         <button className="rounded bg-gray-100 px-3 py-1 cursor-pointer text-xs border border-gray-700 leading-3">
           Buscar
         </button>
+        <div className="flex items-center gap-2">
+          {!isPaying && <span className="text-xs w-[50px]">No pagar</span>}
+
+          <label className="relative inline-flex items-center cursor-pointer">
+            <input
+              type="checkbox"
+              checked={isPaying}
+              onChange={(e) => setIsPaying(e.target.checked)}
+              className="sr-only peer"
+            />
+            <div
+              className={`w-10 h-5 rounded-full transition-all relative ${isPaying ? "bg-green-500" : "bg-red-500"
+                }`}
+            >
+              <div
+                className={`absolute w-4 h-4 bg-white rounded-full transition-all 
+          ${isPaying ? "left-[23px]" : "left-[1px]"} top-1/2 -translate-y-1/2`}
+              ></div>
+            </div>
+          </label>
+
+          {isPaying && <span className="text-xs">Pagar</span>}
+        </div>
       </form>
+      <BlockInventory />
+      <br />
       <InvoiceTicket />
     </div>
   );

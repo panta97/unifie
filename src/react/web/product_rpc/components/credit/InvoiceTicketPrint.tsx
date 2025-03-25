@@ -1,12 +1,8 @@
-import React, { Fragment, useEffect } from "react";
+import React, { Fragment } from "react";
+import { createPortal } from "react-dom";
 import QRCode from "react-qr-code";
-import { useAppDispatch, useAppSelector } from "../../app/hooks";
-import { selectFormIvoiceStatus } from "../../app/slice/refund/formSlice";
-import {
-  selectInvoiceItem,
-  updateRefund,
-} from "../../app/slice/refund/invoiceSlice";
-  import { Loader } from "../shared/Loader";
+import { useAppSelector } from "../../app/hooks";
+import { selectInvoiceItem } from "../../app/slice/refund/creditSlice";
 import {
   getCurrencyFormat,
   getInvoiceDiscount,
@@ -15,22 +11,12 @@ import {
 } from "./format";
 import kdoshLogo from "./kdosh_logo.png";
 
-export const InvoiceTicket = () => {
-  const invoiceStatus = useAppSelector(selectFormIvoiceStatus);
+export const InvoiceTicketPrint = () => {
   const invoiceDetails = useAppSelector(selectInvoiceItem);
-  const dispatch = useAppDispatch();
 
-  // useEffect(() => {
-  //   console.log("invoiceDetails:", invoiceDetails);
-  // }, [invoiceDetails]);
-
-  const handleRefund = (lineId: number, qty: number) => {
-    dispatch(updateRefund({ lineId, qty }));
-  };
-
-  return (
+  return createPortal(
     <div className="font-invoice text-[13px] text-black">
-      <div className="relative inline-block overflow-hidden w-[298px] p-[15px] border border-gray-300 rounded-md min-h-[700px]">
+      <div className="relative inline-block overflow-hidden w-[296px] p-[15px] min-h-[700px]">
         {invoiceDetails.id !== 0 && (
           <>
             <div className="w-[45%] m-auto">
@@ -74,20 +60,7 @@ export const InvoiceTicket = () => {
               </thead>
               <tbody>
                 {invoiceDetails.lines.map((line) => (
-                  <tr
-                    key={line.id}
-                    tabIndex={0}
-                    onKeyDown={(e) => {
-                      if (e.key === "Backspace") handleRefund(line.id, -1);
-                      else if (e.key === "Enter") handleRefund(line.id, 1);
-                    }}
-                    onClick={() => handleRefund(line.id, 1)}
-                    onDoubleClick={() => handleRefund(line.id, -1)}
-                    className={`hover:bg-gray-200 hover:cursor-pointer ${line.qty_refund > 0
-                        ? "bg-[#F4BF50] hover:bg-[#F4BF50]"
-                        : ""
-                      }`}
-                  >
+                  <tr key={line.id}>
                     <td className="p-0">
                       {line.name}
                       {line.discount !== 0 && (
@@ -205,8 +178,8 @@ export const InvoiceTicket = () => {
             </div>
           </>
         )}
-        <Loader fetchStatus={invoiceStatus} portal={false} />
       </div>
-    </div>
+    </div>,
+    document.getElementById("print")!
   );
 };

@@ -5,8 +5,8 @@ import { selectFormIvoiceStatus } from "../../app/slice/refund/formSlice";
 import {
   selectInvoiceItem,
   updateRefund,
-} from "../../app/slice/refund/invoiceSlice";
-  import { Loader } from "../shared/Loader";
+} from "../../app/slice/refund/creditSlice";
+import { Loader } from "../shared/Loader";
 import {
   getCurrencyFormat,
   getInvoiceDiscount,
@@ -81,12 +81,6 @@ export const InvoiceTicket = () => {
                       if (e.key === "Backspace") handleRefund(line.id, -1);
                       else if (e.key === "Enter") handleRefund(line.id, 1);
                     }}
-                    onClick={() => handleRefund(line.id, 1)}
-                    onDoubleClick={() => handleRefund(line.id, -1)}
-                    className={`hover:bg-gray-200 hover:cursor-pointer ${line.qty_refund > 0
-                        ? "bg-[#F4BF50] hover:bg-[#F4BF50]"
-                        : ""
-                      }`}
                   >
                     <td className="p-0">
                       {line.name}

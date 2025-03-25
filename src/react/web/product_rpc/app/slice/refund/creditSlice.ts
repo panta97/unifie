@@ -1,9 +1,9 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { clamp } from "lodash";
-import { InvoiceDetails, InvoiceSummary } from "../../../types/refund";
+import { CreditDetails, InvoiceSummary } from "../../../types/refund";
 import { RootState } from "../../store";
 
-const initialState: InvoiceDetails = {
+const initialState: CreditDetails = {
   id: 0,
   has_refund: false,
   journal: "",
@@ -33,7 +33,7 @@ export const invoiceItemSlice = createSlice({
   reducers: {
     replaceInvoice: (
       state,
-      { payload: { invoice } }: PayloadAction<{ invoice: InvoiceDetails }>
+      { payload: { invoice } }: PayloadAction<{ invoice: CreditDetails }>
     ) => {
       state.id = invoice.id;
       state.has_refund = invoice.has_refund;
@@ -182,11 +182,11 @@ export const invoiceItemSlice = createSlice({
 });
 
 export const {
-  replaceInvoice,
   updateRefund,
   updateRefundManual,
   updateRefundResult,
   updateRefundEditing,
+  replaceInvoice,
 } = invoiceItemSlice.actions;
 
 export const selectInvoiceItem = (state: RootState) => state.refund.invoice;
