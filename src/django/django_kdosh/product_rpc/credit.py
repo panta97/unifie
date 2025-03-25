@@ -48,6 +48,7 @@ def get_credit_note(credit_note_number, company_ids=None, uid=2):
         "currency_id",
         "partner_id",
         "invoice_line_ids",
+        "payment_state",
     ]
     json_model_details = {
         "jsonrpc": "2.0",
@@ -75,7 +76,10 @@ def get_credit_note(credit_note_number, company_ids=None, uid=2):
     credit_note_details["name"] = credit_note_details["name"].replace("\u200b", "")
 
     # CONSULTA DE PAGOS: Buscar pagos relacionados con la factura
-    domain_payments = [["move_id", "=", credit_note_id], ["company_id", "in", company_ids]]
+    domain_payments = [
+        ["move_id", "=", credit_note_id],
+        ["company_id", "in", company_ids],
+    ]
     json_model_payments = {
         "jsonrpc": "2.0",
         "method": "call",
@@ -122,6 +126,7 @@ def get_credit_note(credit_note_number, company_ids=None, uid=2):
             "amount_total": credit_note_details["amount_total"],
             "user": credit_note_details.get("user_id", ["", ""])[1],
             "currency": credit_note_details.get("currency_id", ["", ""])[1],
+            "payment_state": credit_note_details.get("payment_state"),
         }
     )
 
@@ -391,3 +396,104 @@ def get_credit_note(credit_note_number, company_ids=None, uid=2):
         )
 
     return credit_note_result
+
+
+def pay_credit_note(credit_note_id, uid=2):
+    proxy = rpc.get_proxy()
+
+    # 1) Leemos la nota de crédito para obtener campos necesarios
+    fields_to_read = [
+        "payment_state",
+        "amount_total",
+        "invoice_date",
+        "payment_reference",
+    ]
+    json_read = json.dumps(
+        {
+            "jsonrpc": "2.0",
+            "method": "call",
+            "params": {
+                "args": [[credit_note_id], fields_to_read],
+                "model": "account.move",
+                "method": "read",
+                "kwargs": {
+                    "context": {"lang": "es_PE", "tz": "America/Lima", "uid": uid}
+                },
+            },
+            "id": 987001,
+        }
+    )
+
+    result_list = rpc.execute_json_model(json.loads(json_read), uid, proxy=proxy)
+    if not result_list:
+        raise Exception(f"No se pudo leer la Nota de Crédito con ID {credit_note_id}")
+
+    note_data = result_list[0]
+    payment_state = note_data.get("payment_state", "not_paid")
+    amount_total = note_data.get("amount_total", 0)
+    invoice_date = note_data.get("invoice_date")
+    payment_reference = note_data.get("payment_reference", f"Pago NC {credit_note_id}")
+
+    if payment_state in ("paid", "in_payment", "partial"):
+        return {
+            "result": "WARNING",
+            "message": f"La nota de crédito {credit_note_id} ya tiene estado '{payment_state}'.",
+        }
+
+    # 2) Construimos los valores del wizard de pago
+    wizard_vals = {
+        "payment_date": invoice_date or datetime.now().strftime("%Y-%m-%d"),
+        "amount": amount_total,
+        "communication": payment_reference,
+        "journal_id": 98,
+        "payment_type": "outbound",
+    }
+
+    # 3) Creamos el wizard de pago (account.payment.register)
+    json_wizard_create = json.dumps(
+        {
+            "jsonrpc": "2.0",
+            "method": "call",
+            "params": {
+                "model": "account.payment.register",
+                "method": "create",
+                "args": [wizard_vals],
+                "kwargs": {
+                    "context": {
+                        "lang": "es_PE",
+                        "tz": "America/Lima",
+                        "uid": uid,
+                        "active_model": "account.move",
+                        "active_ids": [credit_note_id],
+                        "active_id": credit_note_id,
+                    }
+                },
+            },
+            "id": 999999,
+        }
+    )
+    wizard_id = rpc.execute_json_model(json.loads(json_wizard_create), uid, proxy=proxy)
+    if not wizard_id:
+        raise Exception(
+            "No se pudo crear el wizard de pago (account.payment.register)."
+        )
+
+    # 4) Confirmamos el wizard para crear el pago
+    json_wizard_action = json.dumps(
+        {
+            "jsonrpc": "2.0",
+            "method": "call",
+            "params": {
+                "model": "account.payment.register",
+                "method": "action_create_payments",
+                "args": [[wizard_id]],
+                "kwargs": {},
+            },
+            "id": 999998,
+        }
+    )
+    result_action = rpc.execute_json_model(
+        json.loads(json_wizard_action), uid, proxy=proxy
+    )
+
+    return {"result": "SUCCESS", "wizard_id": wizard_id, "action_result": result_action}

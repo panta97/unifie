@@ -14,6 +14,7 @@ from .views import (
     get_invoice_details,
     get_credit_note_details,
     create_refund_invoice,
+    pay_credit_note_view,
     ReportList,
 )
 
@@ -35,5 +36,6 @@ urlpatterns = [
     path("refund/invoice", get_invoice_details, name="get_invoice_details"),
     path("credit-note/invoice", get_credit_note_details, name="get_credit_note_details"),
     path("refund/create", create_refund_invoice, name="create_refund_invoice"),
+    path("credit-note/pay", pay_credit_note_view, name="pay_credit_note"),
     path("reports", ReportList.as_view(), name="reports"),
 ]
