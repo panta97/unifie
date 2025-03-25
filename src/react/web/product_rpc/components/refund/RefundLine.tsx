@@ -18,7 +18,7 @@ import { getCurrencyFormat, getQtyFormat } from "./format";
 import { InvoiceSummaryTable } from "./InvoiceSummaryTable";
 import { linesSchema } from "./validation";
 
-export const RefundLine = () => {
+export const RefundLine = ({ isPaying }) => { 
   const refundStatus = useAppSelector(selectFormRefundStatus);
   const invoiceDetails = useAppSelector(selectInvoiceItem);
   const tableSectionRef = useRef<HTMLTableSectionElement>(null);
@@ -78,6 +78,7 @@ export const RefundLine = () => {
             ...invoiceDetails,
             lines: selectedLines,
           },
+          accion: isPaying ? "pagar" : "no_pagar",
           // Se elimina stock_location ya que no se utiliza en este flujo
         }),
       };

@@ -215,7 +215,13 @@ def create_refund_invoice(request):
         # invoice_summaries = invoice_refund(
         #     raw_json["invoice_details"], raw_json["stock_location"]
         # )
-        invoice_summaries = invoice_refund(raw_json["invoice_details"])
+        accion = raw_json.get("accion", None)
+        if accion is None:
+            return JsonResponse(
+                {"result": "ERROR", "message": "Falta el parámetro 'accion'"},
+                status=400,
+            )
+        invoice_summaries = invoice_refund(raw_json["invoice_details"], accion)
         response = JsonResponse(
             {
                 "result": "SUCCESS",

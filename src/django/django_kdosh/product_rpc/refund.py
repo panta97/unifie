@@ -393,7 +393,7 @@ def get_invoice(invoice_number, company_ids=None, uid=2):
     return invoice_result
 
 
-def invoice_refund(invoice_details):
+def invoice_refund(invoice_details, accion):
     uid = 2
     proxy = rpc.get_proxy()
     _invoice_id = invoice_details["id"]
@@ -402,7 +402,7 @@ def invoice_refund(invoice_details):
     json_model = json.dumps(
         {
             "jsonrpc": "2.0",
-            "method": "call",
+            "method": "call",   
             "params": {
                 "args": [
                     [_invoice_id],
@@ -796,53 +796,102 @@ def invoice_refund(invoice_details):
         "payment_type": "outbound",
     }
 
-    # --- Paso 5: Crear el wizard de pago (account.payment.register) ---
-    json_wizard_create = json.dumps(
-        {
-            "jsonrpc": "2.0",
-            "method": "call",
-            "params": {
-                "model": "account.payment.register",
-                "method": "create",
-                "args": [wizard_vals],
-                "kwargs": {
-                    "context": {
-                        "lang": "es_PE",
-                        "tz": "America/Lima",
-                        "uid": uid,
-                        "active_model": "account.move",
-                        "active_ids": [refund_id],
-                        "active_id": refund_id,
-                    }
-                },
-            },
-            "id": 999999,
-        }
-    )
-    wizard_id = rpc.execute_json_model(json.loads(json_wizard_create), uid, proxy=proxy)
-    if not wizard_id:
-        print("Error: No se pudo crear el wizard de pago (account.payment.register).")
-        return None
-    # print(f"WIZARD DE PAGO CREADO: {wizard_id}")
+    wizard_id = None
+    result_action = None
 
-    # --- Paso 6: Confirmar el wizard para crear el pago ---
-    json_wizard_action = json.dumps(
-        {
-            "jsonrpc": "2.0",
-            "method": "call",
-            "params": {
-                "model": "account.payment.register",
-                "method": "action_create_payments",
-                "args": [[wizard_id]],
-                "kwargs": {},
-            },
-            "id": 999998,
-        }
-    )
-    result_action = rpc.execute_json_model(
-        json.loads(json_wizard_action), uid, proxy=proxy
-    )
-    # print(f"RESULTADO action_create_payments: {result_action}")
+    if accion == "pagar":
+        # --- Paso 5: Crear el wizard de pago (account.payment.register) ---
+        json_wizard_create = json.dumps(
+            {
+                "jsonrpc": "2.0",
+                "method": "call",
+                "params": {
+                    "model": "account.payment.register",
+                    "method": "create",
+                    "args": [wizard_vals],
+                    "kwargs": {
+                        "context": {
+                            "lang": "es_PE",
+                            "tz": "America/Lima",
+                            "uid": uid,
+                            "active_model": "account.move",
+                            "active_ids": [refund_id],
+                            "active_id": refund_id,
+                        }
+                    },
+                },
+                "id": 999999,
+            }
+        )
+        wizard_id = rpc.execute_json_model(json.loads(json_wizard_create), uid, proxy=proxy)
+        
+        if not wizard_id:
+            print("Error: No se pudo crear el wizard de pago (account.payment.register).")
+        else:
+            # --- Paso 6: Confirmar el wizard para crear el pago ---
+            json_wizard_action = json.dumps(
+                {
+                    "jsonrpc": "2.0",
+                    "method": "call",
+                    "params": {
+                        "model": "account.payment.register",
+                        "method": "action_create_payments",
+                        "args": [[wizard_id]],
+                        "kwargs": {},
+                    },
+                    "id": 999998,
+                }
+            )
+            result_action = rpc.execute_json_model(json.loads(json_wizard_action), uid, proxy=proxy)
+            # print(f"RESULTADO action_create_payments: {result_action}")
+
+    # # --- Paso 5: Crear el wizard de pago (account.payment.register) ---
+    # json_wizard_create = json.dumps(
+    #     {
+    #         "jsonrpc": "2.0",
+    #         "method": "call",
+    #         "params": {
+    #             "model": "account.payment.register",
+    #             "method": "create",
+    #             "args": [wizard_vals],
+    #             "kwargs": {
+    #                 "context": {
+    #                     "lang": "es_PE",
+    #                     "tz": "America/Lima",
+    #                     "uid": uid,
+    #                     "active_model": "account.move",
+    #                     "active_ids": [refund_id],
+    #                     "active_id": refund_id,
+    #                 }
+    #             },
+    #         },
+    #         "id": 999999,
+    #     }
+    # )
+    # wizard_id = rpc.execute_json_model(json.loads(json_wizard_create), uid, proxy=proxy)
+    # if not wizard_id:
+    #     print("Error: No se pudo crear el wizard de pago (account.payment.register).")
+    #     return None
+    # # print(f"WIZARD DE PAGO CREADO: {wizard_id}")
+
+    # # --- Paso 6: Confirmar el wizard para crear el pago ---
+    # json_wizard_action = json.dumps(
+    #     {
+    #         "jsonrpc": "2.0",
+    #         "method": "call",
+    #         "params": {
+    #             "model": "account.payment.register",
+    #             "method": "action_create_payments",
+    #             "args": [[wizard_id]],
+    #             "kwargs": {},
+    #         },
+    #         "id": 999998,
+    #     }
+    # )
+    # result_action = rpc.execute_json_model(
+    #     json.loads(json_wizard_action), uid, proxy=proxy
+    # )
+    # # print(f"RESULTADO action_create_payments: {result_action}")
 
     # endregion
     # region --------- UPDATE STOCK INVENTORY --------- #
@@ -1056,8 +1105,8 @@ def invoice_refund(invoice_details):
             "create_date": refund_invoice_details["create_date"],
             "odoo_link": f"{settings.ODOO_URL}/web#id={refund_id}&cids=1-2-3&menu_id=117&action=244&model=account.move&view_type=form",
         },
-        "payment_wizard_id": wizard_id,
-        "payment_result": result_action,
+    "payment_wizard_id": wizard_id if wizard_id else None,
+    "payment_result": result_action if result_action else None,
     }
 
     # # 5. Confirmar y validar el Picking (para que los movimientos queden en estado 'done')
