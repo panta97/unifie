@@ -11,6 +11,7 @@ from .views import (
     k_goals_tingo_view,
     forward_static_files_view,
     pos_close_control_view,
+    generator_qr_code_view,
     miscellaneous_view,
 )
 
@@ -39,6 +40,7 @@ urlpatterns = [
         pos_close_control_view,
         name="pos_close_control",
     ),
+    path("apps/generator-qr-code", generator_qr_code_view, name="generator_qr_code"),
     path("apps/miscellaneous", miscellaneous_view, name="miscellaneous"),
     (
         re_path(
