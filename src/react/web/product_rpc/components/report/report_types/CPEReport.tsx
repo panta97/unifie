@@ -44,11 +44,11 @@ export const CPEReport = () => {
         "/api/product-rpc/report/cpe",
         requestOptions
       );
-      console.log("Enviando datos:", {
-        company_id: companyId,
-        date_from: dateFrom,
-        date_to: dateTo,
-      });
+      // console.log("Enviando datos:", {
+      //   company_id: companyId,
+      //   date_from: dateFrom,
+      //   date_to: dateTo,
+      // });
       if (
         response.headers.get("Content-Type") ===
         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"

@@ -103,7 +103,7 @@ def get_cpe(date_from, date_to, odoo_version):
                     am.date,
                     substring(regexp_replace(am.sequence_prefix, '\s+', ''), '([B|F])\w{{3}}-') doc_type,
                     substring(regexp_replace(am.sequence_prefix, '\s+', ''), '([B|F]\w{{3}})-') serie,
-                    substring(regexp_replace(am.name, '\s+', ''), '[B|F]\w{{3}}-(\d{{8}})') doc_number,
+                    substring(regexp_replace(am.name, '\s+', ''), '[B|F]\w{{3}}-(\d+)') doc_number,
                     rp.vat rp_vat,
                     rp.id rp_id,
                     rp.name rp_display_name,
@@ -111,7 +111,7 @@ def get_cpe(date_from, date_to, odoo_version):
                     am2.date date2,
                     substring(regexp_replace(am2.sequence_prefix, '\s+', ''), '([B|F])\w{{3}}-') doc_type2,
                     substring(regexp_replace(am2.sequence_prefix, '\s+', ''), '([B|F]\w{{3}})-') serie2,
-                    substring(regexp_replace(am2.name, '\s+', ''), '[B|F]\w{{3}}-(\d{{8}})') doc_number2
+                    substring(regexp_replace(am2.name, '\s+', ''), '[B|F]\w{{3}}-(\d+)') doc_number2
                 from account_move am
                 left join account_move am2
                     on am.reversed_entry_id = am2.id
