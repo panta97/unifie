@@ -525,6 +525,9 @@ def invoice_refund(invoice_details, accion):
             )
         )
 
+    reason_text = "DEVOLUCIÓN"        
+    ref_text = f"Reversión de: {invoice_number}, {reason_text}"
+
     json_model = json.dumps(
         {
             "jsonrpc": "2.0",
@@ -537,10 +540,11 @@ def invoice_refund(invoice_details, accion):
                         "reversed_entry_id": _invoice_id,
                         "partner_id": partner_id,
                         "invoice_line_ids": credit_note_lines,
-                        "ref": invoice_number,
+                        "ref": ref_text,
                         "journal_id": journal_id,
                         "l10n_latam_document_type_id": l10n_latam_document_type_id,
                         "company_id": company_id,
+                        "l10n_pe_edi_refund_reason": "01",
                     }
                 ],
                 "model": "account.move",
