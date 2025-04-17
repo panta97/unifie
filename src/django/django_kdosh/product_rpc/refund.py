@@ -544,7 +544,7 @@ def invoice_refund(invoice_details, accion):
                         "journal_id": journal_id,
                         "l10n_latam_document_type_id": l10n_latam_document_type_id,
                         "company_id": company_id,
-                        "l10n_pe_edi_refund_reason": "01"
+                        "l10n_pe_edi_refund_reason": "01",
                     }
                 ],
                 "model": "account.move",
@@ -798,8 +798,6 @@ def invoice_refund(invoice_details, accion):
         "communication": payment_reference,
         "journal_id": 98,
         "payment_type": "outbound",
-        "l10n_pe_edi_refund_reason": "01",
-        "reason": reason_text,
     }
 
     wizard_id = None
