@@ -48,16 +48,16 @@ const App: React.FC = () => {
           metodos_pago: o.metodos_pago || []
         }));
 
-        const multiplied = Array(200).fill(null).flatMap((_, i) =>
-          transformed.map((o, index) => ({
-            ...o,
-            id: o.id + index + i * transformed.length,
-            orden_pos: `${o.orden_pos}-${i + 1}`,
-            fecha: new Date(Date.now() + i * 6000000).toISOString()
-          }))
-        );
+        // const multiplied = Array(200).fill(null).flatMap((_, i) =>
+        //   transformed.map((o, index) => ({
+        //     ...o,
+        //     id: o.id + index + i * transformed.length,
+        //     orden_pos: `${o.orden_pos}-${i + 1}`,
+        //     fecha: new Date(Date.now() + i * 6000000).toISOString()
+        //   }))
+        // );
 
-        setOrders(multiplied);
+        setOrders(transformed);
       } catch (err: any) {
         setError(err.message);
       } finally {
