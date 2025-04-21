@@ -12,6 +12,8 @@ from .views import (
     forward_static_files_view,
     pos_close_control_view,
     generator_qr_code_view,
+    reports_credit_note_view,
+    pos_orders_api,
     miscellaneous_view,
 )
 
@@ -41,6 +43,8 @@ urlpatterns = [
         name="pos_close_control",
     ),
     path("apps/generator-qr-code", generator_qr_code_view, name="generator_qr_code"),
+    path("apps/reports-credit-note", reports_credit_note_view, name="reports_credit_note"),
+    path("api/pos-orders", pos_orders_api, name="pos_orders_api"),
     path("apps/miscellaneous", miscellaneous_view, name="miscellaneous"),
     (
         re_path(

@@ -31,10 +31,30 @@ SECRET_KEY = os.getenv(
 # DEBUG = os.getenv("DEBUG", "True") != "False"
 DEBUG = True
 
+CORS_ALLOW_ALL_ORIGINS = False
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:8069",
+    "http://127.0.0.1:8069",
+    "https://marvinh10-kdosh-bd-dev-19830055.dev.odoo.com",
+]
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:8069",
+    "http://127.0.0.1:8069",
+    "https://marvinh10-kdosh-bd-dev-19830055.dev.odoo.com",
+]
+CORS_ALLOW_HEADERS = [
+    "accept",
+    "authorization",
+    "content-type",
+    "x-secret-key",
+    "x-csrftoken",
+]
+CORS_EXPOSE_HEADERS = ["Content-Type", "X-Secret-Key"]
+CORS_ALLOW_METHODS = ["POST", "OPTIONS"]
+
 ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", "127.0.0.1,localhost,0.0.0.0").split(
     ","
 )
-
 
 # Application definition
 
@@ -45,6 +65,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "corsheaders",
     "rest_framework",
     "react",
     "barcode",
@@ -54,6 +75,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -155,7 +177,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # ODOO_DB = os.getenv("ODOO_DB", "marvinh10-kdosh-bd-17-0-0-17332055")
 # ODOO_PWD = os.getenv("ODOO_PWD", "4e94bb1f5aa83b518b04c1a45f7a894585ad474b")
 # ODOO_UID = os.getenv("ODOO_UID", "2")
-ODOO_URL = os.getenv("ODOO_URL", "https://marvinh10-kdosh-bd-dev-19213232.dev.odoo.com")
-ODOO_DB = os.getenv("ODOO_DB", "marvinh10-kdosh-bd-dev-19213232")
-ODOO_PWD = os.getenv("ODOO_PWD", "6860d8f27fcf6de6a51f5b33cb98828ac3df6d21")
+ODOO_URL = os.getenv("ODOO_URL", "https://marvinh10-kdosh-bd-dev-19830055.dev.odoo.com")
+ODOO_DB = os.getenv("ODOO_DB", "marvinh10-kdosh-bd-dev-19830055")
+ODOO_PWD = os.getenv("ODOO_PWD", "4c7b524cc8daa8d32e72b2333a77360bb0159bb3")
 ODOO_UID = os.getenv("ODOO_UID", "2")

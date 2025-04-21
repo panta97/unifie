@@ -27,6 +27,7 @@ export default defineConfig({
         product_rpc: "web/product_rpc/index.tsx",
         pos_close_control: "web/pos_close_control/index.tsx",
         generator_qr_code: "web/generator_qr_code/index.tsx",
+        reports_credit_note: "web/reports_credit_note/index.tsx",
         misscellaneous: "web/miscellaneous/index.tsx",
         default: "web/default/main.tsx",
       },
