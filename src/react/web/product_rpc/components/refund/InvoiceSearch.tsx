@@ -105,7 +105,7 @@ export const InvoiceSearch: React.FC<InvoiceSearchProps> = ({ isPaying, setIsPay
         <button className="rounded bg-gray-100 px-3 py-1 cursor-pointer text-xs border border-gray-700 leading-3">
           Buscar
         </button>
-        <div className="flex items-center gap-2">
+        {/* <div className="flex items-center gap-2">
           {!isPaying && <span className="text-xs w-[50px]">No pagar</span>}
 
           <label className="relative inline-flex items-center cursor-pointer">
@@ -127,7 +127,7 @@ export const InvoiceSearch: React.FC<InvoiceSearchProps> = ({ isPaying, setIsPay
           </label>
 
           {isPaying && <span className="text-xs">Pagar</span>}
-        </div>
+        </div> */}
       </form>
       <BlockInventory />
       <br />

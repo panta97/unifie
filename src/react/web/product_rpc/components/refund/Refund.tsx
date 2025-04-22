@@ -5,7 +5,7 @@ import { InvoiceTicketPrint } from "./InvoiceTicketPrint";
 import { RefundLine } from "./RefundLine";
 
 const Refund = () => {
-  const [isPaying, setIsPaying] = useState(true);
+  const [isPaying, setIsPaying] = useState(false);
 
   return (
     <Wrapper>
