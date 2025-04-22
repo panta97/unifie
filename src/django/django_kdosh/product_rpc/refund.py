@@ -491,7 +491,14 @@ def invoice_refund(invoice_details, accion):
             "params": {
                 "args": [
                     selected_line_ids,
-                    ["product_id", "quantity", "price_unit", "price_subtotal", "tax_ids"],
+                    [
+                        "product_id",
+                        "quantity",
+                        "price_unit",
+                        "price_subtotal",
+                        "discount",
+                        "tax_ids",
+                    ],
                 ],
                 "model": "account.move.line",
                 "method": "read",
@@ -512,20 +519,28 @@ def invoice_refund(invoice_details, accion):
 
     credit_note_lines = []
     for line in lines_response:
+        discount = line.get("discount", 0) or 0
+        qty = line.get("quantity", 1)
+        subtotal = line.get("price_subtotal", 0)
+        if discount > 0 and qty:
+            unit_price = round(subtotal / qty, 2)
+        else:
+            unit_price = line.get("price_unit", 0)
+
         credit_note_lines.append(
             (
                 0,
                 0,
                 {
                     "product_id": line["product_id"][0],
-                    "quantity": line["quantity"],
-                    "price_unit": line["price_subtotal"],
-                    "tax_ids": [(6, 0, line["tax_ids"])] if line["tax_ids"] else [],
+                    "quantity": qty,
+                    "price_unit": unit_price,
+                    "tax_ids": [(6, 0, line.get("tax_ids", []))],
                 },
             )
         )
 
-    reason_text = "DEVOLUCIÓN"        
+    reason_text = "DEVOLUCIÓN"
     ref_text = f"Reversión de: {invoice_number}, {reason_text}"
 
     json_model = json.dumps(
