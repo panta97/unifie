@@ -484,6 +484,19 @@ def invoice_refund(invoice_details, accion):
         )
         return None
 
+    # Construir mapa de cantidades a reembolsar por línea
+    refund_qty_map = {
+        line["id"]: line.get("qty_refund", 0)
+        for line in invoice_details.get("lines", [])
+        if line.get("qty_refund", 0) > 0
+    }
+    if not refund_qty_map:
+        print(
+            f"Error: No se seleccionaron productos para la nota de crédito de la factura {_invoice_id}."
+        )
+        return None
+    selected_line_ids = list(refund_qty_map.keys())
+
     json_model = json.dumps(
         {
             "jsonrpc": "2.0",
@@ -519,11 +532,15 @@ def invoice_refund(invoice_details, accion):
 
     credit_note_lines = []
     for line in lines_response:
+        line_id = line.get("id")
+        refund_qty = refund_qty_map.get(line_id, 0)
+        if refund_qty <= 0:
+            continue
         discount = line.get("discount", 0) or 0
-        qty = line.get("quantity", 1)
+        orig_qty = line.get("quantity", 1)
         subtotal = line.get("price_subtotal", 0)
-        if discount > 0 and qty:
-            unit_price = round(subtotal / qty, 2)
+        if discount > 0 and orig_qty:
+            unit_price = round(subtotal / orig_qty, 2)
         else:
             unit_price = line.get("price_unit", 0)
 
@@ -533,7 +550,7 @@ def invoice_refund(invoice_details, accion):
                 0,
                 {
                     "product_id": line["product_id"][0],
-                    "quantity": qty,
+                    "quantity": refund_qty,
                     "price_unit": unit_price,
                     "tax_ids": [(6, 0, line.get("tax_ids", []))],
                 },
@@ -1022,7 +1039,7 @@ def invoice_refund(invoice_details, accion):
     created_stock_moves = []
     for line in lines_response:
         product_id = line["product_id"][0]
-        quantity = line["quantity"]
+        quantity = refund_qty_map.get(line_id, 0)
 
         json_read_product = json.dumps(
             {
