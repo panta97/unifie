@@ -4,6 +4,7 @@ export interface OrderDetails {
   name: string;
   partner_name: string;
   partner_ref: string;
+  company_id: number;
 }
 
 export interface OrderLine {

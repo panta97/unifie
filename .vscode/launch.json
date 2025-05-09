@@ -22,7 +22,7 @@
                 "ODOO_URL": "https://marvinh10-kdosh-bd-dev-20159950.dev.odoo.com",
                 "ODOO_DB": "marvinh10-kdosh-bd-dev-20159950",
                 // "ODOO_PWD": "20c5aaf29cc989036cc1708c4d8e10afeb531db3",
-                "ODOO_PWD": "84fe3eafb62b49aaa312c7b823c54dba8904784a",
+                "ODOO_PWD": "d7a89f859df18881d145e3e928afb8e25f9b043f",
                 "ODOO_UID": "2",
             },
             "args": [

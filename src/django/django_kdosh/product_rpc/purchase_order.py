@@ -8,6 +8,18 @@ from .utils import utils, rpc, sql
 from .models import OrderStats
 
 
+WAREHOUSE_PICKING_TYPE = {
+    1: 1,
+    2: 7,
+    3: 13,
+}
+
+EMPRESA = {
+    1: 1,
+    2: 2,
+    3: 3,
+}
+
 def search_product_by_name(name):
     pp_table = "product.product"
     kwards = {
@@ -270,8 +282,9 @@ def get_order_item(product_id, type):
 
 
 class Order:
-    def __init__(self):
-        self.company_id = 1
+    def __init__(self, company_id):
+        self.company_id      = company_id
+        self.picking_type_id = WAREHOUSE_PICKING_TYPE[company_id]
         self.currency_id = 157
         self.date_order = None
         self.date_planned = None
@@ -284,7 +297,6 @@ class Order:
         self.partner_id = None
         self.partner_ref = None
         self.payment_term_id = False
-        self.picking_type_id = 1
         self.priority = "0"
         self.user_id = None
         self.receipt_reminder_email = False
@@ -325,6 +337,8 @@ class Order:
             virtual_count += 10
 
     def set_order_dict(self, dict, uid):
+        self.company_id = dict.get("company_id", self.company_id)
+        self.picking_type_id = WAREHOUSE_PICKING_TYPE[self.company_id]
         self.user_id = uid
         self.date_order = dict["date_order"]
         self.partner_id = dict["partner_id"]
@@ -340,17 +354,17 @@ def create_order(order, user):
     uid = int(settings.ODOO_UID)
     password = utils.get_user_password(uid)
     models = xmlrpclib.ServerProxy("{}/xmlrpc/2/object".format(url))
-    order_template = Order()
+    order_template = Order(company_id=order.get("company_id", 1))
     order_template.set_order_dict(order, uid)
     kwargs = {
         "context": {
             "lang": "es_PE",
             "tz": "America/Lima",
             "uid": uid,
-            "allowed_company_ids": [1],
+            "allowed_company_ids": [order_template.company_id],
             "params": {
                 "menu_id": 260,
-                "cids": 1,
+                "cids": [order_template.company_id],
                 "action": 401,
                 "model": "purchase.order",
                 "view_type": "form",

@@ -1,4 +1,6 @@
 import React, { useState } from "react";
+import { useAppDispatch } from "../product_rpc/app/hooks";
+import { updateCompany } from "../product_rpc/app/slice/order/orderDetailsSlice";
 import { IOrderGrouped, RowHandler } from "./logic/rowHandler";
 import { Sheet } from "./Components/Sheet/Sheet";
 import { Destiny } from "./Components/Destiny/Destiny";
@@ -9,8 +11,9 @@ import { getPurchaseOrder } from "./logic/endpoint";
 import { Typist } from "./Components/Typist/Typist";
 
 const App = () => {
+  const dispatch = useAppDispatch();
   const [store, setStore] = useState<Catalog>(stores[0]);
-  const [storeTypist, ] = useState<Catalog[]>(storesTypist);
+  const [storeTypist,] = useState<Catalog[]>(storesTypist);
   const [typist, setTypist] = useState<Catalog>(storesTypist[0]);
   const [orderGroups, setOrderGroups] = useState<IOrderGrouped[]>([]);
   const [totalQty, setTotalQty] = useState<number>(0);
@@ -20,9 +23,14 @@ const App = () => {
     const order = await getPurchaseOrder(params);
     if (!order) return;
     document.title = order.order_details.name;
+    dispatch(updateCompany({ company_id: order.order_details.company_id }));
+    const initialStore = stores.find(
+      (s) => s.id === order.order_details.company_id
+    );
+    if (initialStore) setStore(initialStore);
     const rowHandler = new RowHandler(order);
     setOrderGroups(rowHandler.getGroups());
-    setTotalQty(rowHandler.getTotalQty);
+    setTotalQty(rowHandler.getTotalQty());
   };
 
   const handleStoreUpdate = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -33,7 +41,7 @@ const App = () => {
   };
 
   const handleStoreUpdateTypist = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const typist = storesTypist?.find((store)=> store.id  === Number(e.target.value))!;
+    const typist = storesTypist?.find((store) => store.id === Number(e.target.value))!;
     setTypist(typist);
   };
 
