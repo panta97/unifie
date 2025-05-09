@@ -4,7 +4,7 @@ import productReducer from "./slice/product/productRoot";
 import refundReducer from "./slice/refund/refundRoot";
 import reportReducer from "./slice/report/reportSlice";
 
-export const store = configureStore({
+const store = configureStore({
   reducer: {
     order: orderReducer,
     product: productReducer,
@@ -12,6 +12,8 @@ export const store = configureStore({
     refund: refundReducer,
   },
 });
+
+export default store;
 
 export type AppDispatch = typeof store.dispatch;
 export type RootState = ReturnType<typeof store.getState>;
