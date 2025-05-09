@@ -91,7 +91,7 @@ def product_client_result(product_tmpl_ids):
         product_results.append(
             {
                 "odoo_id": result[0],
-                "odoo_link": "{}/web#id={}&cids=1&menu_id=206&action=354&model=product.template&view_type=form".format(
+                "odoo_link": "{}/web#id={}&cids=1-2-3&menu_id=206&action=354&model=product.template&view_type=form".format(
                     settings.ODOO_URL, result[0]
                 ),
                 "client_id": result[1],
@@ -130,6 +130,7 @@ def transform_order_json(data):
         "date_order": dt.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"),
         "partner_id": data["order_details"]["partner_id"],
         "partner_ref": data["order_details"]["partner_ref"],
+        "company_id": data["order_details"]["company_id"],
         "amount_tax_otros": total_price * PERUVIAN_TAX,
         "order_lines": order_lines,
     }
@@ -139,7 +140,7 @@ def transform_order_json(data):
 
 def order_client_result(order_id):
     result = {
-        "odoo_link": "{}/web#id={}&cids=1&menu_id=407&action=599&model=purchase.order&view_type=form".format(
+        "odoo_link": "{}/web#id={}&cids=1-2-3&menu_id=407&action=599&model=purchase.order&view_type=form".format(
             settings.ODOO_URL, order_id
         ),
         "odoo_id": order_id,
