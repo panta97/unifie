@@ -10,6 +10,7 @@ export type OrderDetailsState = {
   partner_name: string;
   partner_ref: string;
   is_taxed: boolean;
+  company_id: number;
 };
 
 const initialState: OrderDetailsState = {
@@ -17,6 +18,7 @@ const initialState: OrderDetailsState = {
   partner_name: "",
   partner_ref: "",
   is_taxed: true,
+  company_id: 1,
 };
 
 export const orderDetailsSlice = createSlice({
@@ -54,6 +56,9 @@ export const orderDetailsSlice = createSlice({
       state.partner_ref = "";
       state.is_taxed = false;
     },
+    updateCompany(state, action: PayloadAction<{ company_id: number }>) {
+      state.company_id = action.payload.company_id;
+    },
   },
 });
 
@@ -75,5 +80,10 @@ export const selectPartnerRef = (state: RootState) =>
   state.order.orderDetails.partner_ref;
 export const selectIsTaxed = (state: RootState) =>
   state.order.orderDetails.is_taxed;
+
+export const { updateCompany } = orderDetailsSlice.actions;
+
+export const selectCompanyId = (state: RootState) =>
+  state.order.orderDetails.company_id;
 
 export default orderDetailsSlice.reducer;
