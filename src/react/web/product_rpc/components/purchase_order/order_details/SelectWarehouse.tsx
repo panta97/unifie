@@ -26,6 +26,7 @@ export const SelectWarehouse = () => {
                 <option value={1}>KDOSH ABTAO</option>
                 <option value={3}>KDOSH SAN MARTIN</option>
                 <option value={2}>KDOSH TINGO MARIA</option>
+                <option value={4}>KDOSH WEB</option>
             </select>
         </div>
     )
