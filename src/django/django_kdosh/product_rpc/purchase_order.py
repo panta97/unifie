@@ -12,12 +12,14 @@ WAREHOUSE_PICKING_TYPE = {
     1: 1,
     2: 7,
     3: 13,
+    4: 33,
 }
 
 EMPRESA = {
     1: 1,
     2: 2,
     3: 3,
+    4: 4,
 }
 
 def search_product_by_name(name):

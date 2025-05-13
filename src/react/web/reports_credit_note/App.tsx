@@ -27,6 +27,7 @@ const App: React.FC = () => {
   const [selectedPuntoVenta, setSelectedPuntoVenta] = useState<string>("");
   const [startDate, setStartDate] = useState<string>("");
   const [endDate, setEndDate] = useState<string>("");
+  const [searchTerm, setSearchTerm] = useState<string>("");
 
   useEffect(() => {
     const fetchData = async () => {
@@ -104,7 +105,16 @@ const App: React.FC = () => {
     const matchesStart = !startAdjusted || orderDatePeru >= startAdjusted;
     const matchesEnd = !endAdjusted || orderDatePeru <= endAdjusted;
 
-    return matchesUser && matchesPuntoVenta && matchesStart && matchesEnd;
+    const term = searchTerm.toLowerCase();
+    const termInOrder = order.orden_pos.toLowerCase().includes(term);
+    const termInUser = order.user_name?.toLowerCase().includes(term);
+    const termInPunto = order.config_name?.toLowerCase().includes(term);
+    const termInTotal = order.total.toString().includes(term);
+    const termInMetodo = order.metodos_pago.join(', ').toLowerCase().includes(term);
+    const termInFecha = new Date(order.fecha).toLocaleString('es-PE').toLowerCase().includes(term);
+    const matchesSearch = !term || termInOrder || termInUser || termInPunto || termInTotal || termInMetodo || termInFecha;
+
+    return matchesUser && matchesPuntoVenta && matchesStart && matchesEnd && matchesSearch;
   });
 
   const lastIndex = currentPage * itemsPerPage;
@@ -226,6 +236,22 @@ const App: React.FC = () => {
                 <option key={index} value={punto}>{punto}</option>
               ))}
             </select>
+          </div>
+          <div className="filter-group">
+            <label htmlFor="bigSearch">Buscar:</label>
+            <div className="search-input-wrapper">
+              <svg className="search-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              </svg>
+              <input
+                id="bigSearch"
+                type="text"
+                placeholder="Buscar Orden, Usuario, ..."
+                value={searchTerm}
+                onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
+              />
+            </div>
           </div>
           <button onClick={exportToExcel} className="export-button">
             <svg
