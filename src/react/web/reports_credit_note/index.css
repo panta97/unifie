@@ -1,4 +1,4 @@
-body {
+  body {
     margin: 0;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
       'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
@@ -69,7 +69,7 @@ body {
 
   .filters-container {
     display: flex;
-    gap: 20px;
+    gap: 34.5px;
     margin-bottom: 20px;
     align-items: flex-end;
   }
@@ -95,7 +95,7 @@ body {
   }
 
   .filter-group input[type="date"] {
-    padding: 7px 12px;
+    padding: 4px 12px;
     border-radius: 4px;
     border: 1px solid #ddd;
     font-size: 0.9em;
@@ -178,8 +178,20 @@ body {
     padding: 0.4rem 0.6rem;
     color: #999;
   }
+
+  @media (max-width: 1176px) {
+    .filters-container {
+      flex-wrap: wrap;
+    }
+  }
   
   @media (max-width: 768px) {
+    .export-button {
+      width: 100%;
+      justify-content: center;
+      margin-top: 0.5rem;
+    }
+
     .app-container {
       padding: 1rem;
     }
@@ -192,4 +204,30 @@ body {
     .orders-table td {
       padding: 0.75rem;
     }
+  }
+
+  .search-input-wrapper {
+    position: relative;
+    width: 100%;
+  }
+
+  .search-input-wrapper input {
+    width: 100%;
+    padding: 0.3rem 2rem;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+    font-size: 0.9em;
+  }
+
+  .search-icon {
+    position: absolute;
+    top: 50%;
+    left: 0.75rem;
+    transform: translateY(-50%);
+    color: #555;
+  }
+
+  .search-input-wrapper input {
+    padding-left: 2.5rem;
+    width: 70%;
   }
