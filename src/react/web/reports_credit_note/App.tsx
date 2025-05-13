@@ -247,7 +247,7 @@ const App: React.FC = () => {
               <input
                 id="bigSearch"
                 type="text"
-                placeholder="Buscar Orden, Usuario, ..."
+                placeholder="Buscar Orden, Usuario, .."
                 value={searchTerm}
                 onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
               />

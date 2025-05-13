@@ -72,6 +72,7 @@
     gap: 34.5px;
     margin-bottom: 20px;
     align-items: flex-end;
+    flex-wrap: wrap;
   }
   
   .filter-group {
@@ -178,12 +179,6 @@
     padding: 0.4rem 0.6rem;
     color: #999;
   }
-
-  @media (max-width: 1176px) {
-    .filters-container {
-      flex-wrap: wrap;
-    }
-  }
   
   @media (max-width: 768px) {
     .export-button {
@@ -229,5 +224,5 @@
 
   .search-input-wrapper input {
     padding-left: 2.5rem;
-    width: 70%;
+    width: 65%;
   }
