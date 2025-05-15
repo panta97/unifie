@@ -17,13 +17,31 @@ export const SummaryPrint = () => {
   const posName = useAppSelector(selectPosName);
   const cashier = useAppSelector(selectCashier);
   const manager = useAppSelector(selectManager);
+  const { mainSession, extraSessions } = useAppSelector((state: any) => state.pos);
+
+  const sessions = [
+    ...(mainSession ? [mainSession] : []),
+    ...(Array.isArray(extraSessions) ? extraSessions : []),
+  ];
+
+  const posNames = sessions.map((s) => s.posName || "").filter(Boolean).join(" - ") || posName;
+  const sessionCodes = sessions.map((s) => s.sessionId).filter(Boolean);
+
+  const sessionNames = sessions
+    .map((s) => s.sessionName ? `POS/${s.sessionName}` : "")
+    .filter(Boolean)
+    .join(" - ");
+
+  const totalOdooCard = sessions.reduce((acc: number, s: any) => acc + (s.odooCard || 0), 0);
+  const totalOdooCash = sessions.reduce((acc: number, s: any) => acc + (s.odooCash || 0), 0);
+  const totalOdooCreditNote = sessions.reduce((acc: number, s: any) => acc + (s.odooCreditNote || 0), 0);
 
   return createPortal(
     <div className="relative inline-block overflow-hidden w-[296px] p-[15px]">
       <PrintValidator>
         <div className="text-center">
-          <p className="font-bold uppercase">{posName}</p>
-          <p className="font-bold">{summary.sessionName}</p>
+          <p className="font-bold uppercase">{posNames}</p>
+          <p className="font-bold">{sessionNames}</p>
           <p className="font-bold mt-2">FECHA DE APERTURA</p>
           <p className="uppercase">{getDateFormat(summary.startAt)}</p>
           <p className="font-bold mt-2">FECHA DE CIERRE</p>
@@ -34,14 +52,14 @@ export const SummaryPrint = () => {
           </p>
           <p className="font-bold mt-2">CUADRADO POR</p>
           <p>
-            {manager.first_name} {manager.first_name}
+            {manager.first_name} {manager.last_name}
           </p>
           <p className="font-bold mt-2">VENTA EN TARJETA</p>
-          <p>{getCurrencyFormat(summary.odooCard)}</p>
+          <p>{getCurrencyFormat(totalOdooCard)}</p>
           <p className="font-bold mt-2">VENTA EN EFECTIVO</p>
-          <p>{getCurrencyFormat(summary.profitTotal)}</p>
+          <p>{getCurrencyFormat(totalOdooCash)}</p>
           <p className="font-bold mt-2">NOTA DE CREDITO</p>
-          <p>{getCurrencyFormat(summary.odooCreditNote)}</p>
+          <p>{getCurrencyFormat(totalOdooCreditNote)}</p>
           <p className="h-6 border-b border-black mt-3"></p>
           <p className="font-bold">
             {cashier.first_name} {cashier.last_name}
