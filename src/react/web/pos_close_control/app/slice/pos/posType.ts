@@ -12,6 +12,8 @@ export interface POSState {
   fetchPOSStateStatus: fetchStatus;
   savePOSStateStatus: fetchStatus;
   isPOSStateSaved: boolean;
+  extraSessions: ExtraSession[];
+  mainSession?: ExtraSession;
 }
 
 export interface POSSummary {
@@ -110,6 +112,14 @@ export interface DiscountResult {
   product_desc: string;
   discount: number;
   odoo_link: string;
+}
+
+export interface ExtraSession {
+  sessionId: string;
+  odooCash: number;
+  odooCard: number;
+  odooCreditNote: number;
+  sessionName?: string;
 }
 
 export type endStateType = "extra" | "stable" | "missing";

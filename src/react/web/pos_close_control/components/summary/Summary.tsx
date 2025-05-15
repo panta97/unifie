@@ -8,6 +8,8 @@ import {
   updateCashier,
   updateEndState,
   updateManager,
+  fetchOdooSummaryById,
+  mergeOdooSummary,
 } from "../../app/slice/pos/posSlice";
 import { endStates } from "../../data/data";
 import { getDateFormat, getEndStateSpanish } from "../../shared";
@@ -26,9 +28,52 @@ const Divider = () => {
 
 export const Summary = () => {
   const posState = useAppSelector((root) => root.pos);
-  const isSessionClosed = posState.summary.isSessionClosed;
-  const summary = posState.summary;
+
+  function parseIfString<T>(value: T | string): T {
+    if (typeof value === "string") {
+      try {
+        return JSON.parse(value);
+      } catch {
+        return value as T;
+      }
+    }
+    return value;
+  }
+
+  const mainSession = parseIfString(posState.mainSession);
+  const extraSessions = Array.isArray(posState.extraSessions)
+    ? posState.extraSessions.map(parseIfString)
+    : [];
+
+  const totalOdooCash =
+    (mainSession?.odooCash || 0) +
+    extraSessions.reduce((acc, s) => acc + (s.odooCash || 0), 0);
+  const totalOdooCard =
+    (mainSession?.odooCard || 0) +
+    extraSessions.reduce((acc, s) => acc + (s.odooCard || 0), 0);
+  const totalOdooCreditNote =
+    (mainSession?.odooCreditNote || 0) +
+    extraSessions.reduce((acc, s) => acc + (s.odooCreditNote || 0), 0);
+
+  const summary = parseIfString(posState.summary);
+  const isSessionClosed = summary.isSessionClosed;
   const posEndState = posState.endState;
+  const [extraLines, setExtraLines] = React.useState<
+    { id: string; isLoading: boolean }[]
+  >([]);
+  const addLine = () => {
+    setExtraLines((lines) => [...lines, { id: "", isLoading: false }]);
+  };
+  const setLineId = (i: number, id: string) => {
+    setExtraLines((lines) =>
+      lines.map((l, idx) => (idx === i ? { ...l, id } : l))
+    );
+  };
+  const setLineLoading = (i: number, isLoading: boolean) => {
+    setExtraLines((lines) =>
+      lines.map((l, idx) => (idx === i ? { ...l, isLoading } : l))
+    );
+  };
   const pos = posState.posName;
   const cashier = posState.cashier;
   const manager = posState.manager;
@@ -63,6 +108,45 @@ export const Summary = () => {
     }
   }, []);
 
+  const handleFetchExtraSessions = async () => {
+    dispatch({ type: "POS/clearExtraSessions" });
+    const codes = extraLines.map(l => l.id.trim()).filter(Boolean);
+    await Promise.all(
+      codes.map(async (code, i) => {
+        setLineLoading(i, true);
+        try {
+          const [result, detailsResp] = await Promise.all([
+            dispatch(fetchOdooSummaryById({ sessionId: code })),
+            fetch(`/api/pos-close-control/get-pos-details/${code}`)
+          ]);
+          let sessionName = "";
+          try {
+            const detailsJson = await detailsResp.json();
+            sessionName = detailsJson.body.session_name;
+          } catch {}
+          setLineLoading(i, false);
+          if (fetchOdooSummaryById.fulfilled.match(result)) {
+            const { cash, card, credit_note } = result.payload;
+            dispatch(
+              mergeOdooSummary({
+                sessionId: code,
+                odooCash: cash,
+                odooCard: card,
+                odooCreditNote: credit_note,
+                sessionName,
+              })
+            );
+          } else {
+            alert("Error al traer la sesión " + code);
+          }
+        } catch {
+          setLineLoading(i, false);
+          alert("Error al traer la sesión " + code);
+        }
+      })
+    );
+  };
+
   return (
     <section>
       <table className="w-[450px] border-collapse border border-black">
@@ -85,7 +169,7 @@ export const Summary = () => {
           <tr>
             <td className="border border-black px-2 w-1/4">EFECTIVO</td>
             <td className="border border-black px-2 w-1/4">
-              {getCurrencyFormat(summary.odooCash)}
+              {getCurrencyFormat(totalOdooCash)}
             </td>
             <td className="border border-black px-2 w-1/4">EFECTIVO</td>
             <td className="border border-black px-2 w-1/4">
@@ -95,7 +179,7 @@ export const Summary = () => {
           <tr>
             <td className="border border-black px-2 w-1/4">BCP</td>
             <td className="border border-black px-2 w-1/4">
-              {getCurrencyFormat(summary.odooCard)}
+              {getCurrencyFormat(totalOdooCard)}
             </td>
             <td className="border border-black px-2 w-1/4">BCP</td>
             <td className="border border-black px-2 w-1/4">
@@ -115,7 +199,7 @@ export const Summary = () => {
               className="border border-black px-2 text-center h-7"
               colSpan={4}
             >
-              {getCurrencyFormat(summary.odooCreditNote)}
+              {getCurrencyFormat(totalOdooCreditNote)}
             </td>
           </tr>
           <Divider />
@@ -141,23 +225,58 @@ export const Summary = () => {
               className="border border-black px-2 text-center h-7"
               colSpan={4}
             >
-              <div className="flex justify-center gap-1">
+              <div className="flex justify-center gap-1 items-center relative">
+                <button
+                  type="button"
+                  className="absolute right-3 -top-5 border border-black px-2 py-1 rounded-full text-lg leading-none flex items-center justify-center bg-white"
+                  style={{ width: 28, height: 28 }}
+                  onClick={addLine}
+                  title="Agregar más"
+                >
+                  +
+                </button>
+                <button
+                  type="button"
+                  className="absolute right-[-20px] -top-5 border border-black px-2 py-1 rounded-full text-lg leading-none flex items-center justify-center bg-white"
+                  style={{ width: 28, height: 28 }}
+                  onClick={() => setExtraLines((lines) => lines.slice(0, -1))}
+                  title="Quitar"
+                  disabled={extraLines.length === 0}
+                >
+                  –
+                </button>
                 CODIGO DE SESION:
                 <form
-                  onSubmit={(e) => {
+                  onSubmit={async (e) => {
                     e.preventDefault();
-                    handleFetchPOSSession();
+                    if (extraLines.length > 0) {
+                      await handleFetchExtraSessions();
+                    } else {
+                      handleFetchPOSSession();
+                    }
                   }}
                 >
                   <input
                     onChange={(e) => setSessionId(e.target.value)}
                     value={sessionId}
                     className="w-[50px] border-black border-b-2 outline-none focus:border-blue-600"
-                    type={"text"}
-                  ></input>
-                  <button>Buscar</button>
+                    type="text"
+                  />
+                  <button className="absolute right-10 top-[-1px] px-2 py-1 flex items-center justify-center">Buscar</button>
                 </form>
               </div>
+              {extraLines.map((line, i) => (
+                <div key={i} className="flex justify-center gap-1 items-center mt-1">
+                  CODIGO DE SESION:
+                  <input
+                    value={line.id}
+                    onChange={(e) => setLineId(i, e.target.value)}
+                    className="w-[50px] border-black border-b-2 outline-none focus:border-blue-600"
+                    type="text"
+                  />
+                  <Loader fetchStatus={line.isLoading ? "loading" : "idle"} />
+                </div>
+              ))}
             </td>
           </tr>
           <tr>
@@ -165,7 +284,24 @@ export const Summary = () => {
               className="border border-black px-2 text-center h-7"
               colSpan={4}
             >
-              {summary.sessionName}
+              { [
+                summary.sessionName,
+                ...(posState.extraSessions &&
+                  Array.isArray(posState.extraSessions)
+                  ? posState.extraSessions
+                      .filter(
+                        (s, idx, arr) =>
+                          s.sessionName &&
+                          s.sessionName !== summary.sessionName &&
+                          arr.findIndex(
+                            (x) => x.sessionId === s.sessionId
+                          ) === idx
+                      )
+                      .map((s) => s.sessionName)
+                  : [])
+              ]
+                .filter(Boolean)
+                .join(" - ")}
             </td>
           </tr>
           <Divider />
@@ -293,9 +429,8 @@ export const Summary = () => {
             </td>
           </tr>
           <tr
-            className={`${
-              posEndState.state === "missing" ? "text-red-500" : ""
-            }`}
+            className={`${posEndState.state === "missing" ? "text-red-500" : ""
+              }`}
           >
             <td
               className="border border-black px-2 text-center h-7"
