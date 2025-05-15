@@ -12,9 +12,42 @@ import {
   POSState,
 } from "./posType";
 
+interface ExtraSession {
+  sessionId: string;
+  odooCash: number;
+  odooCard: number;
+  odooCreditNote: number;
+  sessionName?: string;
+}
+
+interface POSStateWithMainSession extends POSState {
+  mainSession?: ExtraSession;
+}
+
+export const fetchOdooSummaryById = createAsyncThunk(
+  "POS/fetchOdooSummaryById",
+  async (
+    { sessionId }: { sessionId: string },
+    { rejectWithValue }
+  ): Promise<Pick<POSFetchResult, "cash" | "card" | "credit_note">> => {
+    try {
+      const url = `/api/pos-close-control/get-pos-details/${sessionId}`;
+      const response = await fetch(url);
+      const jsonResult = await response.json();
+      return {
+        cash: jsonResult.body.cash,
+        card: jsonResult.body.card,
+        credit_note: jsonResult.body.credit_note,
+      };
+    } catch (error) {
+      throw rejectWithValue(error);
+    }
+  }
+);
+
 export const FIXED_BALANCE_START = 300;
 
-const initialState: POSState = {
+const initialState: POSStateWithMainSession = {
   posName: "",
   cashier: { id: 0, first_name: "", last_name: "" },
   manager: { id: 0, first_name: "", last_name: "" },
@@ -34,6 +67,7 @@ const initialState: POSState = {
     stopAt: "",
     isSessionClosed: false,
   },
+  extraSessions: [],
   endState: {
     state: "stable",
     amount: 0,
@@ -261,6 +295,13 @@ export const POSSlice = createSlice({
       state.summary.sessionName = sessionName;
       state.summary.startAt = startAt;
       state.summary.stopAt = stopAt;
+      state.mainSession = {
+        sessionId: String(state.summary.sessionId),
+        odooCash: odooCash,
+        odooCard: odooCard,
+        odooCreditNote: state.summary.odooCreditNote,
+        sessionName: sessionName,
+      };
     },
     updateEndState: (
       state,
@@ -282,6 +323,27 @@ export const POSSlice = createSlice({
       state.fetchPOSStateStatus = "idle";
       state.savePOSStateStatus = "idle";
     },
+    setMainSession: (state, action: PayloadAction<ExtraSession>) => {
+      state.mainSession = action.payload;
+    },
+    mergeOdooSummary(state, action: PayloadAction<ExtraSession>) {
+      const { sessionId } = action.payload;
+      if (!state.extraSessions) state.extraSessions = [];
+      const idx = state.extraSessions.findIndex(s => s.sessionId === sessionId);
+      if (idx !== -1) {
+        state.extraSessions.splice(idx, 1, { ...action.payload });
+      } else {
+        state.extraSessions.push(action.payload);
+      }
+    },
+    removeExtraSession: (state, action: PayloadAction<string>) => {
+      state.extraSessions = state.extraSessions.filter(
+        (s) => s.sessionId !== action.payload
+      );
+    },
+    clearExtraSessions: (state) => {
+      state.extraSessions = [];
+    },
   },
   extraReducers(builder) {
     builder.addCase(fetchPOSDetails.pending, (state) => {
@@ -291,14 +353,16 @@ export const POSSlice = createSlice({
     builder.addCase(fetchPOSDetails.fulfilled, (state, action) => {
       const posDetails = action.payload;
       state.fetchPOSStateStatus = "idle";
-
-      if (!posDetails.is_session_closed) state.isPOSStateSaved = false;
-      if (state.summary.sessionId !== posDetails.session_id) {
-        state.endState.state = "stable";
-        state.endState.amount = 0;
-        state.endState.note = "";
-      }
-
+      state.extraSessions = [];
+      // Almacena la sesión principal como mainSession
+      state.mainSession = {
+        sessionId: String(posDetails.session_id),
+        odooCash: posDetails.cash,
+        odooCard: posDetails.card,
+        odooCreditNote: posDetails.credit_note,
+        sessionName: posDetails.session_name,
+      };
+      // Actualiza también el summary con los datos correctos
       state.posName = posDetails.pos_name;
       state.summary.sessionId = posDetails.session_id;
       state.summary.sessionName = posDetails.session_name;
@@ -339,6 +403,12 @@ export const POSSlice = createSlice({
       state.savePOSStateStatus = "idle";
       alert((action.payload as any).payload);
     });
+    builder
+      .addCase(fetchOdooSummaryById.fulfilled, (_, __) => {
+      })
+      .addCase(fetchOdooSummaryById.rejected, (_, action) => {
+        alert("No se pudo traer el resumen Odoo: " + action.payload);
+      });
   },
 });
 
@@ -351,6 +421,8 @@ export const {
   updateOdooSummary,
   updateEndState,
   setFetchStatusesToIdle,
+  mergeOdooSummary,
+  setMainSession,
 } = POSSlice.actions;
 
 export const selectPosName = (state: RootState) => state.pos.posName;

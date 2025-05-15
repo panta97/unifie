@@ -14,7 +14,15 @@ import useRoveFocus from "../../../shared/hooks/useRoveFocus";
 export const Cash = () => {
   const denoms = useAppSelector(selectCashDenominations);
   const summary = useAppSelector(selectSummary);
-  const diff = summary.posCash - summary.odooCash;
+  const { mainSession, extraSessions } = useAppSelector((state: any) => state.pos);
+
+  const totalOdooCash =
+    (mainSession?.odooCash || 0) +
+    (Array.isArray(extraSessions)
+      ? extraSessions.reduce((acc, s) => acc + (s.odooCash || 0), 0)
+      : 0);
+
+  const diff = summary.posCash - totalOdooCash;
   const [focus, setFocus] = useRoveFocus(11);
   const dispatch = useAppDispatch();
 
@@ -270,7 +278,7 @@ export const Cash = () => {
               TOTAL ODOO
             </td>
             <td className="border border-black px-2 text-right">
-              {getCurrencyFormat(summary.odooCash)}
+              {getCurrencyFormat(totalOdooCash)}
             </td>
           </tr>
           <tr>

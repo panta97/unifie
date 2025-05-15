@@ -14,7 +14,15 @@ import useRoveFocus from "../../../shared/hooks/useRoveFocus";
 export const Card = () => {
   const denoms = useAppSelector(selectCardDenominations);
   const summary = useAppSelector(selectSummary);
-  const diff = summary.posCard - summary.odooCard;
+  const { mainSession, extraSessions } = useAppSelector((state: any) => state.pos);
+
+  const totalOdooCard =
+    (mainSession?.odooCard || 0) +
+    (Array.isArray(extraSessions)
+      ? extraSessions.reduce((acc, s) => acc + (s.odooCard || 0), 0)
+      : 0);
+
+  const diff = summary.posCard - totalOdooCard;
   const [focus, setFocus] = useRoveFocus(3);
   const dispatch = useAppDispatch();
 
@@ -83,7 +91,7 @@ export const Card = () => {
           <tr>
             <td className="border border-black px-2 text-right">TOTAL ODOO</td>
             <td className="border border-black px-2 text-right">
-              {getCurrencyFormat(summary.odooCard)}
+              {getCurrencyFormat(totalOdooCard)}
             </td>
           </tr>
           <tr>
