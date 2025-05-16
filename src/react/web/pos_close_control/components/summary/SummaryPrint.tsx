@@ -12,7 +12,11 @@ import { getDateFormat } from "../../shared";
 import { getCurrencyFormat } from "../../utils";
 import { PrintValidator } from "../PrintValidator";
 
-export const SummaryPrint = () => {
+interface SummaryPrintProps {
+  includeBalanceStart: boolean;
+}
+
+export const SummaryPrint: React.FC<SummaryPrintProps> = ({ includeBalanceStart }) => {
   const summary = useAppSelector(selectSummary);
   const posName = useAppSelector(selectPosName);
   const cashier = useAppSelector(selectCashier);
@@ -25,16 +29,19 @@ export const SummaryPrint = () => {
   ];
 
   const posNames = sessions.map((s) => s.posName || "").filter(Boolean).join(" - ") || posName;
-  const sessionCodes = sessions.map((s) => s.sessionId).filter(Boolean);
-
   const sessionNames = sessions
     .map((s) => s.sessionName ? `POS/${s.sessionName}` : "")
     .filter(Boolean)
     .join(" - ");
 
   const totalOdooCard = sessions.reduce((acc: number, s: any) => acc + (s.odooCard || 0), 0);
-  const totalOdooCash = sessions.reduce((acc: number, s: any) => acc + (s.odooCash || 0), 0);
   const totalOdooCreditNote = sessions.reduce((acc: number, s: any) => acc + (s.odooCreditNote || 0), 0);
+
+  const totalOdooCash = sessions.reduce((acc: number, s: any) => {
+    const cash = s.odooCash || 0;
+    const balance = s.balanceStart || 0;
+    return acc + (includeBalanceStart ? cash : cash - balance);
+  }, 0);
 
   return createPortal(
     <div className="relative inline-block overflow-hidden w-[296px] p-[15px]">

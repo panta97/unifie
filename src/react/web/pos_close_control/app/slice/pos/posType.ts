@@ -120,6 +120,7 @@ export interface ExtraSession {
   odooCard: number;
   odooCreditNote: number;
   sessionName?: string;
+  balanceStart: number;
 }
 
 export type endStateType = "extra" | "stable" | "missing";
