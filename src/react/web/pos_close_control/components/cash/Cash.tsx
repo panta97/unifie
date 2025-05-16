@@ -10,17 +10,24 @@ import { getOdooStateMessage, getStateMessage } from "../../shared";
 import { getCurrencyFormat } from "../../utils";
 import NumberInputBlank from "../input/NumberInputBlank";
 import useRoveFocus from "../../../shared/hooks/useRoveFocus";
+import { useLocalStorage } from "../../../shared/hooks/useLocalStorage";
 
 export const Cash = () => {
   const denoms = useAppSelector(selectCashDenominations);
   const summary = useAppSelector(selectSummary);
   const { mainSession, extraSessions } = useAppSelector((state: any) => state.pos);
 
-  const totalOdooCash =
-    (mainSession?.odooCash || 0) +
-    (Array.isArray(extraSessions)
-      ? extraSessions.reduce((acc, s) => acc + (s.odooCash || 0), 0)
-      : 0);
+  const { storedValue: includeBalanceStart } = useLocalStorage<boolean>("include-balance-start", true);
+
+  const sessions = [
+    ...(mainSession ? [mainSession] : []),
+    ...(Array.isArray(extraSessions) ? extraSessions : []),
+  ];
+  const totalOdooCash = sessions.reduce((acc: number, s: any) => {
+    const cash = s.odooCash || 0;
+    const balance = s.balanceStart || 0;
+    return acc + (includeBalanceStart ? cash : cash - balance);
+  }, 0);
 
   const diff = summary.posCash - totalOdooCash;
   const [focus, setFocus] = useRoveFocus(11);

@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useLocalStorage } from "../../../shared/hooks/useLocalStorage";
 import { useAppDispatch, useAppSelector } from "../../app/hooks";
 import { useGetEmployeesByTypeQuery } from "../../app/slice/employee/employeeSlice";
@@ -28,6 +28,7 @@ const Divider = () => {
 
 export const Summary = () => {
   const posState = useAppSelector((root) => root.pos);
+  const { storedValue: includeBalanceStart, setValue: setIncludeBalanceStart } = useLocalStorage<boolean>("include-balance-start", true);
 
   function parseIfString<T>(value: T | string): T {
     if (typeof value === "string") {
@@ -45,9 +46,13 @@ export const Summary = () => {
     ? posState.extraSessions.map(parseIfString)
     : [];
 
-  const totalOdooCash =
-    (mainSession?.odooCash || 0) +
-    extraSessions.reduce((acc, s) => acc + (s.odooCash || 0), 0);
+  const totalOdooCash = (mainSession?.odooCash || 0)
+    + extraSessions.reduce((acc, s) => acc + (s.odooCash || 0), 0)
+    - (!includeBalanceStart
+      ? ((mainSession?.balanceStart || 0)
+        + extraSessions.reduce((acc, s) => acc + (s.balanceStart || 0), 0))
+      : 0);
+
   const totalOdooCard =
     (mainSession?.odooCard || 0) +
     extraSessions.reduce((acc, s) => acc + (s.odooCard || 0), 0);
@@ -120,10 +125,12 @@ export const Summary = () => {
             fetch(`/api/pos-close-control/get-pos-details/${code}`)
           ]);
           let sessionName = "";
+          let balanceStart = 0;
           try {
             const detailsJson = await detailsResp.json();
             sessionName = detailsJson.body.session_name;
-          } catch {}
+            balanceStart = detailsJson.body.balance_start || 0;
+          } catch { }
           setLineLoading(i, false);
           if (fetchOdooSummaryById.fulfilled.match(result)) {
             const { cash, card, credit_note } = result.payload;
@@ -134,6 +141,7 @@ export const Summary = () => {
                 odooCard: card,
                 odooCreditNote: credit_note,
                 sessionName,
+                balanceStart,
               })
             );
           } else {
@@ -152,8 +160,37 @@ export const Summary = () => {
       <table className="w-[450px] border-collapse border border-black">
         <thead>
           <tr>
-            <th className="border border-black px-2 h-7 uppercase" colSpan={4}>
+            <th className="border border-black px-2 h-7 uppercase" colSpan={3}>
               {pos}
+            </th>
+            <th className="border border-black px-2 h-7 uppercase" colSpan={1}>
+              <div className="flex items-center justify-end">
+                <label htmlFor="include-balance-start" className="flex items-center cursor-pointer select-none">
+                  <span className="mr-2 text-xs">Saldo inicial</span>
+                  <span className="relative">
+                    <input
+                      type="checkbox"
+                      id="include-balance-start"
+                      checked={includeBalanceStart}
+                      onChange={() => setIncludeBalanceStart(!includeBalanceStart)}
+                      className="sr-only"
+                    />
+                    <span
+                      className={
+                        "block w-10 h-6 rounded-full transition-colors duration-200 " +
+                        (includeBalanceStart ? "bg-green-500" : "bg-gray-400")
+                      }
+                    ></span>
+                    <span
+                      className={
+                        "absolute left-0 top-0 w-6 h-6 bg-white rounded-full shadow transition-transform duration-200 " +
+                        (includeBalanceStart ? "translate-x-4" : "translate-x-0")
+                      }
+                      style={{ border: "1px solid #888" }}
+                    ></span>
+                  </span>
+                </label>
+              </div>
             </th>
           </tr>
         </thead>
@@ -284,20 +321,20 @@ export const Summary = () => {
               className="border border-black px-2 text-center h-7"
               colSpan={4}
             >
-              { [
+              {[
                 summary.sessionName,
                 ...(posState.extraSessions &&
                   Array.isArray(posState.extraSessions)
                   ? posState.extraSessions
-                      .filter(
-                        (s, idx, arr) =>
-                          s.sessionName &&
-                          s.sessionName !== summary.sessionName &&
-                          arr.findIndex(
-                            (x) => x.sessionId === s.sessionId
-                          ) === idx
-                      )
-                      .map((s) => s.sessionName)
+                    .filter(
+                      (s, idx, arr) =>
+                        s.sessionName &&
+                        s.sessionName !== summary.sessionName &&
+                        arr.findIndex(
+                          (x) => x.sessionId === s.sessionId
+                        ) === idx
+                    )
+                    .map((s) => s.sessionName)
                   : [])
               ]
                 .filter(Boolean)
@@ -500,7 +537,7 @@ export const Summary = () => {
       )}
       <Loader fetchStatus={posState.savePOSStateStatus} />
       <Loader fetchStatus={posState.fetchPOSStateStatus} />
-      <SummaryPrint />
+      <SummaryPrint includeBalanceStart={includeBalanceStart} />
     </section>
   );
 };

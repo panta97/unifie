@@ -10,15 +10,8 @@ import {
   POSFetchResult,
   POSSaveResult,
   POSState,
+  ExtraSession,
 } from "./posType";
-
-interface ExtraSession {
-  sessionId: string;
-  odooCash: number;
-  odooCard: number;
-  odooCreditNote: number;
-  sessionName?: string;
-}
 
 interface POSStateWithMainSession extends POSState {
   mainSession?: ExtraSession;
@@ -301,6 +294,7 @@ export const POSSlice = createSlice({
         odooCard: odooCard,
         odooCreditNote: state.summary.odooCreditNote,
         sessionName: sessionName,
+        balanceStart: balanceStart,
       };
     },
     updateEndState: (
@@ -361,6 +355,7 @@ export const POSSlice = createSlice({
         odooCard: posDetails.card,
         odooCreditNote: posDetails.credit_note,
         sessionName: posDetails.session_name,
+        balanceStart: posDetails.balance_start,
       };
       // Actualiza también el summary con los datos correctos
       state.posName = posDetails.pos_name;
