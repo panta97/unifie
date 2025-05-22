@@ -4,7 +4,8 @@ export const stores: Catalog[] = [
   { id: 1, name: "abtao" },
   { id: 2, name: "san martin" },
   { id: 3, name: "tingo maria" },
-  { id: 4, name: "compartir" },
+  { id: 4, name: "web" },
+  { id: 5, name: "compartir" },
 ];
 
 export const storesTypist: Catalog[] = [
