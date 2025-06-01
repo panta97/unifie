@@ -4,6 +4,7 @@ import { saveAs } from 'file-saver';
 import * as XLSX from 'xlsx';
 import SearchIcon from "@mui/icons-material/Search";
 import ViewModeSwitcher from "./components/ViewModeSwitcher";
+import CircularProgress from "@mui/material/CircularProgress";
 
 interface OrderData {
   id: number;
@@ -24,7 +25,7 @@ const App: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 9;
+  const itemsPerPage = 10;
 
   const [selectedUser, setSelectedUser] = useState<string>("");
   const [selectedPuntoVenta, setSelectedPuntoVenta] = useState<string>("");
@@ -108,8 +109,14 @@ const App: React.FC = () => {
     }
   }, [years]);
 
-  if (loading || (years.length && !selectedYear)) return <div className="loading">Cargando...</div>;
   if (error) return <div className="error">Error: {error}</div>;
+  if (years.length && !selectedYear)
+    return (
+      <div className="loading" style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: 40 }}>
+        <CircularProgress style={{ marginBottom: 16 }} />
+        Cargando...
+      </div>
+    );
 
   const filteredOrders = orders.filter(order => {
     const orderYear = new Date(order.fecha).getFullYear().toString();
