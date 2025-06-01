@@ -113,8 +113,9 @@ const App: React.FC = () => {
   if (years.length && !selectedYear)
     return (
       <div className="loading" style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: 40 }}>
-        <CircularProgress style={{ marginBottom: 16 }} />
-        Cargando...
+        <span style={{ display: "flex", justifyContent: "center", alignItems: "center", marginBottom: 16 }}>
+          <CircularProgress color="inherit" size={36} />
+        </span>
       </div>
     );
 
@@ -133,20 +134,20 @@ const App: React.FC = () => {
 
     const startAdjusted = start
       ? new Date(Date.UTC(
-          start.getUTCFullYear(),
-          start.getUTCMonth(),
-          start.getUTCDate(),
-          5, 0, 0, 0
-        ))
+        start.getUTCFullYear(),
+        start.getUTCMonth(),
+        start.getUTCDate(),
+        5, 0, 0, 0
+      ))
       : null;
 
     const endAdjusted = end
       ? new Date(Date.UTC(
-          end.getUTCFullYear(),
-          end.getUTCMonth(),
-          end.getUTCDate(),
-          28, 59, 59, 999
-        ))
+        end.getUTCFullYear(),
+        end.getUTCMonth(),
+        end.getUTCDate(),
+        28, 59, 59, 999
+      ))
       : null;
 
     const matchesStart = !startAdjusted || orderDatePeru >= startAdjusted;
@@ -327,7 +328,11 @@ const App: React.FC = () => {
           {(isMobile || viewMode === "module") ? (
             <div className="table-wrapper" style={{ padding: isMobile ? 0 : 24 }}>
               {loading ? (
-                <div className="loading" style={{ padding: 32, textAlign: "center" }}>Cargando...</div>
+                <div className="loading" style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: 40 }}>
+                  <span style={{ display: "flex", justifyContent: "center", alignItems: "center", marginBottom: 16 }}>
+                    <CircularProgress color="inherit" size={36} />
+                  </span>
+                </div>
               ) : (
                 <div
                   style={{
@@ -372,7 +377,14 @@ const App: React.FC = () => {
                         Métodos de Pago:
                         <ul className="payment-list" style={{ marginTop: 2 }}>
                           {order.metodos_pago.map((m, i) => (
-                            <li key={i}><span className="method">{m}</span></li>
+                            <li key={i}>
+                              <span className="method">
+                                {isNaN(Number(m))
+                                  ? m
+                                  : Number(m).toFixed(2)
+                                }
+                              </span>
+                            </li>
                           ))}
                         </ul>
                       </div>
@@ -387,7 +399,11 @@ const App: React.FC = () => {
           ) : (
             <div className="table-wrapper">
               {loading ? (
-                <div className="loading" style={{ padding: 32, textAlign: "center" }}>Cargando...</div>
+                <div className="loading" style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: 40 }}>
+                  <span style={{ display: "flex", justifyContent: "center", alignItems: "center", marginBottom: 16 }}>
+                    <CircularProgress color="inherit" size={36} />
+                  </span>
+                </div>
               ) : (
                 <table className="orders-table">
                   <thead>
@@ -410,7 +426,14 @@ const App: React.FC = () => {
                         <td>
                           <ul className="payment-list">
                             {order.metodos_pago.map((m, i) => (
-                              <li key={i}><span className="method">{m}</span></li>
+                              <li key={i}>
+                                <span className="method">
+                                  {isNaN(Number(m))
+                                    ? m
+                                    : Number(m).toFixed(2)
+                                  }
+                                </span>
+                              </li>
                             ))}
                           </ul>
                         </td>
