@@ -16,8 +16,8 @@ interface OrderData {
   metodos_pago: string[];
 }
 
-// const API_BASE_URL = 'https://octopus-app-ygvgz.ondigitalocean.app/api/pos-orders';
-const API_BASE_URL = 'http://127.0.0.1:8000/api/pos-orders';
+const API_BASE_URL = 'https://octopus-app-ygvgz.ondigitalocean.app/api/pos-orders';
+// const API_BASE_URL = 'http://127.0.0.1:8000/api/pos-orders';
 
 const App: React.FC = () => {
   const [orders, setOrders] = useState<OrderData[]>([]);
