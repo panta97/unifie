@@ -20,6 +20,11 @@ interface OrderData {
 const API_BASE_URL = 'https://octopus-app-ygvgz.ondigitalocean.app/api/pos-orders';
 // const API_BASE_URL = 'http://127.0.0.1:8000/api/pos-orders';
 
+const IS_PROD = API_BASE_URL.includes("octopus-app-ygvgz.ondigitalocean.app");
+const BACK_URL = IS_PROD
+  ? "https://octopus-app-ygvgz.ondigitalocean.app"
+  : "http://127.0.0.1:8000";
+
 const App: React.FC = () => {
   const [orders, setOrders] = useState<OrderData[]>([]);
   const [loading, setLoading] = useState(true);
@@ -229,7 +234,10 @@ const App: React.FC = () => {
     <div className="app-container">
       <div className="layout">
         <aside className="sidebar">
-          <button className="back-button" onClick={() => window.history.back()}>
+          <button
+            className="back-button"
+            onClick={() => { window.location.href = BACK_URL; }}
+          >
             <span className="arrow-rotate">➔</span> Regresar
           </button>
           <div className="year-selector" style={{ marginBottom: 16 }}>
@@ -377,14 +385,7 @@ const App: React.FC = () => {
                         Métodos de Pago:
                         <ul className="payment-list" style={{ marginTop: 2 }}>
                           {order.metodos_pago.map((m, i) => (
-                            <li key={i}>
-                              <span className="method">
-                                {isNaN(Number(m))
-                                  ? m
-                                  : Number(m).toFixed(2)
-                                }
-                              </span>
-                            </li>
+                            <li key={i}><span className="method">{m}</span></li>
                           ))}
                         </ul>
                       </div>
@@ -426,14 +427,7 @@ const App: React.FC = () => {
                         <td>
                           <ul className="payment-list">
                             {order.metodos_pago.map((m, i) => (
-                              <li key={i}>
-                                <span className="method">
-                                  {isNaN(Number(m))
-                                    ? m
-                                    : Number(m).toFixed(2)
-                                  }
-                                </span>
-                              </li>
+                              <li key={i}><span className="method">{m}</span></li>
                             ))}
                           </ul>
                         </td>
