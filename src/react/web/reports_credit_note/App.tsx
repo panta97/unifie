@@ -1,7 +1,9 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import './styles/App.css';
 import { saveAs } from 'file-saver';
 import * as XLSX from 'xlsx';
+import SearchIcon from "@mui/icons-material/Search";
+import ViewModeSwitcher from "./components/ViewModeSwitcher";
 
 interface OrderData {
   id: number;
@@ -22,12 +24,24 @@ const App: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
+  const itemsPerPage = 9;
+
   const [selectedUser, setSelectedUser] = useState<string>("");
   const [selectedPuntoVenta, setSelectedPuntoVenta] = useState<string>("");
   const [startDate, setStartDate] = useState<string>("");
   const [endDate, setEndDate] = useState<string>("");
+  const [selectedYear, setSelectedYear] = useState<string>("");
   const [searchTerm, setSearchTerm] = useState<string>("");
+  const [showDateRange, setShowDateRange] = useState(false);
+  const dateRangeRef = useRef<HTMLDivElement>(null);
+  const [viewMode, setViewMode] = useState<"list" | "module">("list");
+  const [isMobile, setIsMobile] = useState<boolean>(window.innerWidth <= 600);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 600);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -49,15 +63,6 @@ const App: React.FC = () => {
           metodos_pago: o.metodos_pago || []
         }));
 
-        // const multiplied = Array(200).fill(null).flatMap((_, i) =>
-        //   transformed.map((o, index) => ({
-        //     ...o,
-        //     id: o.id + index + i * transformed.length,
-        //     orden_pos: `${o.orden_pos}-${i + 1}`,
-        //     fecha: new Date(Date.now() + i * 6000000).toISOString()
-        //   }))
-        // );
-
         setOrders(transformed);
       } catch (err: any) {
         setError(err.message);
@@ -68,13 +73,48 @@ const App: React.FC = () => {
     fetchData();
   }, []);
 
-  if (loading) return <div className="loading">Cargando...</div>;
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        dateRangeRef.current &&
+        !dateRangeRef.current.contains(event.target as Node)
+      ) {
+        setShowDateRange(false);
+      }
+    }
+    if (showDateRange) {
+      document.addEventListener("mousedown", handleClickOutside);
+    } else {
+      document.removeEventListener("mousedown", handleClickOutside);
+    }
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [showDateRange]);
+
+  const uniqueUsers = [...new Set(orders.map(order => order.user_name))].filter(Boolean) as string[];
+  const uniquePuntosVenta = [...new Set(orders.map(order => order.config_name))].filter(Boolean) as string[];
+
+  const years = React.useMemo(() => {
+    const set = new Set<string>();
+    orders.forEach(order => {
+      const year = new Date(order.fecha).getFullYear().toString();
+      set.add(year);
+    });
+    return Array.from(set).sort((a, b) => Number(b) - Number(a));
+  }, [orders]);
+
+  useEffect(() => {
+    if (years.length && !selectedYear) {
+      setSelectedYear(years[0]);
+    }
+  }, [years]);
+
+  if (loading || (years.length && !selectedYear)) return <div className="loading">Cargando...</div>;
   if (error) return <div className="error">Error: {error}</div>;
 
-  const uniqueUsers = [...new Set(orders.map(order => order.user_name))].filter(Boolean);
-  const uniquePuntosVenta = [...new Set(orders.map(order => order.config_name))].filter(Boolean);
-
   const filteredOrders = orders.filter(order => {
+    const orderYear = new Date(order.fecha).getFullYear().toString();
+    const matchesYear = !selectedYear || orderYear === selectedYear;
+
     const matchesUser = !selectedUser || order.user_name === selectedUser;
     const matchesPuntoVenta = !selectedPuntoVenta || order.config_name === selectedPuntoVenta;
 
@@ -84,23 +124,23 @@ const App: React.FC = () => {
     const start = startDate ? new Date(startDate) : null;
     const end = endDate ? new Date(endDate) : null;
 
-    const startAdjusted = start ? new Date(
-      Date.UTC(
-        start.getUTCFullYear(),
-        start.getUTCMonth(),
-        start.getUTCDate(),
-        5, 0, 0, 0
-      )
-    ) : null;
+    const startAdjusted = start
+      ? new Date(Date.UTC(
+          start.getUTCFullYear(),
+          start.getUTCMonth(),
+          start.getUTCDate(),
+          5, 0, 0, 0
+        ))
+      : null;
 
-    const endAdjusted = end ? new Date(
-      Date.UTC(
-        end.getUTCFullYear(),
-        end.getUTCMonth(),
-        end.getUTCDate(),
-        28, 59, 59, 999
-      )
-    ) : null;
+    const endAdjusted = end
+      ? new Date(Date.UTC(
+          end.getUTCFullYear(),
+          end.getUTCMonth(),
+          end.getUTCDate(),
+          28, 59, 59, 999
+        ))
+      : null;
 
     const matchesStart = !startAdjusted || orderDatePeru >= startAdjusted;
     const matchesEnd = !endAdjusted || orderDatePeru <= endAdjusted;
@@ -114,7 +154,7 @@ const App: React.FC = () => {
     const termInFecha = new Date(order.fecha).toLocaleString('es-PE').toLowerCase().includes(term);
     const matchesSearch = !term || termInOrder || termInUser || termInPunto || termInTotal || termInMetodo || termInFecha;
 
-    return matchesUser && matchesPuntoVenta && matchesStart && matchesEnd && matchesSearch;
+    return matchesYear && matchesUser && matchesPuntoVenta && matchesStart && matchesEnd && matchesSearch;
   });
 
   const lastIndex = currentPage * itemsPerPage;
@@ -167,170 +207,240 @@ const App: React.FC = () => {
       'Fecha': new Date(order.fecha).toLocaleString('es-PE')
     }));
 
-    const worksheet = XLSX.utils.json_to_sheet(worksheetData);
     const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Ventas");
+    const worksheet = XLSX.utils.json_to_sheet(worksheetData);
+    XLSX.utils.book_append_sheet(workbook, worksheet, `Notas de Crédito POS ${selectedYear || ""}`);
 
     const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
     const data = new Blob([excelBuffer], { type: 'application/octet-stream' });
 
-    saveAs(data, 'ventas_pos.xlsx');
+    saveAs(data, `credit_note_pos_${selectedYear || "all"}.xlsx`);
   };
 
   return (
     <div className="app-container">
-      <h1 className="title">Registro de Ventas Nota de Crédito en POS</h1>
-      <div className="header-container">
-        <div className="filters-container">
-          <div className="filter-group">
-            <label>Fecha desde:</label>
-            <input
-              type="date"
-              value={startDate}
-              onChange={(e) => {
-                setStartDate(e.target.value);
-                setCurrentPage(1);
-              }}
-            />
+      <div className="layout">
+        <aside className="sidebar">
+          <button className="back-button" onClick={() => window.history.back()}>
+            <span className="arrow-rotate">➔</span> Regresar
+          </button>
+          <div className="year-selector" style={{ marginBottom: 16 }}>
+            {years.map((year) => (
+              <div
+                key={year}
+                onClick={() => { setSelectedYear(year); setCurrentPage(1); }}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                  fontWeight: selectedYear === year ? 500 : 400,
+                  color: selectedYear === year ? "#222" : "#888",
+                  cursor: "pointer",
+                  marginBottom: 8,
+                  borderRadius: 6,
+                  padding: "4px 8px"
+                }}
+              >
+                <span
+                  style={{
+                    display: "inline-block",
+                    width: 14,
+                    height: 14,
+                    borderRadius: "50%",
+                    background: selectedYear === year ? "#22c55e" : "#e5e7eb",
+                    marginRight: 8,
+                    border: selectedYear === year ? "2px solid #22c55e" : "2px solid #e5e7eb",
+                    transition: "background 0.2s, border 0.2s"
+                  }}
+                />
+                {`Año ${year}`}
+              </div>
+            ))}
+          </div>
+        </aside>
+
+        <main className="main-content">
+          <div className="header-top">
+            <h1>Registro de Ventas Nota de Crédito en POS</h1>
+            <button onClick={exportToExcel} className="export-button">
+              Exportar a Excel
+            </button>
           </div>
 
-          <div className="filter-group">
-            <label>Fecha hasta:</label>
-            <input
-              type="date"
-              value={endDate}
-              onChange={(e) => {
-                setEndDate(e.target.value);
-                setCurrentPage(1);
-              }}
-              min={startDate}
-            />
-          </div>
-          <div className="filter-group">
-            <label>Usuario:</label>
-            <select
-              value={selectedUser}
-              onChange={(e) => {
-                setSelectedUser(e.target.value);
-                setCurrentPage(1);
-              }}
-            >
-              <option value="">Todos</option>
-              {uniqueUsers.map((user, index) => (
-                <option key={index} value={user}>{user}</option>
-              ))}
-            </select>
-          </div>
-
-          <div className="filter-group">
-            <label>Punto de Venta:</label>
-            <select
-              value={selectedPuntoVenta}
-              onChange={(e) => {
-                setSelectedPuntoVenta(e.target.value);
-                setCurrentPage(1);
-              }}
-            >
-              <option value="">Todos</option>
-              {uniquePuntosVenta.map((punto, index) => (
-                <option key={index} value={punto}>{punto}</option>
-              ))}
-            </select>
-          </div>
-          <div className="filter-group">
-            <label htmlFor="bigSearch">Buscar:</label>
-            <div className="search-input-wrapper">
-              <svg className="search-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="11" cy="11" r="8"></circle>
-                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-              </svg>
+          <div className="search-filter-row">
+            <div className="search-wrapper">
+              <span className="search-icon"><SearchIcon /></span>
               <input
-                id="bigSearch"
                 type="text"
-                placeholder="Buscar Orden, Usuario, .."
+                placeholder="Buscar Ordenes, Usuarios, etc.."
                 value={searchTerm}
                 onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
+                className="search-input"
               />
             </div>
+            <div className="filter-group">
+              <label htmlFor="filter-user">Usuario:</label>
+              <select
+                id="filter-user"
+                value={selectedUser}
+                onChange={(e) => { setSelectedUser(e.target.value); setCurrentPage(1); }}>
+                <option value="">Todos</option>
+                {uniqueUsers.map((user) => (
+                  <option key={user} value={user}>{user}</option>
+                ))}
+              </select>
+            </div>
+            <div className="filter-group">
+              <label htmlFor="filter-punto">Punto de Venta:</label>
+              <select
+                id="filter-punto"
+                value={selectedPuntoVenta}
+                onChange={(e) => { setSelectedPuntoVenta(e.target.value); setCurrentPage(1); }}>
+                <option value="">Todos</option>
+                {uniquePuntosVenta.map((pv) => (
+                  <option key={pv} value={pv}>{pv}</option>
+                ))}
+              </select>
+            </div>
+            <ViewModeSwitcher
+              viewMode={isMobile ? "module" : viewMode}
+              onChange={setViewMode}
+              showDateRange={showDateRange}
+              setShowDateRange={setShowDateRange}
+              dateRangeRef={dateRangeRef}
+              startDate={startDate}
+              endDate={endDate}
+              setStartDate={setStartDate}
+              setEndDate={setEndDate}
+              setCurrentPage={setCurrentPage}
+              hideListIcon={isMobile}
+            />
           </div>
-          <button onClick={exportToExcel} className="export-button">
-            <svg
-              viewBox="0 0 384 512"
-              width="20"
-              height="20"
-              className="excel-icon"
-              aria-hidden="true"
-            >
-              <path fill="currentColor" d="M224 136V0H24C10.7 0 0 10.7 0 24v464c0 13.3 10.7 24 24 24h336c13.3 0 24-10.7 24-24V160H248c-13.2 0-24-10.8-24-24zm60.1 106.5L224 336l60.1 93.5c5.1 8-.6 18.5-10.1 18.5h-34.9c-4.4 0-8.5-2.4-10.6-6.3C208.9 405.5 192 373 192 373c-6.4 14.8-10 20-36.6 68.8-2.1 3.9-6.1 6.3-10.5 6.3H110c-9.5 0-15.2-10.5-10.1-18.5l60.1-93.5-60.1-93.5c-5.1-8 .6-18.5 10.1-18.5h34.8c4.4 0 8.5 2.4 10.6 6.3 26.1 48.8 20 35.4 36.6 68.8 0 0 6.1-11.7 36.6-68.8 2.1-3.9 6.2-6.3 10.6-6.3H274c9.5-.1 15.2 10.4 10.1 18.4zM160 72c0-4.4 3.6-8 8-8h64c4.4 0 8 3.6 8 8v16c0 4.4-3.6 8-8 8h-64c-4.4 0-8-3.6-8-8V72z" />
-            </svg>
-            Exportar a Excel
-          </button>
-        </div>
-      </div>
-      <div className="table-wrapper">
-        <table className="orders-table">
-          <thead>
-            <tr>
-              <th>Orden POS</th>
-              <th>Usuario</th>
-              <th>Punto de Venta</th>
-              <th className="amount">Total</th>
-              <th>Método de Pago</th>
-              <th>Fecha</th>
-            </tr>
-          </thead>
-          <tbody>
-            {currentOrders.map(order => (
-              <tr key={`${order.id}-${order.fecha}`}>
-                <td>{order.orden_pos}</td>
-                <td>{order.user_name}</td>
-                <td>{order.config_name}</td>
-                <td className="amount">S/ {order.total.toFixed(2)}</td>
-                <td>
-                  <ul className="payment-list">
-                    {order.metodos_pago.map((m, i) => (
-                      <li key={i}><span className="method">{m}</span></li>
+
+          {(isMobile || viewMode === "module") ? (
+            <div className="table-wrapper" style={{ padding: isMobile ? 0 : 24 }}>
+              {loading ? (
+                <div className="loading" style={{ padding: 32, textAlign: "center" }}>Cargando...</div>
+              ) : (
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: isMobile ? "1fr" : "repeat(auto-fit, minmax(260px, 1fr))",
+                    gap: isMobile ? 10 : 18,
+                    width: "100%",
+                    boxSizing: "border-box"
+                  }}
+                >
+                  {currentOrders.map(order => (
+                    <div
+                      key={`${order.id}-${order.fecha}`}
+                      style={{
+                        background: "#fff",
+                        border: "1px solid #e5e7eb",
+                        borderRadius: 10,
+                        padding: isMobile ? "12px 10px 10px 10px" : "18px 18px 14px 18px",
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: 8,
+                        boxShadow: "0 1px 4px rgba(0,0,0,0.03)",
+                        fontSize: isMobile ? 13 : 15,
+                        width: "100%",
+                        minWidth: 0,
+                        boxSizing: "border-box"
+                      }}
+                    >
+                      <div style={{ fontWeight: 600, color: "#232324", fontSize: isMobile ? 15 : 16, marginBottom: 2 }}>
+                        {order.orden_pos}
+                      </div>
+                      <div style={{ color: "#888", fontSize: isMobile ? 13 : 14, marginBottom: 2 }}>
+                        Usuario: <span style={{ color: "#232324" }}>{order.user_name}</span>
+                      </div>
+                      <div style={{ color: "#888", fontSize: isMobile ? 13 : 14, marginBottom: 2 }}>
+                        Punto de Venta: <span style={{ color: "#232324" }}>{order.config_name}</span>
+                      </div>
+                      <div style={{ color: "#232324", fontWeight: 500, fontSize: isMobile ? 14 : 15 }}>
+                        Total: <span style={{ fontWeight: 600 }}>S/ {order.total.toFixed(2)}</span>
+                      </div>
+                      <div style={{ color: "#232324", fontSize: isMobile ? 13 : 14 }}>
+                        Métodos de Pago:
+                        <ul className="payment-list" style={{ marginTop: 2 }}>
+                          {order.metodos_pago.map((m, i) => (
+                            <li key={i}><span className="method">{m}</span></li>
+                          ))}
+                        </ul>
+                      </div>
+                      <div style={{ color: "#232324", fontSize: isMobile ? 13 : 14 }}>
+                        Fecha: {new Date(order.fecha).toLocaleDateString('es-PE')}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="table-wrapper">
+              {loading ? (
+                <div className="loading" style={{ padding: 32, textAlign: "center" }}>Cargando...</div>
+              ) : (
+                <table className="orders-table">
+                  <thead>
+                    <tr>
+                      <th style={{ color: "gray" }}>Orden POS</th>
+                      <th>Usuario</th>
+                      <th>Punto de Venta</th>
+                      <th>Venta Total</th>
+                      <th>Método de Pago</th>
+                      <th>Fecha</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {currentOrders.map(order => (
+                      <tr key={`${order.id}-${order.fecha}`}>
+                        <td style={{ color: "gray" }}>{order.orden_pos}</td>
+                        <td>{order.user_name}</td>
+                        <td>{order.config_name}</td>
+                        <td className="amount">S/ {order.total.toFixed(2)}</td>
+                        <td>
+                          <ul className="payment-list">
+                            {order.metodos_pago.map((m, i) => (
+                              <li key={i}><span className="method">{m}</span></li>
+                            ))}
+                          </ul>
+                        </td>
+                        <td>{new Date(order.fecha).toLocaleDateString('es-PE')}</td>
+                      </tr>
                     ))}
-                  </ul>
-                </td>
-                <td>{new Date(order.fecha).toLocaleString('es-PE')}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {totalPages > 1 && (
-        <div className="pagination">
-          <button
-            onClick={() => handlePage(currentPage - 1)}
-            disabled={currentPage === 1}
-          >
-            &laquo; Anterior
-          </button>
-
-          {getPaginationRange().map((page, idx) =>
-            typeof page === "string" ? (
-              <span key={`dots-${idx}`} className="dots">...</span>
-            ) : (
-              <button
-                key={page}
-                className={page === currentPage ? 'active' : ''}
-                onClick={() => handlePage(page)}
-              >
-                {page}
-              </button>
-            )
+                  </tbody>
+                </table>
+              )}
+            </div>
           )}
 
-          <button
-            onClick={() => handlePage(currentPage + 1)}
-            disabled={currentPage === totalPages}
-          >
-            Siguiente &raquo;
-          </button>
-        </div>
-      )}
+          {totalPages > 1 && (
+            <div className="pagination">
+              <button onClick={() => handlePage(currentPage - 1)} disabled={currentPage === 1}>
+                &laquo; Anterior
+              </button>
+              {getPaginationRange().map((page, idx) =>
+                typeof page === "string" ? (
+                  <span key={`dots-${idx}`} className="dots">...</span>
+                ) : (
+                  <button
+                    key={page}
+                    className={page === currentPage ? 'active' : ''}
+                    onClick={() => handlePage(page as number)}
+                  >
+                    {page}
+                  </button>
+                )
+              )}
+              <button onClick={() => handlePage(currentPage + 1)} disabled={currentPage === totalPages}>
+                Siguiente &raquo;
+              </button>
+            </div>
+          )}
+        </main>
+      </div>
     </div>
   );
 };

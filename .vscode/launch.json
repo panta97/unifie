@@ -19,9 +19,9 @@
                 "PG_USER": "postgres",
                 "PG_HOST": "77.37.43.105",
                 "PG_PWD": "asAS12!@",
-                "ODOO_URL": "https://marvinh10-kdosh-bd-dev-20495222.dev.odoo.com",
-                "ODOO_DB": "marvinh10-kdosh-bd-dev-20495222",
-                "ODOO_PWD": "c9b68f5ade530e57e1f28888a476f5865332493b",
+                "ODOO_URL": "https://marvinh10-kdosh-bd-dev-20869231.dev.odoo.com",
+                "ODOO_DB": "marvinh10-kdosh-bd-dev-20869231",
+                "ODOO_PWD": "4e94bb1f5aa83b518b04c1a45f7a894585ad474b",
                 "ODOO_UID": "2",
             },
             "args": [
