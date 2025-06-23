@@ -97,7 +97,7 @@ def pos_orders_api(request):
         try:
             logs = PosExternalLog.objects.filter(
                 status="success", order_data__contains='"is_credit_note": true'
-            ).order_by("-timestamp")[:100]
+            ).order_by("-timestamp")
 
             orders = []
             for log in logs:
