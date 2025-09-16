@@ -49,6 +49,10 @@ def product_rpc_view(request, param):
 def pos_close_control_view(request, param):
     return render_react_app(request, "pos_close_control", "Caja Cuadre")
 
+@login_required
+def pos_close_control_admin_view(request, param=""):
+    return render_react_app(request, "pos_close_control_admin", "Caja Cuadre Admin")
+
 
 @login_required
 def generator_qr_code_view(request):
