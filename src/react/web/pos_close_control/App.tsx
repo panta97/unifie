@@ -59,7 +59,7 @@ function App() {
             path={`${basePath}/balance-start`}
             element={<BalanceStart />}
           />
-          <Route path={`${basePath}/discount`} element={<Discount />} />
+          {/* <Route path={`${basePath}/discount`} element={<Discount />} /> */}
         </Routes>
       </div>
     </Router>
