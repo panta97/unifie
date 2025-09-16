@@ -38,12 +38,12 @@ const NavBar = () => {
         >
           INICIO
         </NavLink>
-        <NavLink
+        {/* <NavLink
           className={({ isActive }) => getLinkStyles(isActive)}
           to={`${basePath}/discount`}
         >
           DESC
-        </NavLink>
+        </NavLink> */}
       </nav>
     </>
   );

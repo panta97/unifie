@@ -11,6 +11,7 @@ from .views import (
     k_goals_tingo_view,
     forward_static_files_view,
     pos_close_control_view,
+    pos_close_control_admin_view,
     generator_qr_code_view,
     reports_credit_note_view,
     pos_orders_api,
@@ -38,9 +39,14 @@ urlpatterns = [
         name="product_rpc",
     ),
     re_path(
-        r"^apps/pos-close-control/(|cash|card|balance-start|discount-invoices|discount|cash-unlocked)",
+        r"^apps/pos-close-control/(|cash|card|balance-start|discount-invoices|cash-unlocked)",
         pos_close_control_view,
         name="pos_close_control",
+    ),
+    re_path(
+        r"^apps/pos-close-control-admin/(|discount)/?$",
+        pos_close_control_admin_view,
+        name="pos_close_control_admin",
     ),
     path("apps/generator-qr-code", generator_qr_code_view, name="generator_qr_code"),
     path("apps/reports-credit-note", reports_credit_note_view, name="reports_credit_note"),
