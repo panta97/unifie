@@ -1,3 +1,4 @@
+import React from "react";
 import NavBarAdmin from "./components/NavBarAdmin";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { Discount } from "./components/discount/Discount";
