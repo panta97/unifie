@@ -1,5 +1,6 @@
 import React from "react";
 import NavBar from "./components/NavBar";
+import NavBarAdmin from "./components/NavBarAdmin";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { Summary } from "./components/summary/Summary";
 import { Cash } from "./components/cash/Cash";
@@ -20,14 +21,33 @@ import {
 } from "./app/slice/pos/posSlice";
 import { DiscountInvoices } from "./components/discount_invoices/DiscountInvoices";
 
+// Componente para la página principal de admin
+const AdminHome = () => {
+  return (
+    <div className="p-4">
+      <h2 className="text-xl font-bold mb-4">Panel de Administración</h2>
+      <p>Bienvenido al panel de administración de POS.</p>
+      <div className="mt-4">
+        <p>Funciones disponibles:</p>
+        <ul className="list-disc ml-6 mt-2">
+          <li>Gestión de descuentos</li>
+          <li>Configuraciones avanzadas</li>
+        </ul>
+      </div>
+    </div>
+  );
+};
+
 function App() {
   const lockedSince = useAppSelector(selectLockedSince);
   const dispatch = useAppDispatch();
-  const basePath = "/apps/pos-close-control";
+  
+  // Detectar si estamos en ruta admin
+  const isAdminRoute = window.location.pathname.includes('/pos-close-control-admin');
+  const basePath = isAdminRoute ? "/apps/pos-close-control-admin" : "/apps/pos-close-control";
 
   useEffect(() => {
     dispatch(setFetchStatusesToIdle());
-    // dispatch(fetchPOSDetails());
     const currentTime = new Date().getTime();
     if (currentTime - lockedSince > LOCKAFTER_TIME) {
       dispatch(updateSecurity({ isLocked: true, lockedSince: 0 }));
@@ -35,7 +55,6 @@ function App() {
   }, []);
 
   useEffect(() => {
-    // runs every minute
     const intervalId = setInterval(() => {
       const currentTime = new Date().getTime();
       if (currentTime - lockedSince > LOCKAFTER_TIME) {
@@ -50,16 +69,21 @@ function App() {
   return (
     <Router>
       <div className="my-2 mx-4 mt-0 font-mono">
-        <NavBar />
+        {/* Usar NavBar diferente según la ruta */}
+        {isAdminRoute ? <NavBarAdmin /> : <NavBar />}
+        
         <Routes>
-          <Route path={basePath} element={<Summary />} />
-          <Route path={`${basePath}/cash`} element={<Cash />} />
-          <Route path={`${basePath}/card`} element={<Card />} />
-          <Route
-            path={`${basePath}/balance-start`}
-            element={<BalanceStart />}
-          />
-          {/* <Route path={`${basePath}/discount`} element={<Discount />} /> */}
+          {/* Rutas normales */}
+          <Route path="/apps/pos-close-control" element={<Summary />} />
+          <Route path="/apps/pos-close-control/cash" element={<Cash />} />
+          <Route path="/apps/pos-close-control/card" element={<Card />} />
+          <Route path="/apps/pos-close-control/balance-start" element={<BalanceStart />} />
+          <Route path="/apps/pos-close-control/discount-invoices" element={<DiscountInvoices />} />
+          <Route path="/apps/pos-close-control/cash-unlocked" element={<CashUnlocked />} />
+          
+          {/* Rutas admin */}
+          <Route path="/apps/pos-close-control-admin" element={<AdminHome />} />
+          <Route path="/apps/pos-close-control-admin/discount" element={<Discount />} />
         </Routes>
       </div>
     </Router>
