@@ -21,13 +21,27 @@ const App = () => {
   const fetchOrder = async () => {
     const params = new URLSearchParams(window.location.search);
     const order = await getPurchaseOrder(params);
+
     if (!order) return;
+
+    if (!order.order_details) {
+      console.error("order_details no está definido");
+      return;
+    }
+
+    if (!order.order_lines || !Array.isArray(order.order_lines)) {
+      console.error("order_lines no está definido o no es un array");
+      return;
+    }
+
     document.title = order.order_details.name;
     dispatch(updateCompany({ company_id: order.order_details.company_id }));
+
     const initialStore = stores.find(
       (s) => s.id === order.order_details.company_id
     );
     if (initialStore) setStore(initialStore);
+
     const rowHandler = new RowHandler(order);
     setOrderGroups(rowHandler.getGroups());
     setTotalQty(rowHandler.getTotalQty());
