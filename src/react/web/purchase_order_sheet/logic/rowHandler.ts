@@ -53,9 +53,9 @@ export class RowHandler implements IRowHandler {
     };
     for (const orderLine of this.order.order_lines) {
       const descHeight = Math.ceil(orderLine.name.length / MAX_DESC_WIDTH);
-      const brandHeight = Math.ceil(
-        orderLine.cats.split(" / ")[2].length / MAX_BRAND_WIDTH
-      );
+      const catsParts = orderLine.cats?.split(" / ") || [];
+      const brandText = catsParts[2] || "";
+      const brandHeight = Math.ceil(brandText.length / MAX_BRAND_WIDTH);
       const qtyHeight = Math.ceil(
         String(orderLine.quantity).length / MAX_QTY_WIDTH
       );
