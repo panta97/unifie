@@ -113,7 +113,7 @@ def get_pos_details(request, session_id):
 
         if method_id in {1, 9, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 22, 23, 24, 25, 27, 28}:
             cash += amount
-        elif method_id in {2, 4, 6}:
+        elif method_id in {2, 4, 6, 31}:
             card += amount
         elif method_id in {10, 21, 26}:
             credit_note += amount

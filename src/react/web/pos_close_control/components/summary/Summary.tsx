@@ -93,11 +93,11 @@ export const Summary = () => {
             </td>
           </tr>
           <tr>
-            <td className="border border-black px-2 w-1/4">BCP</td>
+            <td className="border border-black px-2 w-1/4">BANCO</td>
             <td className="border border-black px-2 w-1/4">
               {getCurrencyFormat(summary.odooCard)}
             </td>
-            <td className="border border-black px-2 w-1/4">BCP</td>
+            <td className="border border-black px-2 w-1/4">BANCO</td>
             <td className="border border-black px-2 w-1/4">
               {getCurrencyFormat(summary.posCard)}
             </td>
