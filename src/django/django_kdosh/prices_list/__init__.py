@@ -1,0 +1,1 @@
+# prices_list module

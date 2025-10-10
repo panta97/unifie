@@ -25,6 +25,7 @@ from django.views.generic.base import TemplateView
 urlpatterns = [
     path("", include("barcode.urls")),
     path("api/product-rpc/", include("product_rpc.urls")),
+    path("api/prices-list/", include("prices_list.urls")),
     path("", include("pos_close_control.urls")),
     path("", include("miscellaneous.urls")),
     path("", include("react.urls")),
