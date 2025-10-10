@@ -63,6 +63,10 @@ def generator_qr_code_view(request):
 def reports_credit_note_view(request):
     return render_react_app(request, "reports_credit_note", "Reportes Nota de Crédito")
 
+@login_required
+def prices_list_view(request):
+    return render_react_app(request, "prices_list", "Lista de Precios")
+
 
 @csrf_exempt
 def pos_orders_api(request):

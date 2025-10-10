@@ -9,11 +9,26 @@ module.exports = {
     "./web/miscellaneous/**/*.{js,ts,jsx,tsx}",
     "./web/k_abtao_goals/**/*.{js,ts,jsx,tsx}",
     "./web/k_tingo_goals/**/*.{js,ts,jsx,tsx}",
+    "./web/prices_list/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
     extend: {
       fontFamily: {
         invoice: ["Inconsolata", "mono"],
+      },
+      animation: {
+        'shimmer': 'shimmer 2s infinite',
+        'pulse-slow': 'pulse-slow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+      },
+      keyframes: {
+        shimmer: {
+          '0%': { transform: 'translateX(-100%)' },
+          '100%': { transform: 'translateX(100%)' },
+        },
+        'pulse-slow': {
+          '0%, 100%': { opacity: '1' },
+          '50%': { opacity: '0.7' },
+        },
       },
     },
   },
