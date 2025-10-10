@@ -1,5 +1,5 @@
 import React, { Fragment, useEffect } from "react";
-import QRCode from "react-qr-code";
+import * as QRCode from "qrcode.react";
 import { useAppDispatch, useAppSelector } from "../../app/hooks";
 import { selectFormIvoiceStatus } from "../../app/slice/refund/formSlice";
 import {
