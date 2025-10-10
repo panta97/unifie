@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import QRCode from "qrcode";
+import QRCode from "react-qr-code";
 import { jsPDF } from "jspdf";
 import './styles/App.css';
 

@@ -1,4 +1,4 @@
-import QRCode from "qrcode.react";
+import QRCode from "react-qr-code";
 import React from "react";
 import "./Barcode.css";
 import { KdoshLogo } from "./KdoshLogo";
@@ -25,8 +25,8 @@ function Barcode({
                 value={code}
                 size={100}
                 level={"H"}
-                renderAs={"svg"}
-              ></QRCode>
+                // ❌ QUITAR: renderAs={"svg"}
+              />
             </div>
             <div className="d-fa-code">
               <p className="fa-code">{mCode}</p>
@@ -57,8 +57,8 @@ function Barcode({
                 value={code}
                 size={50}
                 level={"H"}
-                renderAs={"svg"}
-              ></QRCode>
+                // ❌ QUITAR: renderAs={"svg"}
+              />
             </div>
             <p className="code">{code}</p>
           </div>
@@ -82,8 +82,8 @@ function Barcode({
                 value={code}
                 size={100}
                 level={"H"}
-                renderAs={"svg"}
-              ></QRCode>
+                // ❌ QUITAR: renderAs={"svg"}
+              />
               <p className="code">{code}</p>
             </div>
           </div>
@@ -117,8 +117,8 @@ function Barcode({
                 value={code}
                 size={100}
                 level={"H"}
-                renderAs={"svg"}
-              ></QRCode>
+                // ❌ QUITAR: renderAs={"svg"}
+              />
             </div>
             <div className="d-fa-code">
               <p className="fa-code">{mCode}</p>
@@ -149,8 +149,8 @@ function Barcode({
                 value={code}
                 size={50}
                 level={"H"}
-                renderAs={"svg"}
-              ></QRCode>
+                // ❌ QUITAR: renderAs={"svg"}
+              />
             </div>
             <p className="code">{code}</p>
           </div>
@@ -174,8 +174,8 @@ function Barcode({
                 value={code}
                 size={80}
                 level={"H"}
-                renderAs={"svg"}
-              ></QRCode>
+                // ❌ QUITAR: renderAs={"svg"}
+              />
             </div>
             <div className="d-fa-code">
               <p className="fa-code">{mCode}</p>
