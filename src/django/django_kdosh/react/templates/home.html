@@ -14,6 +14,7 @@ Hello, {{ user.username }}!
     <li><a href="/apps/pos-close-control">Caja Cuadre</a></li>
     <li><a href="/apps/generator-qr-code">Generador QR</a></li>
     <li><a href="/apps/reports-credit-note">Reportes Nota de Crédito</a></li>
+    <li><a href="/apps/prices-list">Lista de Precios</a></li>
     <li><a href="{% url 'miscellaneous' %}">Otros</a></li>
     {% if user.is_superuser %}
     <li><a href="{% url 'admin:index' %}">Admin</a></li>

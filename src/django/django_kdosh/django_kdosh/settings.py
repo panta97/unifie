@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     "product_rpc",
     "pos_close_control",
     "miscellaneous",
+    "prices_list",
 ]
 
 MIDDLEWARE = [
