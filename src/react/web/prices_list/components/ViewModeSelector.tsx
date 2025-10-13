@@ -1,9 +1,9 @@
 import React from 'react';
-import { Package, Layers } from 'lucide-react';
+import { Package, Layers, Tag } from 'lucide-react';
 
 interface ViewModeSelectorProps {
-    mode: 'product' | 'variant';
-    onChange: (mode: 'product' | 'variant') => void;
+    mode: 'product' | 'variant' | 'category';
+    onChange: (mode: 'product' | 'variant' | 'category') => void;
 }
 
 const ViewModeSelector: React.FC<ViewModeSelectorProps> = ({ mode, onChange }) => {
@@ -21,8 +21,8 @@ const ViewModeSelector: React.FC<ViewModeSelectorProps> = ({ mode, onChange }) =
                     <button
                         onClick={() => onChange('product')}
                         className={`flex items-center gap-2 px-4 py-2.5 rounded-md transition-all font-medium text-sm ${mode === 'product'
-                                ? 'bg-white text-blue-600 shadow-sm'
-                                : 'text-slate-600 hover:text-slate-900'
+                            ? 'bg-white text-blue-600 shadow-sm'
+                            : 'text-slate-600 hover:text-slate-900'
                             }`}
                     >
                         <Package size={18} />
@@ -31,12 +31,22 @@ const ViewModeSelector: React.FC<ViewModeSelectorProps> = ({ mode, onChange }) =
                     <button
                         onClick={() => onChange('variant')}
                         className={`flex items-center gap-2 px-4 py-2.5 rounded-md transition-all font-medium text-sm ${mode === 'variant'
-                                ? 'bg-white text-blue-600 shadow-sm'
-                                : 'text-slate-600 hover:text-slate-900'
+                            ? 'bg-white text-blue-600 shadow-sm'
+                            : 'text-slate-600 hover:text-slate-900'
                             }`}
                     >
                         <Layers size={18} />
                         Por Variante
+                    </button>
+                    <button
+                        onClick={() => onChange('category')}
+                        className={`flex items-center gap-2 px-4 py-2.5 rounded-md transition-all font-medium text-sm ${mode === 'category'
+                            ? 'bg-white text-blue-600 shadow-sm'
+                            : 'text-slate-600 hover:text-slate-900'
+                            }`}
+                    >
+                        <Tag size={18} />
+                        Por Categoría
                     </button>
                 </div>
             </div>
@@ -53,6 +63,14 @@ const ViewModeSelector: React.FC<ViewModeSelectorProps> = ({ mode, onChange }) =
                 <div className="mt-4 p-3 bg-purple-50 border border-purple-200 rounded-lg">
                     <p className="text-sm text-purple-800">
                         <span className="font-semibold">Por Variante:</span> Cada variante se muestra individualmente con sus atributos y puedes aplicar descuentos específicos.
+                    </p>
+                </div>
+            )}
+
+            {mode === 'category' && (
+                <div className="mt-4 p-3 bg-purple-50 border border-purple-200 rounded-lg">
+                    <p className="text-sm text-purple-800">
+                        <span className="font-semibold">Por Categoría:</span> Cada categoría será mostrado individualmente y categorizarlos por sus subcategorias.
                     </p>
                 </div>
             )}

@@ -1,8 +1,10 @@
 from django.urls import path
-from .views import get_pricelists, search_products, save_to_pricelist
+from . import views
 
 urlpatterns = [
-    path("pricelists/", get_pricelists, name="get_pricelists"),
-    path("products/search/", search_products, name="search_products"),
-    path("save/", save_to_pricelist, name="save_to_pricelist"),
+    path('pricelists/', views.get_pricelists, name='get_pricelists'),
+    path('products/search/', views.search_products, name='search_products'),
+    path('categories/', views.get_categories, name='get_categories'),
+    path('products/by-category/', views.search_products_by_category, name='search_by_category'),
+    path('save/', views.save_to_pricelist, name='save_to_pricelist'),
 ]

@@ -8,6 +8,7 @@ interface ProductTableProps {
     allCurrentPageSelected: boolean;
     totalSelected: number;
     totalProducts: number;
+    viewMode?: 'product' | 'variant' | 'category';
     onToggleSelectAll: () => void;
     onToggleSelect: (id: number) => void;
     onUpdateDiscount: (id: number, discount: string) => void;
@@ -25,6 +26,7 @@ const ProductTable: React.FC<ProductTableProps> = ({
     selectedProducts,
     totalSelected,
     totalProducts,
+    viewMode = 'variant',
     onToggleSelectAll,
     onToggleSelect,
     onUpdateDiscount,
@@ -81,19 +83,23 @@ const ProductTable: React.FC<ProductTableProps> = ({
     const someButNotAllSelected = totalSelected > 0 && totalSelected < totalProducts;
     const showSelectAllBanner = allCurrentPageSelected && someButNotAllSelected;
 
+    const isCategory = viewMode === 'category';
+    const itemLabel = isCategory ? 'categoría' : 'producto';
+    const itemsLabel = isCategory ? 'categorías' : 'productos';
+
     return (
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
             {showSelectAllBanner && (
-                <div className="bg-blue-50 border-b border-blue-200 px-6 py-3">
+                <div className={`${isCategory ? 'bg-purple-50 border-purple-200' : 'bg-blue-50 border-blue-200'} border-b px-6 py-3`}>
                     <div className="flex items-center justify-between">
-                        <p className="text-sm font-medium text-blue-900">
-                            {totalSelected} {totalSelected === 1 ? 'producto seleccionado' : 'productos seleccionados'}
+                        <p className={`text-sm font-medium ${isCategory ? 'text-purple-900' : 'text-blue-900'}`}>
+                            {totalSelected} {totalSelected === 1 ? itemLabel : itemsLabel} {totalSelected === 1 ? 'seleccionado' : 'seleccionados'}
                         </p>
                         <button
                             onClick={onSelectAllProducts}
-                            className="text-sm font-semibold text-blue-600 hover:text-blue-800 hover:underline transition-colors"
+                            className={`text-sm font-semibold ${isCategory ? 'text-purple-600 hover:text-purple-800' : 'text-blue-600 hover:text-blue-800'} hover:underline transition-colors`}
                         >
-                            Seleccionar todos los {totalProducts} productos
+                            Seleccionar todos los {totalProducts} {itemsLabel}
                         </button>
                     </div>
                 </div>
@@ -106,7 +112,7 @@ const ProductTable: React.FC<ProductTableProps> = ({
                             <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                         </svg>
                         <p className="text-sm font-medium text-green-900">
-                            ✓ Todos los {totalProducts} productos están seleccionados
+                            ✓ Todos los {totalProducts} {itemsLabel} están {totalProducts === 1 ? 'seleccionado' : 'seleccionados'}
                         </p>
                     </div>
                 </div>
@@ -122,38 +128,46 @@ const ProductTable: React.FC<ProductTableProps> = ({
                                         type="checkbox"
                                         checked={allCurrentPageSelected}
                                         onChange={onToggleSelectAll}
-                                        className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500 cursor-pointer"
-                                        title={`Seleccionar ${products.length} productos de esta página`}
+                                        className={`w-4 h-4 ${isCategory ? 'text-purple-600' : 'text-blue-600'} rounded focus:ring-2 focus:ring-${isCategory ? 'purple' : 'blue'}-500 cursor-pointer`}
+                                        title={`Seleccionar ${products.length} ${itemsLabel} de esta página`}
                                     />
                                     {totalSelected > 0 && (
-                                        <span className="text-xs font-medium text-blue-600">
+                                        <span className={`text-xs font-medium ${isCategory ? 'text-purple-600' : 'text-blue-600'}`}>
                                             ({totalSelected})
                                         </span>
                                     )}
                                 </div>
                             </th>
+                            {!isCategory && (
+                                <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                                    Referencia
+                                </th>
+                            )}
                             <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                                Referencia
+                                {isCategory ? 'Categoría' : 'Descripción'}
                             </th>
-                            <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                                Descripción
-                            </th>
-                            <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                                Precio Base
-                            </th>
+                            {!isCategory && (
+                                <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                                    Precio Base
+                                </th>
+                            )}
                             <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
                                 Descuento %
                             </th>
-                            <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                                Precio Final
-                            </th>
+                            {!isCategory && (
+                                <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                                    Precio Final
+                                </th>
+                            )}
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-200">
                         {products.map((product) => (
                             <tr
                                 key={product.id}
-                                className={`hover:bg-slate-50 transition-colors ${selectedProducts.includes(product.id) ? 'bg-blue-50' : ''
+                                className={`hover:bg-slate-50 transition-colors ${selectedProducts.includes(product.id)
+                                        ? isCategory ? 'bg-purple-50' : 'bg-blue-50'
+                                        : ''
                                     }`}
                             >
                                 <td className="px-6 py-4">
@@ -161,39 +175,56 @@ const ProductTable: React.FC<ProductTableProps> = ({
                                         type="checkbox"
                                         checked={selectedProducts.includes(product.id)}
                                         onChange={() => onToggleSelect(product.id)}
-                                        className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500 cursor-pointer"
+                                        className={`w-4 h-4 ${isCategory ? 'text-purple-600' : 'text-blue-600'} rounded focus:ring-2 focus:ring-${isCategory ? 'purple' : 'blue'}-500 cursor-pointer`}
                                     />
                                 </td>
+                                {!isCategory && (
+                                    <td className="px-6 py-4">
+                                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                            {product.reference}
+                                        </span>
+                                    </td>
+                                )}
                                 <td className="px-6 py-4">
-                                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                        {product.reference}
-                                    </span>
+                                    {isCategory ? (
+                                        <div>
+                                            <div className="flex items-center gap-2">
+                                                <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                                                </svg>
+                                                <p className="text-sm text-slate-900 font-bold">{product.description}</p>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div>
+                                            <p className="text-sm text-slate-900 font-medium">{product.description}</p>
+                                            <div className="flex items-center gap-2 mt-1">
+                                                <p className="text-xs text-slate-500">{product.category}</p>
+                                                {product.attributes && (
+                                                    <>
+                                                        <span className="text-slate-300">•</span>
+                                                        <p className="text-xs text-purple-600 font-medium">{product.attributes}</p>
+                                                    </>
+                                                )}
+                                                {product.variantCount && product.variantCount > 1 && (
+                                                    <>
+                                                        <span className="text-slate-300">•</span>
+                                                        <span className="text-xs text-green-600 font-medium">
+                                                            {product.variantCount} variantes
+                                                        </span>
+                                                    </>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
                                 </td>
-                                <td className="px-6 py-4">
-                                    <p className="text-sm text-slate-900 font-medium">{product.description}</p>
-                                    <div className="flex items-center gap-2 mt-1">
-                                        <p className="text-xs text-slate-500">{product.category}</p>
-                                        {product.attributes && (
-                                            <>
-                                                <span className="text-slate-300">•</span>
-                                                <p className="text-xs text-purple-600 font-medium">{product.attributes}</p>
-                                            </>
-                                        )}
-                                        {product.variantCount && product.variantCount > 1 && (
-                                            <>
-                                                <span className="text-slate-300">•</span>
-                                                <span className="text-xs text-green-600 font-medium">
-                                                    {product.variantCount} variantes
-                                                </span>
-                                            </>
-                                        )}
-                                    </div>
-                                </td>
-                                <td className="px-6 py-4">
-                                    <span className="text-sm font-semibold text-slate-900">
-                                        S/ {product.currentPrice.toFixed(2)}
-                                    </span>
-                                </td>
+                                {!isCategory && (
+                                    <td className="px-6 py-4">
+                                        <span className="text-sm font-semibold text-slate-900">
+                                            S/ {product.currentPrice.toFixed(2)}
+                                        </span>
+                                    </td>
+                                )}
                                 <td className="px-6 py-4">
                                     <div className="flex items-center gap-2">
                                         <input
@@ -203,23 +234,25 @@ const ProductTable: React.FC<ProductTableProps> = ({
                                             step="0.01"
                                             value={product.discount}
                                             onChange={(e) => onUpdateDiscount(product.id, e.target.value)}
-                                            className="w-20 px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-sm"
+                                            className={`w-20 px-3 py-2 border ${isCategory ? 'border-purple-300 focus:ring-purple-500' : 'border-slate-300 focus:ring-blue-500'} rounded-lg focus:ring-2 focus:border-transparent outline-none text-sm`}
                                         />
                                         <span className="text-slate-600 text-sm">%</span>
                                     </div>
                                 </td>
-                                <td className="px-6 py-4">
-                                    <div className="flex flex-col">
-                                        <span className="text-sm font-bold text-green-600">
-                                            S/ {calculateFinalPrice(product.currentPrice, product.discount)}
-                                        </span>
-                                        {product.discount > 0 && (
-                                            <span className="text-xs text-slate-500">
-                                                Ahorro: S/ {(product.currentPrice * product.discount / 100).toFixed(2)}
+                                {!isCategory && (
+                                    <td className="px-6 py-4">
+                                        <div className="flex flex-col">
+                                            <span className="text-sm font-bold text-green-600">
+                                                S/ {calculateFinalPrice(product.currentPrice, product.discount)}
                                             </span>
-                                        )}
-                                    </div>
-                                </td>
+                                            {product.discount > 0 && (
+                                                <span className="text-xs text-slate-500">
+                                                    Ahorro: S/ {(product.currentPrice * product.discount / 100).toFixed(2)}
+                                                </span>
+                                            )}
+                                        </div>
+                                    </td>
+                                )}
                             </tr>
                         ))}
                     </tbody>
@@ -231,7 +264,7 @@ const ProductTable: React.FC<ProductTableProps> = ({
                     <div className="text-sm text-slate-600 text-center sm:text-left">
                         Mostrando <span className="font-medium">{startIndex + 1}</span> a{' '}
                         <span className="font-medium">{Math.min(endIndex, totalCount)}</span> de{' '}
-                        <span className="font-medium">{totalCount}</span> productos
+                        <span className="font-medium">{totalCount}</span> {itemsLabel}
                     </div>
 
                     <div className="flex items-center gap-2">
@@ -262,7 +295,9 @@ const ProductTable: React.FC<ProductTableProps> = ({
                                         <button
                                             onClick={() => onPageChange(page as number)}
                                             className={`min-w-[40px] px-3 py-2 rounded-lg transition-colors text-sm font-medium ${currentPage === page
-                                                    ? 'bg-blue-600 text-white'
+                                                    ? isCategory
+                                                        ? 'bg-purple-600 text-white'
+                                                        : 'bg-blue-600 text-white'
                                                     : 'border border-slate-300 text-slate-700 hover:bg-slate-100'
                                                 }`}
                                         >
