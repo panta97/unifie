@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Toaster, toast } from 'react-hot-toast';
-import { Product, PriceList } from './types/Product';
+import { Product, PriceList, Category } from './types/Product';
 import { priceListApi } from './services/priceListApi';
 import Header from './components/Header';
 import StatsCards from './components/StatsCards';
@@ -13,22 +13,28 @@ import LoadingModal from './components/LoadingModal';
 
 const App: React.FC = () => {
   const [allProducts, setAllProducts] = useState<Product[]>([]);
-  const [viewMode, setViewMode] = useState<'product' | 'variant'>('product');
+  const [viewMode, setViewMode] = useState<'product' | 'variant' | 'category'>('product');
   const [priceLists, setPriceLists] = useState<PriceList[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [selectedPriceList, setSelectedPriceList] = useState<PriceList | null>(null);
+
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [selectedProducts, setSelectedProducts] = useState<number[]>([]);
+
   const [bulkDiscount, setBulkDiscount] = useState<string>('');
   const [showBulkModal, setShowBulkModal] = useState<boolean>(false);
+
   const [currentPage, setCurrentPage] = useState<number>(1);
+  const itemsPerPage = 10;
+
   const [loading, setLoading] = useState<boolean>(false);
   const [loadingMessage, setLoadingMessage] = useState<string>('');
   const [progress, setProgress] = useState<number>(0);
   const [error, setError] = useState<string | null>(null);
-  const itemsPerPage = 10;
 
   useEffect(() => {
     loadPriceLists();
+    loadCategories();
   }, []);
 
   const loadPriceLists = async (): Promise<void> => {
@@ -36,9 +42,11 @@ const App: React.FC = () => {
       setLoading(true);
       setLoadingMessage('Cargando listas de precios...');
       setProgress(0);
+
       const lists = await priceListApi.getPriceLists();
       setPriceLists(lists);
       setError(null);
+
       toast.success('Listas de precios cargadas correctamente');
     } catch (err) {
       setError('Error al cargar las listas de precios');
@@ -50,6 +58,16 @@ const App: React.FC = () => {
     }
   };
 
+  const loadCategories = async (): Promise<void> => {
+    try {
+      const cats = await priceListApi.getCategories();
+      setCategories(cats);
+    } catch (err) {
+      console.error('Error al cargar categorías:', err);
+      toast.error('Error al cargar las categorías');
+    }
+  };
+
   const handleSearchProducts = async (): Promise<void> => {
     if (!searchTerm.trim()) {
       toast.error('Por favor ingresa un término de búsqueda');
@@ -58,27 +76,59 @@ const App: React.FC = () => {
 
     try {
       setLoading(true);
-      setLoadingMessage('Buscando productos en Odoo...');
+      setLoadingMessage(viewMode === 'category' ? 'Filtrando categorías...' : 'Buscando productos en Odoo...');
       setProgress(0);
       setError(null);
 
-      const foundProducts = await priceListApi.searchProducts(searchTerm);
+      if (viewMode === 'category') {
+        const filteredCategories = categories.filter(cat =>
+          cat.name.toLowerCase().includes(searchTerm.toLowerCase())
+        );
 
-      if (foundProducts.length === 0) {
-        toast.error(`No se encontraron productos con "${searchTerm}"`);
-        setAllProducts([]);
-        return;
+        if (filteredCategories.length === 0) {
+          toast.error(`No se encontraron categorías con "${searchTerm}"`);
+          setAllProducts([]);
+          return;
+        }
+
+        const categoryProducts: Product[] = filteredCategories.map(cat => ({
+          id: cat.id,
+          category_id: cat.id,
+          reference: `CAT-${cat.id}`,
+          description: cat.name,
+          currentPrice: 0,
+          discount: 0,
+          category: cat.name,
+          variantCount: 0,
+          attributes: undefined,
+        }));
+
+        setAllProducts(categoryProducts);
+        setCurrentPage(1);
+        setSelectedProducts([]);
+
+        toast.success(`Se encontraron ${categoryProducts.length} categorías con "${searchTerm}"`, {
+          duration: 4000,
+        });
+      } else {
+        const foundProducts = await priceListApi.searchProducts(searchTerm);
+
+        if (foundProducts.length === 0) {
+          toast.error(`No se encontraron productos con "${searchTerm}"`);
+          setAllProducts([]);
+          return;
+        }
+
+        setAllProducts(foundProducts);
+        setCurrentPage(1);
+        setSelectedProducts([]);
+
+        toast.success(`Se encontraron ${foundProducts.length} productos`, {
+          duration: 4000,
+        });
       }
-
-      setAllProducts(foundProducts);
-      setCurrentPage(1);
-      setSelectedProducts([]);
-
-      toast.success(`Se encontraron ${foundProducts.length} productos`, {
-        duration: 4000,
-      });
     } catch (err) {
-      toast.error('Error al buscar productos en Odoo');
+      toast.error(viewMode === 'category' ? 'Error al filtrar categorías' : 'Error al buscar productos en Odoo');
       console.error(err);
       setAllProducts([]);
     } finally {
@@ -151,7 +201,8 @@ const App: React.FC = () => {
 
   const selectAllProducts = (): void => {
     setSelectedProducts(filteredProducts.map(p => p.id));
-    toast.success(`${filteredProducts.length} productos seleccionados`);
+    const itemType = viewMode === 'category' ? 'categorías' : 'productos';
+    toast.success(`${filteredProducts.length} ${itemType} seleccionados`);
   };
 
   const toggleSelectProduct = (id: number): void => {
@@ -162,6 +213,7 @@ const App: React.FC = () => {
 
   const applyBulkDiscount = (): void => {
     const discount = parseFloat(bulkDiscount);
+
     if (isNaN(discount) || discount < 0 || discount > 100) {
       toast.error('Por favor ingresa un descuento válido (0-100)');
       return;
@@ -176,6 +228,14 @@ const App: React.FC = () => {
           return isSelected ? { ...product, discount } : product;
         })
       );
+    } else if (viewMode === 'category') {
+      setAllProducts((prev: Product[]) =>
+        prev.map(product =>
+          selectedProducts.includes(product.id)
+            ? { ...product, discount }
+            : product
+        )
+      );
     } else {
       setAllProducts((prev: Product[]) =>
         prev.map(product =>
@@ -186,9 +246,11 @@ const App: React.FC = () => {
       );
     }
 
-    toast.success(`Descuento del ${discount}% aplicado a ${selectedProducts.length} productos`, {
-      duration: 4000,
-    });
+    const modeText = viewMode === 'product' ? 'productos' : viewMode === 'category' ? 'categorías' : 'variantes';
+    toast.success(
+      `Descuento del ${discount}% aplicado a ${selectedProducts.length} ${modeText}`,
+      { duration: 4000 }
+    );
 
     setShowBulkModal(false);
     setBulkDiscount('');
@@ -232,7 +294,7 @@ const App: React.FC = () => {
     try {
       setLoading(true);
       setProgress(0);
-      setLoadingMessage(`Guardando ${productsWithDiscount.length} productos en Odoo...`);
+      setLoadingMessage(`Guardando ${productsWithDiscount.length} ${viewMode === 'category' ? 'categorías' : 'productos'} en Odoo...`);
 
       const result = await priceListApi.saveToPriceList(
         selectedPriceList.id,
@@ -242,7 +304,7 @@ const App: React.FC = () => {
           const percentage = Math.round((current / total) * 100);
           setProgress(percentage);
           setLoadingMessage(
-            `Guardando productos (Lote ${current} de ${total})`
+            `Guardando (Lote ${current} de ${total})`
           );
         }
       );
@@ -252,12 +314,29 @@ const App: React.FC = () => {
       toast.success(
         (t) => (
           <div className="flex flex-col gap-2">
-            <div className="font-bold text-lg">Guardado exitoso en "{selectedPriceList.name}"</div>
+            <div className="font-bold text-lg">
+              ✅ Guardado exitoso en "{selectedPriceList.name}"
+            </div>
             <div className="text-sm space-y-1">
-              <div>• Modo: {viewMode === 'product' ? 'Por Producto' : 'Por Variante'}</div>
-              <div>• Productos creados: <span className="font-semibold text-white">{result.created}</span></div>
-              <div>• Productos actualizados: <span className="font-semibold text-white">{result.updated}</span></div>
-              <div>• Total procesados: <span className="font-semibold">{result.total}</span></div>
+              <div>
+                • Modo: {
+                  viewMode === 'product' ? 'Por Producto' :
+                    viewMode === 'category' ? 'Por Categoría' :
+                      'Por Variante'
+                }
+              </div>
+              <div>
+                • Items creados:{' '}
+                <span className="font-semibold text-white">{result.created}</span>
+              </div>
+              <div>
+                • Items actualizados:{' '}
+                <span className="font-semibold text-white">{result.updated}</span>
+              </div>
+              <div>
+                • Total procesados:{' '}
+                <span className="font-semibold">{result.total}</span>
+              </div>
             </div>
           </div>
         ),
@@ -268,11 +347,12 @@ const App: React.FC = () => {
           },
         }
       );
+
       setError(null);
     } catch (err) {
       setError('Error al guardar en Odoo');
       console.error(err);
-      alert('Error al guardar en Odoo. Verifica la consola para más detalles.');
+      toast.error('Error al guardar en Odoo. Verifica la consola para más detalles.');
     } finally {
       setLoading(false);
       setLoadingMessage('');
@@ -366,15 +446,34 @@ const App: React.FC = () => {
         {allProducts.length === 0 && !loading && !error && (
           <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-12 text-center">
             <div className="text-slate-400 mb-4">
-              <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
+              {viewMode === 'category' ? (
+                <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                </svg>
+              ) : (
+                <svg
+                  className="w-16 h-16 mx-auto"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                  />
+                </svg>
+              )}
             </div>
             <h3 className="text-lg font-semibold text-slate-900 mb-2">
-              Busca productos en Odoo
+              {viewMode === 'category' ? 'Busca categorías' : 'Busca productos en Odoo'}
             </h3>
             <p className="text-slate-600">
-              Ingresa una referencia o descripción y presiona "Buscar en Odoo"
+              {viewMode === 'category'
+                ? 'Escribe un término como "DAMA", "HOMBRE" o "CALZADO" y presiona "Buscar en Odoo"'
+                : 'Ingresa una referencia o descripción y presiona "Buscar en Odoo"'
+              }
             </p>
           </div>
         )}
@@ -386,6 +485,7 @@ const App: React.FC = () => {
             allCurrentPageSelected={allCurrentPageSelected}
             totalSelected={selectedProducts.length}
             totalProducts={filteredProducts.length}
+            viewMode={viewMode}
             onToggleSelectAll={toggleSelectAll}
             onToggleSelect={toggleSelectProduct}
             onUpdateDiscount={updateDiscount}
