@@ -1,4 +1,4 @@
-import { Product, PriceList } from '../types/Product';
+import { Product, PriceList, Category } from '../types/Product';
 
 const API_BASE_URL = '/api/prices-list';
 
@@ -66,14 +66,61 @@ export const priceListApi = {
         return data.data;
     },
 
+    async getCategories(): Promise<Category[]> {
+        const response = await fetch(`${API_BASE_URL}/categories/`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            credentials: 'include',
+        });
+
+        if (!response.ok) {
+            throw new Error('Error al obtener categorías');
+        }
+
+        const data = await response.json();
+
+        if (!data.success) {
+            throw new Error(data.error || 'Error desconocido');
+        }
+
+        return data.data;
+    },
+
+    async searchProductsByCategory(categoryId: number): Promise<Product[]> {
+        const response = await fetch(
+            `${API_BASE_URL}/products/by-category/?category_id=${categoryId}`,
+            {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'include',
+            }
+        );
+
+        if (!response.ok) {
+            throw new Error('Error al buscar productos por categoría');
+        }
+
+        const data = await response.json();
+
+        if (!data.success) {
+            throw new Error(data.error || 'Error desconocido');
+        }
+
+        return data.data;
+    },
+
     async saveToPriceList(
-        pricelistId: number, 
-        products: Product[], 
-        applyMode: 'product' | 'variant' = 'product',
+        pricelistId: number,
+        products: Product[],
+        applyMode: 'product' | 'variant' | 'category' = 'product',
         onProgress?: (current: number, total: number) => void
     ): Promise<{ created: number; updated: number; total: number }> {
         const productsWithDiscount = products.filter(p => p.discount > 0);
-        
+
         if (productsWithDiscount.length === 0) {
             throw new Error('No hay productos con descuento');
         }
@@ -82,7 +129,7 @@ export const priceListApi = {
 
         const batchSize = 10;
         const totalBatches = Math.ceil(productsWithDiscount.length / batchSize);
-        
+
         let totalCreated = 0;
         let totalUpdated = 0;
 

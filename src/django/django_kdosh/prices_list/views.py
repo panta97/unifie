@@ -37,6 +37,35 @@ def search_products(request):
         return JsonResponse({"success": False, "error": str(e)}, status=500)
 
 
+@require_http_methods(["GET"])
+def get_categories(request):
+    try:
+        odoo_service = OdooService()
+        categories = odoo_service.get_categories()
+
+        return JsonResponse({"success": True, "data": categories})
+    except Exception as e:
+        return JsonResponse({"success": False, "error": str(e)}, status=500)
+
+
+@require_http_methods(["GET"])
+def search_products_by_category(request):
+    try:
+        category_id = request.GET.get("category_id")
+
+        if not category_id:
+            return JsonResponse(
+                {"success": False, "error": "category_id es requerido"}, status=400
+            )
+
+        odoo_service = OdooService()
+        products = odoo_service.search_products_by_category(category_id)
+
+        return JsonResponse({"success": True, "data": products})
+    except Exception as e:
+        return JsonResponse({"success": False, "error": str(e)}, status=500)
+
+
 @login_required
 @require_http_methods(["POST"])
 @ensure_csrf_cookie
