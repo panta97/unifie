@@ -441,12 +441,12 @@ def invoice_refund(invoice_details, accion):
             ["B001", "B002", "B003", "B004", "B005", "B006", "B007", "B008", "B009"], 37
         ),
         "B010": 38,
-        **dict.fromkeys(["B011", "B012", "B013"], 39),
+        **dict.fromkeys(["B011", "B012", "B013", "B014", "B015"], 39),
         **dict.fromkeys(
             ["F001", "F002", "F003", "F004", "F005", "F006", "F007", "F008", "F009"], 95
         ),
         "F010": 96,
-        **dict.fromkeys(["F011", "F012", "F013"], 97),
+        **dict.fromkeys(["F011", "F012", "F013", "F014", "F015"], 97),
     }
 
     journal_id = next(
