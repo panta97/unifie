@@ -18,7 +18,7 @@ import { getCurrencyFormat, getQtyFormat } from "./format";
 import { InvoiceSummaryTable } from "./InvoiceSummaryTable";
 import { linesSchema } from "./validation";
 
-export const RefundLine = ({ isPaying }) => { 
+export const RefundLine = ({ isPaying }: { isPaying: boolean }) => { 
   const refundStatus = useAppSelector(selectFormRefundStatus);
   const invoiceDetails = useAppSelector(selectInvoiceItem);
   const tableSectionRef = useRef<HTMLTableSectionElement>(null);
