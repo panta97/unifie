@@ -256,14 +256,15 @@ def get_invoice(invoice_number, company_ids=None, uid=2):
     refund_invoices = rpc.execute_json_model(dict_model, uid, proxy=proxy)
 
     if len(refund_invoices) > 0:
-        invoice_result["has_refund"] = True
+        # invoice_result["has_refund"] = True
+        pass
     for refund in refund_invoices:
         refund["create_date"] = utils.get_invoice_datetime_format(refund["create_date"])
         refund["odoo_link"] = (
-            f"{settings.ODOO_URL}/web#id={refund['id']}&cids=1-2-3&menu_id=174&action=341&active_id=5&model=stock.picking&view_type=form"
+            f"{settings.ODOO_URL}/web#id={refund['id']}&cids=1-2-3&menu_id=117&action=244&model=account.move&view_type=form"
         )
-        if not refund["number"]:
-            refund["number"] = "BORRADOR"
+        if not refund.get("number"):
+            refund["number"] = refund.get("name") or "BORRADOR"
     invoice_result["refund_invoices"] = refund_invoices
 
     # GET STOCK MOVES
