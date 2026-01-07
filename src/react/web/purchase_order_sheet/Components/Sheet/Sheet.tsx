@@ -26,6 +26,7 @@ export const Sheet = ({ orderGroup, totalQty, store, typist }: SheetProps) => {
         <List
           order_details={orderGroup.order_details}
           order_lines={orderGroup.order_lines}
+          typist={typist}
         />
         <Footer order_details={orderGroup.order_details} />
       </div>
