@@ -20,6 +20,7 @@
 
   .sheet-page {
     margin: 0 !important;
+    print-color-adjust: exact;
     -webkit-print-color-adjust: exact;
     border: initial;
     border-radius: initial;
@@ -34,5 +35,15 @@
 
   .sheet-page:not(:last-child) {
     page-break-after: always;
+  }
+
+  /* Estilos para inputs en impresión */
+  input {
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+    appearance: none !important;
   }
 }
