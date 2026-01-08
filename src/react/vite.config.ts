@@ -29,6 +29,7 @@ export default defineConfig({
         generator_qr_code: "web/generator_qr_code/index.tsx",
         reports_credit_note: "web/reports_credit_note/index.tsx",
         prices_list: "web/prices_list/index.tsx",
+        pos_close_control_v2: "web/pos_close_control_v2/index.tsx",
         misscellaneous: "web/miscellaneous/index.tsx",
         default: "web/default/main.tsx",
       },

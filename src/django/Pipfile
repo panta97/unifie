@@ -12,6 +12,7 @@ requests = "*"
 pandas = "*"
 xlsxwriter = "*"
 djangorestframework = "*"
+numpy = "*"
 
 [dev-packages]
 
