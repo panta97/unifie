@@ -9,6 +9,9 @@ interface RightSectionProps {
   posCash: number;
   posCard: number;
   balanceStart: number;
+  managers: Employee[];
+  selectedManager: Employee | null;
+  onManagerChange: (managerId: number) => void;
   cashiers: Employee[];
   selectedCashier: Employee | null;
   onCashierChange: (cashierId: number) => void;
@@ -24,6 +27,9 @@ export const RightSection: React.FC<RightSectionProps> = ({
   posCash,
   posCard,
   balanceStart,
+  managers,
+  selectedManager,
+  onManagerChange,
   cashiers,
   selectedCashier,
   onCashierChange,
@@ -59,6 +65,12 @@ export const RightSection: React.FC<RightSectionProps> = ({
   const cajaWidth = maxTotal > 0 ? (cajaTotal / maxTotal) * 100 : 0;
   const diffWidth = maxTotal > 0 ? (Math.abs(difference) / maxTotal) * 100 : 0;
 
+  // Estimate if difference bar is wide enough to show text (assuming ~400px container width for bars)
+  const estimatedContainerWidth =
+    typeof window !== "undefined" ? window.innerWidth * 0.35 : 400;
+  const diffBarPixelWidth = (diffWidth / 100) * estimatedContainerWidth;
+  const showDiffText = diffBarPixelWidth >= 65;
+
   // Calculate segment widths within each bar
   const odooEfectivoPercent = odooTotal > 0 ? (odooCash / odooTotal) * 100 : 0;
   const odooTarjetaPercent = odooTotal > 0 ? (odooCard / odooTotal) * 100 : 0;
@@ -69,8 +81,8 @@ export const RightSection: React.FC<RightSectionProps> = ({
     status === "Faltante"
       ? "text-red-900"
       : status === "Sobrante"
-        ? "text-amber-900"
-        : "text-green-900";
+      ? "text-amber-900"
+      : "text-green-900";
 
   return (
     <div className="col-start-2 row-start-2 bg-white rounded-lg shadow-sm border border-gray-200 overflow-auto flex flex-col">
@@ -116,10 +128,10 @@ export const RightSection: React.FC<RightSectionProps> = ({
               {/* Sobrante bar (shown next to Odoo if Caja > Odoo) */}
               {difference > 0 && (
                 <div
-                  className="flex items-center justify-center px-2.5 py-2 rounded-md text-[11px] font-semibold font-mono text-white min-w-[60px] shadow-sm transition-all duration-300 bg-gradient-to-br from-amber-500 to-amber-600"
+                  className="flex items-center justify-center h-[32px] px-2.5 py-2 rounded-md text-[11px] font-semibold font-mono text-white min-w-[1px] shadow-sm transition-all duration-300 bg-gradient-to-br from-amber-500 to-amber-600"
                   style={{ width: `${diffWidth}%` }}
                 >
-                  {formatCurrency(Math.abs(difference))}
+                  {showDiffText && formatCurrency(Math.abs(difference))}
                 </div>
               )}
             </div>
@@ -159,10 +171,10 @@ export const RightSection: React.FC<RightSectionProps> = ({
               {/* Faltante bar (shown next to Caja if Odoo > Caja) */}
               {difference < 0 && (
                 <div
-                  className="flex items-center justify-center px-2.5 py-2 rounded-md text-[11px] font-semibold font-mono text-white min-w-[60px] shadow-sm transition-all duration-300 bg-gradient-to-br from-red-500 to-red-600"
+                  className="flex items-center justify-center h-[32px] px-2.5 py-2 rounded-md text-[11px] font-semibold font-mono text-white min-w-[1px] shadow-sm transition-all duration-300 bg-gradient-to-br from-red-500 to-red-600"
                   style={{ width: `${diffWidth}%` }}
                 >
-                  {formatCurrency(Math.abs(difference))}
+                  {showDiffText && formatCurrency(Math.abs(difference))}
                 </div>
               )}
             </div>
@@ -221,6 +233,25 @@ export const RightSection: React.FC<RightSectionProps> = ({
               </tr>
             </tbody>
           </table>
+        </div>
+
+        {/* Manager Dropdown */}
+        <div className="mt-4">
+          <label className="block mb-1.5 font-medium text-sm text-slate-600">
+            Gerente:
+          </label>
+          <select
+            value={selectedManager?.id || ""}
+            onChange={(e) => onManagerChange(Number(e.target.value))}
+            className="w-full text-sm px-2.5 py-1.5 border border-gray-200 rounded transition-all duration-200 cursor-pointer bg-white focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+          >
+            <option value="">Seleccionar Gerente</option>
+            {managers.map((manager) => (
+              <option key={manager.id} value={manager.id}>
+                {manager.first_name} {manager.last_name.charAt(0)}.
+              </option>
+            ))}
+          </select>
         </div>
 
         {/* Cajero Dropdown */}

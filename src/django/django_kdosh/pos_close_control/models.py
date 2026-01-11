@@ -57,3 +57,50 @@ class PosSession(models.Model):
     end_state_amount = models.DecimalField(max_digits=12, decimal_places=2)
     json = models.TextField()
     odoo_version = models.IntegerField(default=17)
+
+
+class PosSessionV2(models.Model):
+    """
+    Version 2 of POS Session model.
+    All amount fields are stored as integers (cents) instead of decimals.
+    For example, $123.45 is stored as 12345.
+    """
+    id = models.AutoField(primary_key=True)
+    pos_name = models.CharField(max_length=50)
+    cashier = models.ForeignKey(
+        Employee, on_delete=models.CASCADE, related_name="cashier_v2"
+    )
+    manager = models.ForeignKey(
+        Employee, on_delete=models.CASCADE, related_name="manager_v2"
+    )
+    odoo_session_id = models.IntegerField()
+    odoo_config_id = models.IntegerField(default=0)
+    # Amount fields stored as integers (cents)
+    odoo_cash = models.IntegerField()
+    odoo_card = models.IntegerField()
+    pos_cash = models.IntegerField()
+    pos_card = models.IntegerField()
+    profit_total = models.IntegerField()
+    balance_start = models.IntegerField()
+    balance_start_next_day = models.IntegerField()
+    session_name = models.CharField(max_length=100)
+    start_at = models.DateTimeField()
+    stop_at = models.DateTimeField()
+
+    EXTRA = "EX"
+    STABLE = "ST"
+    MISSING = "MS"
+    END_STATE_CHOICES = (
+        (EXTRA, "Extra"),
+        (STABLE, "Stable"),
+        (MISSING, "Missing"),
+    )
+    end_state = models.CharField(
+        max_length=2,
+        choices=END_STATE_CHOICES,
+        default=STABLE,
+    )
+    end_state_note = models.TextField()
+    end_state_amount = models.IntegerField()
+    json = models.TextField()
+    odoo_version = models.IntegerField(default=17)

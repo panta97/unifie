@@ -1,12 +1,12 @@
-export const FIXED_BALANCE_START = 200; // Fixed starting balance
+export const FIXED_BALANCE_START = 20000; // Fixed starting balance in cents (200.00)
 
 export interface CashDenominations {
-  d0_10: number;  // 0.10
-  d0_20: number;  // 0.20
-  d0_50: number;  // 0.50
-  d1_00: number;  // 1.00
-  d2_00: number;  // 2.00
-  d5_00: number;  // 5.00
+  d0_10: number; // 0.10
+  d0_20: number; // 0.20
+  d0_50: number; // 0.50
+  d1_00: number; // 1.00
+  d2_00: number; // 2.00
+  d5_00: number; // 5.00
   d10_00: number; // 10.00
   d20_00: number; // 20.00
   d50_00: number; // 50.00
@@ -28,6 +28,8 @@ export interface Employee {
 
 export interface Summary {
   sessionId: number;
+  configId: number;
+  configDisplayName: string;
   sessionName: string;
   posName: string;
   startAt: string;

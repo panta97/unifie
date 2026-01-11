@@ -124,11 +124,11 @@ export const LeftSection: React.FC<LeftSectionProps> = ({
               <td className="w-1/2 px-2.5 py-1.5 text-left border-b border-gray-100">
                 <input
                   type="number"
-                  value={(cardAmounts.pos1 / 100).toFixed(2)}
+                  value={cardAmounts.pos1 / 100}
                   onChange={(e) =>
                     onCardAmountChange(
                       "pos1",
-                      Math.round(parseInt(e.target.value || "0") * 100)
+                      Math.round(parseFloat(e.target.value || "0") * 100)
                     )
                   }
                   className="w-full px-2.5 py-1.5 border border-gray-200 rounded text-sm transition-all duration-200 text-right font-mono focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
@@ -142,11 +142,11 @@ export const LeftSection: React.FC<LeftSectionProps> = ({
               <td className="px-2.5 py-1.5 text-left border-b border-gray-100">
                 <input
                   type="number"
-                  value={(cardAmounts.pos2 / 100).toFixed(2)}
+                  value={cardAmounts.pos2 / 100}
                   onChange={(e) =>
                     onCardAmountChange(
                       "pos2",
-                      Math.round(parseInt(e.target.value || "0") * 100)
+                      Math.round(parseFloat(e.target.value || "0") * 100)
                     )
                   }
                   className="w-full px-2.5 py-1.5 border border-gray-200 rounded text-sm transition-all duration-200 text-right font-mono focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
@@ -160,11 +160,11 @@ export const LeftSection: React.FC<LeftSectionProps> = ({
               <td className="px-2.5 py-1.5 text-left border-b border-gray-100">
                 <input
                   type="number"
-                  value={(cardAmounts.miscellaneous / 100).toFixed(2)}
+                  value={cardAmounts.miscellaneous / 100}
                   onChange={(e) =>
                     onCardAmountChange(
                       "miscellaneous",
-                      Math.round(parseInt(e.target.value || "0") * 100)
+                      Math.round(parseFloat(e.target.value || "0") * 100)
                     )
                   }
                   className="w-full px-2.5 py-1.5 border border-gray-200 rounded text-sm transition-all duration-200 text-right font-mono focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"

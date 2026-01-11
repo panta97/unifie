@@ -7,8 +7,11 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_exempt
 from .models import PosSession, Employee
+from django.views import View
+from .models import PosSessionV2
 
 logger = logging.getLogger(__name__)
+
 
 def get_discounts(session_id):
     porder_table = "pos.order"
@@ -111,7 +114,26 @@ def get_pos_details(request, session_id):
         method_id = payment["payment_method_id"][0]
         amount = payment["amount"]
 
-        if method_id in {1, 9, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 22, 23, 24, 25, 27, 28}:
+        if method_id in {
+            1,
+            9,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            20,
+            22,
+            23,
+            24,
+            25,
+            27,
+            28,
+        }:
             cash += amount
         elif method_id in {2, 4, 6, 31}:
             card += amount
@@ -147,6 +169,7 @@ def get_pos_details(request, session_id):
     }
 
     return JsonResponse(data)
+
 
 @csrf_exempt
 @require_http_methods(["POST"])
@@ -202,7 +225,9 @@ def pos_persist(request):
         )
 
         logger.info(f"✅ Sesión creada con éxito: {pos_session.id}")
-        return JsonResponse({"message": "Sesión guardada", "id": pos_session.id}, status=201)
+        return JsonResponse(
+            {"message": "Sesión guardada", "id": pos_session.id}, status=201
+        )
 
     except json.JSONDecodeError:
         logger.error("❌ JSON inválido")
@@ -210,6 +235,7 @@ def pos_persist(request):
     except KeyError as e:
         logger.error(f"❌ Falta el campo: {str(e)}")
         return JsonResponse({"error": f"Falta el campo: {str(e)}"}, status=400)
+
 
 def employee(request, type):
     if type == Employee.CASHIER:
@@ -224,3 +250,219 @@ def employee(request, type):
         )
         managers = list(managers)
         return JsonResponse(managers, safe=False)
+
+
+class PosCloseControlV2View(View):
+    """
+    V2 API for POS Close Control.
+    All amount fields are handled as integers (cents).
+    """
+
+    def get(self, request, session_id):
+        """
+        GET method - retrieve POS session details.
+        Adapted from v1 get_pos_details but returns integers instead of decimals.
+        """
+        try:
+            ps_table = "pos.session"
+            ps_filter = [[["id", "=", session_id]]]
+            ps_fields = [
+                "display_name",
+                "user_id",
+                "config_id",
+                "start_at",
+                "stop_at",
+                "cash_register_balance_start",
+                "cash_register_balance_end",
+            ]
+            proxy = get_proxy()
+            pos_session = get_model(ps_table, ps_filter, ps_fields, proxy=proxy)
+
+            # ACCOUNT BANK STATEMENT
+            abs_table = "account.bank.statement.line"
+            abs_filter = [[["pos_session_id", "=", session_id]]]
+            abs_fields = ["id"]
+            account_bank_statements = get_model(
+                abs_table, abs_filter, abs_fields, proxy=proxy
+            )
+
+            # ACCOUNT BANK LINE
+            statement_id = account_bank_statements[0]["id"]
+            absl_table = "account.bank.statement.line"
+            absl_filter = [[["statement_id", "=", statement_id]]]
+            absl_fields = ["amount_residual", "is_reconciled", "payment_ref"]
+            account_bank_statement_lines = get_model(
+                absl_table, absl_filter, absl_fields, proxy=proxy
+            )
+
+            absl_sorted = sorted(account_bank_statement_lines, key=lambda x: x["id"])
+            cash_in_outs_total = 0
+            if len(absl_sorted) > 0:
+                for item in absl_sorted:
+                    if "Opening Balance difference for" in item["payment_ref"]:
+                        continue
+                    cash_in_outs_total -= item["amount_residual"]
+
+            # POS PAYMENT
+            pp_table = "pos.payment"
+            pp_filter = [[["session_id", "=", session_id]]]
+            pp_fields = ["amount", "payment_method_id", "session_id"]
+            pos_payments = get_model(pp_table, pp_filter, pp_fields, proxy=proxy)
+
+            card = 0
+            cash = cash_in_outs_total
+            credit_note = 0
+            # PAYMENT METHODS
+            for payment in pos_payments:
+                method_id = payment["payment_method_id"][0]
+                amount = payment["amount"]
+
+                if method_id in {
+                    1,
+                    9,
+                    11,
+                    12,
+                    13,
+                    14,
+                    15,
+                    16,
+                    17,
+                    18,
+                    19,
+                    20,
+                    22,
+                    23,
+                    24,
+                    25,
+                    27,
+                    28,
+                }:
+                    cash += amount
+                elif method_id in {2, 4, 6, 31}:
+                    card += amount
+                elif method_id in {10, 21, 26}:
+                    credit_note += amount
+
+            opening = pos_session[0]["cash_register_balance_end"] - cash
+            cash += opening
+
+            # Convert to integers (multiply by 100)
+            cash_int = int(round(cash * 100))
+            card_int = int(round(card * 100))
+            credit_note_int = int(round(credit_note * 100))
+            balance_start_int = int(
+                round(pos_session[0]["cash_register_balance_start"] * 100)
+            )
+
+            # CHANGE TIMEZONE FORM UTC TO UTC-5
+            start_at = pos_session[0]["start_at"]
+            stop_at = pos_session[0]["stop_at"]
+
+            result = {
+                "pos_name": pos_session[0]["config_id"][1].split()[0],
+                "session_id": pos_session[0]["id"],
+                "config_id": pos_session[0]["config_id"][0],
+                "config_display_name": pos_session[0]["config_id"][1],
+                "session_name": pos_session[0]["display_name"],
+                "balance_start": balance_start_int,
+                "start_at": start_at,
+                "stop_at": stop_at,
+                "cash": cash_int,
+                "card": card_int,
+                "credit_note": credit_note_int,
+                "discounts": [],
+                "is_session_closed": bool(pos_session[0]["stop_at"]),
+            }
+
+            data = {
+                "statusCode": 200,
+                "body": result,
+            }
+
+            return JsonResponse(data)
+
+        except Exception as e:
+            logger.error(f"❌ Error in GET v2: {str(e)}")
+            return JsonResponse({"error": str(e)}, status=500)
+
+    @csrf_exempt
+    def post(self, request, session_id):
+        """
+        POST method - persist POS session data.
+        Adapted from v1 pos_persist but expects integers from FE.
+        """
+        try:
+            # Log the received data
+            logger.info(f"📥 Data recibida V2: {request.body}")
+
+            data = json.loads(request.body)
+
+            cashier_id = data["cashier"]["id"]
+            manager_id = data["manager"]["id"]
+
+            logger.info(
+                f"📌 Buscando Cajero ID: {cashier_id}, Gerente ID: {manager_id}"
+            )
+
+            # Verify employees exist
+            cashier = Employee.objects.filter(id=cashier_id, is_used=True).first()
+            manager = Employee.objects.filter(id=manager_id, is_used=True).first()
+
+            if not cashier:
+                logger.error(f"Cajero con ID {cashier_id} no encontrado o inactivo")
+            if not manager:
+                logger.error(f"Gerente con ID {manager_id} no encontrado o inactivo")
+
+            if not cashier or not manager:
+                return JsonResponse({"error": "Cajero o gerente inválido"}, status=400)
+
+            # Map endState
+            end_state_map = {"extra": "EX", "stable": "ST", "missing": "MS"}
+            end_state = end_state_map.get(data["endState"]["state"], "ST")
+
+            # Create the v2 session with integer values
+            # FE sends integers, we save them directly
+            pos_session = PosSessionV2.objects.create(
+                pos_name=data["posName"],
+                cashier=cashier,
+                manager=manager,
+                odoo_session_id=data["summary"]["sessionId"],
+                odoo_config_id=data["summary"]["configId"],
+                odoo_cash=data["summary"]["odooCash"],  # Already an integer from FE
+                odoo_card=data["summary"]["odooCard"],  # Already an integer from FE
+                pos_cash=data["summary"]["posCash"],  # Already an integer from FE
+                pos_card=data["summary"]["posCard"],  # Already an integer from FE
+                profit_total=data["summary"][
+                    "profitTotal"
+                ],  # Already an integer from FE
+                balance_start=data["summary"][
+                    "balanceStart"
+                ],  # Already an integer from FE
+                balance_start_next_day=data["summary"][
+                    "balanceStartNextDay"
+                ],  # Already an integer from FE
+                session_name=data["summary"]["sessionName"],
+                start_at=data["summary"]["startAt"],
+                stop_at=data["summary"]["stopAt"],
+                end_state=end_state,
+                end_state_amount=data["endState"][
+                    "amount"
+                ],  # Already an integer from FE
+                end_state_note=data["endState"]["note"],
+                json=json.dumps(data),  # Save the entire JSON
+            )
+
+            logger.info(f"✅ Sesión V2 creada con éxito: {pos_session.id}")
+            return JsonResponse(
+                {"message": "Sesión guardada", "id": pos_session.id}, status=201
+            )
+
+        except json.JSONDecodeError:
+            logger.error("❌ JSON inválido")
+            return JsonResponse({"error": "JSON inválido"}, status=400)
+        except KeyError as e:
+            logger.error(f"❌ Falta el campo: {str(e)}")
+            return JsonResponse({"error": f"Falta el campo: {str(e)}"}, status=400)
+        except Exception as e:
+            logger.error(f"❌ Error en POST V2: {str(e)}")
+            return JsonResponse({"error": str(e)}, status=500)
