@@ -93,8 +93,16 @@ export const RightSection: React.FC<RightSectionProps> = ({
   const isObservationsEmpty = observations.trim() === "";
   const showObservationsError = isObservationsRequired && isObservationsEmpty;
 
+  // Check if manager and cashier are selected (always required)
+  const isManagerMissing = !selectedManager;
+  const isCashierMissing = !selectedCashier;
+
   // Check if Guardar button should be disabled
-  const isGuardarDisabled = !isSessionClosed || (isObservationsRequired && isObservationsEmpty);
+  const isGuardarDisabled =
+    !isSessionClosed ||
+    (isObservationsRequired && isObservationsEmpty) ||
+    isManagerMissing ||
+    isCashierMissing;
 
   // Handle Guardar button click
   const handleGuardarClick = () => {
@@ -107,12 +115,26 @@ export const RightSection: React.FC<RightSectionProps> = ({
 
   // Get modal message based on which constraint is violated
   const getModalMessage = () => {
-    if (!isSessionClosed && isObservationsRequired && isObservationsEmpty) {
-      return "No se puede guardar por dos razones:\n1. La sesión aún está abierta (Estado: Falso)\n2. Las observaciones son requeridas cuando hay un Faltante";
-    } else if (!isSessionClosed) {
-      return "No se puede guardar porque la sesión aún está abierta (Estado: Falso)";
-    } else if (isObservationsRequired && isObservationsEmpty) {
-      return "No se puede guardar porque las observaciones son requeridas cuando hay un Faltante";
+    const reasons: string[] = [];
+
+    if (!isSessionClosed) {
+      reasons.push("La sesión aún está abierta (Estado: Falso)");
+    }
+    if (isObservationsRequired && isObservationsEmpty) {
+      reasons.push("Las observaciones son requeridas cuando hay un Faltante");
+    }
+    if (isManagerMissing) {
+      reasons.push("Debe seleccionar un Gerente");
+    }
+    if (isCashierMissing) {
+      reasons.push("Debe seleccionar un Cajero");
+    }
+
+    if (reasons.length === 1) {
+      return `No se puede guardar porque ${reasons[0].toLowerCase()}`;
+    } else if (reasons.length > 1) {
+      return "No se puede guardar por las siguientes razones:\n" +
+        reasons.map((r, i) => `${i + 1}. ${r}`).join("\n");
     }
     return "";
   };
@@ -271,12 +293,15 @@ export const RightSection: React.FC<RightSectionProps> = ({
         {/* Manager Dropdown */}
         <div className="mt-4">
           <label className="block mb-1.5 font-medium text-sm text-slate-600">
-            Gerente:
+            Gerente:<span className="text-red-500 ml-1">*</span>
           </label>
           <select
             value={selectedManager?.id || ""}
             onChange={(e) => onManagerChange(Number(e.target.value))}
-            className="w-full text-sm px-2.5 py-1.5 border border-gray-200 rounded transition-all duration-200 cursor-pointer bg-white focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+            className={`w-full text-sm px-2.5 py-1.5 border rounded transition-all duration-200 cursor-pointer bg-white focus:outline-none ${isManagerMissing
+                ? "border-red-500 ring-2 ring-red-200 focus:border-red-500 focus:ring-red-200"
+                : "border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+              }`}
           >
             <option value="">Seleccionar Gerente</option>
             {managers.map((manager) => (
@@ -290,12 +315,15 @@ export const RightSection: React.FC<RightSectionProps> = ({
         {/* Cajero Dropdown */}
         <div className="mt-4">
           <label className="block mb-1.5 font-medium text-sm text-slate-600">
-            Cajero:
+            Cajero:<span className="text-red-500 ml-1">*</span>
           </label>
           <select
             value={selectedCashier?.id || ""}
             onChange={(e) => onCashierChange(Number(e.target.value))}
-            className="w-full text-sm px-2.5 py-1.5 border border-gray-200 rounded transition-all duration-200 cursor-pointer bg-white focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+            className={`w-full text-sm px-2.5 py-1.5 border rounded transition-all duration-200 cursor-pointer bg-white focus:outline-none ${isCashierMissing
+                ? "border-red-500 ring-2 ring-red-200 focus:border-red-500 focus:ring-red-200"
+                : "border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+              }`}
           >
             <option value="">Seleccionar Cajero</option>
             {cashiers.map((cashier) => (
