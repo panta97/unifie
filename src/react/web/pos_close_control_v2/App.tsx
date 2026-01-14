@@ -128,7 +128,7 @@ function App() {
   // Handlers
   const handleFetchSession = async () => {
     if (!sessionId) {
-      alert("Please enter a session ID");
+      setError("Please enter a session ID");
       return;
     }
 
@@ -138,13 +138,10 @@ function App() {
     try {
       const data = await fetchSessionData(Number(sessionId));
       setSummary(data);
-
-      alert("Session data loaded successfully!");
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : "Failed to fetch session data";
       setError(errorMessage);
-      alert(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -242,10 +239,10 @@ function App() {
       console.log("Save result:", result);
       alert(
         "POS Close Control saved successfully!\n\n" +
-          `Total Cash: S/. ${(posCash / 100).toFixed(2)}\n` +
-          `Total Card: S/. ${(posCard / 100).toFixed(2)}\n` +
-          `Status: ${endState.state.toUpperCase()}\n` +
-          `Difference: S/. ${(Math.abs(difference) / 100).toFixed(2)}`
+        `Total Cash: S/. ${(posCash / 100).toFixed(2)}\n` +
+        `Total Card: S/. ${(posCard / 100).toFixed(2)}\n` +
+        `Status: ${endState.state.toUpperCase()}\n` +
+        `Difference: S/. ${(Math.abs(difference) / 100).toFixed(2)}`
       );
     } catch (err) {
       const errorMessage =
@@ -280,6 +277,7 @@ function App() {
           startAt={summary.startAt}
           stopAt={summary.stopAt}
           isSessionClosed={summary.isSessionClosed}
+          loading={loading}
           onSessionIdChange={setSessionId}
           onFetchSession={handleFetchSession}
         />
@@ -298,6 +296,7 @@ function App() {
           posCash={posCash}
           posCard={posCard}
           balanceStart={summary.balanceStart}
+          isSessionClosed={summary.isSessionClosed}
           managers={managers}
           selectedManager={selectedManager}
           onManagerChange={handleManagerChange}

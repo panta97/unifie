@@ -287,21 +287,22 @@ class PosCloseControlV2View(View):
             )
 
             # ACCOUNT BANK LINE
-            statement_id = account_bank_statements[0]["id"]
-            absl_table = "account.bank.statement.line"
-            absl_filter = [[["statement_id", "=", statement_id]]]
-            absl_fields = ["amount_residual", "is_reconciled", "payment_ref"]
-            account_bank_statement_lines = get_model(
-                absl_table, absl_filter, absl_fields, proxy=proxy
-            )
-
-            absl_sorted = sorted(account_bank_statement_lines, key=lambda x: x["id"])
             cash_in_outs_total = 0
-            if len(absl_sorted) > 0:
-                for item in absl_sorted:
-                    if "Opening Balance difference for" in item["payment_ref"]:
-                        continue
-                    cash_in_outs_total -= item["amount_residual"]
+            if account_bank_statements and len(account_bank_statements) > 0:
+                statement_id = account_bank_statements[0]["id"]
+                absl_table = "account.bank.statement.line"
+                absl_filter = [[["statement_id", "=", statement_id]]]
+                absl_fields = ["amount_residual", "is_reconciled", "payment_ref"]
+                account_bank_statement_lines = get_model(
+                    absl_table, absl_filter, absl_fields, proxy=proxy
+                )
+
+                absl_sorted = sorted(account_bank_statement_lines, key=lambda x: x["id"])
+                if len(absl_sorted) > 0:
+                    for item in absl_sorted:
+                        if "Opening Balance difference for" in item["payment_ref"]:
+                            continue
+                        cash_in_outs_total -= item["amount_residual"]
 
             # POS PAYMENT
             pp_table = "pos.payment"

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { formatCurrency } from "../utils/formatters";
 import type { Employee } from "../types";
 
@@ -9,6 +9,7 @@ interface RightSectionProps {
   posCash: number;
   posCard: number;
   balanceStart: number;
+  isSessionClosed: boolean;
   managers: Employee[];
   selectedManager: Employee | null;
   onManagerChange: (managerId: number) => void;
@@ -27,6 +28,7 @@ export const RightSection: React.FC<RightSectionProps> = ({
   posCash,
   posCard,
   balanceStart,
+  isSessionClosed,
   managers,
   selectedManager,
   onManagerChange,
@@ -37,6 +39,8 @@ export const RightSection: React.FC<RightSectionProps> = ({
   onObservationsChange,
   onSave,
 }) => {
+  // Modal state
+  const [showModal, setShowModal] = useState(false);
   // Calculate totals
   const odooTotal = odooCash + odooCard;
   const cajaTotal = posCash + posCard;
@@ -81,8 +85,37 @@ export const RightSection: React.FC<RightSectionProps> = ({
     status === "Faltante"
       ? "text-red-900"
       : status === "Sobrante"
-      ? "text-amber-900"
-      : "text-green-900";
+        ? "text-amber-900"
+        : "text-green-900";
+
+  // Check if observations is required (when Faltante)
+  const isObservationsRequired = difference < 0;
+  const isObservationsEmpty = observations.trim() === "";
+  const showObservationsError = isObservationsRequired && isObservationsEmpty;
+
+  // Check if Guardar button should be disabled
+  const isGuardarDisabled = !isSessionClosed || (isObservationsRequired && isObservationsEmpty);
+
+  // Handle Guardar button click
+  const handleGuardarClick = () => {
+    if (isGuardarDisabled) {
+      setShowModal(true);
+    } else {
+      onSave();
+    }
+  };
+
+  // Get modal message based on which constraint is violated
+  const getModalMessage = () => {
+    if (!isSessionClosed && isObservationsRequired && isObservationsEmpty) {
+      return "No se puede guardar por dos razones:\n1. La sesión aún está abierta (Estado: Falso)\n2. Las observaciones son requeridas cuando hay un Faltante";
+    } else if (!isSessionClosed) {
+      return "No se puede guardar porque la sesión aún está abierta (Estado: Falso)";
+    } else if (isObservationsRequired && isObservationsEmpty) {
+      return "No se puede guardar porque las observaciones son requeridas cuando hay un Faltante";
+    }
+    return "";
+  };
 
   return (
     <div className="col-start-2 row-start-2 bg-white rounded-lg shadow-sm border border-gray-200 overflow-auto flex flex-col">
@@ -224,7 +257,7 @@ export const RightSection: React.FC<RightSectionProps> = ({
                 </td>
               </tr>
               <tr className="hover:bg-gray-50">
-                <td className="px-2.5 py-2 border-b border-gray-100">
+                <td className="w-1/2 px-2.5 py-2 border-b border-gray-100">
                   Inicio:
                 </td>
                 <td className="text-right font-mono text-sm px-2.5 py-2 border-b border-gray-100">
@@ -276,24 +309,68 @@ export const RightSection: React.FC<RightSectionProps> = ({
         {/* Observations */}
         <div className="mt-3">
           <label className="block mb-1.5 font-medium text-sm text-slate-600">
-            Observaciones:
+            Observaciones:{isObservationsRequired && <span className="text-red-500 ml-1">*</span>}
           </label>
           <textarea
             value={observations}
             onChange={(e) => onObservationsChange(e.target.value)}
-            placeholder="Escribe observaciones aquí..."
+            placeholder={isObservationsRequired ? "Requerido: Explica el faltante..." : "Escribe observaciones aquí..."}
             rows={3}
-            className="w-full text-sm px-2 py-2 border border-gray-200 rounded transition-all duration-200 resize-y min-h-[60px] focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+            className={`w-full text-sm px-2 py-2 border rounded transition-all duration-200 resize-y min-h-[60px] focus:outline-none ${showObservationsError
+              ? "border-red-500 ring-2 ring-red-200 focus:border-red-500 focus:ring-red-200"
+              : "border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+              }`}
           />
         </div>
 
-        {/* Save Button */}
-        <button
-          onClick={onSave}
-          className="w-full mt-3 px-5 py-3 bg-gradient-to-br from-blue-500 to-blue-600 border-none rounded-md cursor-pointer text-sm font-semibold uppercase tracking-wide transition-all duration-200 shadow-md hover:-translate-y-0.5 hover:shadow-lg active:translate-y-0"
-        >
-          GUARDAR
-        </button>
+        {/* Bottom Section */}
+        <div className="flex items-center justify-center">
+          {/* Save Button */}
+          <button
+            onClick={handleGuardarClick}
+            className={`mt-3 px-5 py-3 border-none rounded-md text-sm font-semibold uppercase tracking-wide transition-all duration-200 shadow-md ${isGuardarDisabled
+              ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+              : "bg-gradient-to-br from-blue-500 to-blue-600 cursor-pointer hover:-translate-y-0.5 hover:shadow-lg active:translate-y-0"
+              }`}
+          >
+            GUARDAR
+          </button>
+        </div>
+
+        {/* Modal */}
+        {showModal && (
+          <div
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+            onClick={() => setShowModal(false)}
+          >
+            <div
+              className="bg-white rounded-lg shadow-xl p-6 max-w-md mx-4"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-start gap-3">
+                <div className="flex-shrink-0 w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+                  <span className="text-2xl">⚠️</span>
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                    No se puede guardar
+                  </h3>
+                  <p className="text-sm text-gray-700 whitespace-pre-line">
+                    {getModalMessage()}
+                  </p>
+                </div>
+              </div>
+              <div className="mt-5 flex justify-end">
+                <button
+                  onClick={() => setShowModal(false)}
+                  className="px-4 py-2 bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-md text-sm font-semibold hover:shadow-lg transition-all duration-200"
+                >
+                  Entendido
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
