@@ -19,6 +19,16 @@ interface SessionDataResponse {
     credit_note: number; // in cents
     discounts: any[];
     is_session_closed: boolean;
+    saved_session?: {
+      id: number;
+      cashier: { id: number };
+      manager: { id: number };
+      observations: string;
+      cash_denominations: any;
+      card_amounts: any;
+      pos_cash: number;
+      pos_card: number;
+    };
   };
 }
 
@@ -57,6 +67,7 @@ export async function fetchSessionData(sessionId: number) {
     posCard: 0, // Will be calculated from card amounts
     profitTotal: 0,
     balanceStartNextDay: 0,
+    savedSession: data.body.saved_session, // Include saved session if exists
   };
 }
 
@@ -126,6 +137,8 @@ export async function submitPosCloseControl(sessionId: number, data: POSState) {
         amount: data.endState.amount,
         note: data.endState.note,
       },
+      cashDenominations: data.cashDenominations,
+      cardAmounts: data.cardAmounts,
     }),
   });
 
@@ -133,10 +146,64 @@ export async function submitPosCloseControl(sessionId: number, data: POSState) {
     const errorData = await response.json().catch(() => ({}));
     throw new Error(
       errorData.error ||
-        `Failed to save POS close control: ${response.statusText}`
+      `Failed to save POS close control: ${response.statusText}`
     );
   }
 
   const result = await response.json();
   return result;
 }
+
+/**
+ * Update existing POS close control data in backend
+ */
+export async function updatePosCloseControl(sessionId: number, data: POSState) {
+  const response = await fetch(`/api/pos-close-control/v2/${sessionId}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      posName: data.summary.posName,
+      cashier: {
+        id: data.cashier?.id,
+      },
+      manager: {
+        id: data.manager?.id,
+      },
+      summary: {
+        sessionId: data.summary.sessionId,
+        configId: data.summary.configId,
+        sessionName: data.summary.sessionName,
+        startAt: data.summary.startAt,
+        stopAt: data.summary.stopAt,
+        odooCash: data.summary.odooCash,
+        odooCard: data.summary.odooCard,
+        posCash: data.summary.posCash,
+        posCard: data.summary.posCard,
+        profitTotal: data.summary.profitTotal,
+        balanceStart: data.summary.balanceStart,
+        balanceStartNextDay: data.summary.balanceStartNextDay,
+      },
+      endState: {
+        state: data.endState.state,
+        amount: data.endState.amount,
+        note: data.endState.note,
+      },
+      cashDenominations: data.cashDenominations,
+      cardAmounts: data.cardAmounts,
+    }),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(
+      errorData.error ||
+      `Failed to update POS close control: ${response.statusText}`
+    );
+  }
+
+  const result = await response.json();
+  return result;
+}
+

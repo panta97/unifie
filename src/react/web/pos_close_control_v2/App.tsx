@@ -7,6 +7,7 @@ import {
   fetchSessionData,
   fetchEmployees,
   submitPosCloseControl,
+  updatePosCloseControl,
 } from "./utils/api";
 import { FIXED_BALANCE_START } from "./types";
 import type {
@@ -75,6 +76,14 @@ function App() {
   // UI states
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [successData, setSuccessData] = useState<{
+    posCash: number;
+    posCard: number;
+    status: string;
+    difference: number;
+  } | null>(null);
+  const [isExistingSession, setIsExistingSession] = useState(false);
 
   // Fetch employees on mount
   useEffect(() => {
@@ -138,6 +147,76 @@ function App() {
     try {
       const data = await fetchSessionData(Number(sessionId));
       setSummary(data);
+
+      // Check if this session has been saved before
+      if (data.savedSession) {
+        setIsExistingSession(true);
+
+        // Restore React state from saved session
+        if (data.savedSession.cash_denominations) {
+          // Ensure all denomination values are valid numbers
+          const validDenoms = {
+            d0_10: Number(data.savedSession.cash_denominations.d0_10) || 0,
+            d0_20: Number(data.savedSession.cash_denominations.d0_20) || 0,
+            d0_50: Number(data.savedSession.cash_denominations.d0_50) || 0,
+            d1_00: Number(data.savedSession.cash_denominations.d1_00) || 0,
+            d2_00: Number(data.savedSession.cash_denominations.d2_00) || 0,
+            d5_00: Number(data.savedSession.cash_denominations.d5_00) || 0,
+            d10_00: Number(data.savedSession.cash_denominations.d10_00) || 0,
+            d20_00: Number(data.savedSession.cash_denominations.d20_00) || 0,
+            d50_00: Number(data.savedSession.cash_denominations.d50_00) || 0,
+            d100_00: Number(data.savedSession.cash_denominations.d100_00) || 0,
+            d200_00: Number(data.savedSession.cash_denominations.d200_00) || 0,
+          };
+          setCashDenominations(validDenoms);
+        }
+        if (data.savedSession.card_amounts) {
+          // Ensure all card amount values are valid numbers
+          const validCards = {
+            pos1: Number(data.savedSession.card_amounts.pos1) || 0,
+            pos2: Number(data.savedSession.card_amounts.pos2) || 0,
+            miscellaneous: Number(data.savedSession.card_amounts.miscellaneous) || 0,
+          };
+          setCardAmounts(validCards);
+        }
+        if (data.savedSession.observations) {
+          setObservations(data.savedSession.observations);
+        }
+
+        // Restore employees
+        const savedCashier = cashiers.find(
+          (c) => c.id === data.savedSession?.cashier.id
+        );
+        const savedManager = managers.find(
+          (m) => m.id === data.savedSession?.manager.id
+        );
+        if (savedCashier) setSelectedCashier(savedCashier);
+        if (savedManager) setSelectedManager(savedManager);
+      } else {
+        // Reset to default state for new sessions
+        setIsExistingSession(false);
+        setCashDenominations({
+          d0_10: 0,
+          d0_20: 0,
+          d0_50: 0,
+          d1_00: 0,
+          d2_00: 0,
+          d5_00: 0,
+          d10_00: 0,
+          d20_00: 0,
+          d50_00: 0,
+          d100_00: 0,
+          d200_00: 0,
+        });
+        setCardAmounts({
+          pos1: 0,
+          pos2: 0,
+          miscellaneous: 0,
+        });
+        setObservations("");
+        setSelectedCashier(null);
+        setSelectedManager(null);
+      }
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : "Failed to fetch session data";
@@ -235,15 +314,26 @@ function App() {
     setError(null);
 
     try {
-      const result = await submitPosCloseControl(summary.sessionId, dataToSave);
+      // Use PUT for existing sessions, POST for new ones
+      const result = isExistingSession
+        ? await updatePosCloseControl(summary.sessionId, dataToSave)
+        : await submitPosCloseControl(summary.sessionId, dataToSave);
+
       console.log("Save result:", result);
-      alert(
-        "POS Close Control saved successfully!\n\n" +
-        `Total Cash: S/. ${(posCash / 100).toFixed(2)}\n` +
-        `Total Card: S/. ${(posCard / 100).toFixed(2)}\n` +
-        `Status: ${endState.state.toUpperCase()}\n` +
-        `Difference: S/. ${(Math.abs(difference) / 100).toFixed(2)}`
-      );
+
+      // If it was a new session, mark it as existing now
+      if (!isExistingSession) {
+        setIsExistingSession(true);
+      }
+
+      // Show success modal instead of alert
+      setSuccessData({
+        posCash,
+        posCard,
+        status: endState.state,
+        difference,
+      });
+      setShowSuccessModal(true);
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : "Failed to save POS close control";
@@ -297,6 +387,7 @@ function App() {
           posCard={posCard}
           balanceStart={summary.balanceStart}
           isSessionClosed={summary.isSessionClosed}
+          isExistingSession={isExistingSession}
           managers={managers}
           selectedManager={selectedManager}
           onManagerChange={handleManagerChange}
@@ -308,6 +399,53 @@ function App() {
           onSave={handleSave}
         />
       </div>
+
+      {/* Success Modal */}
+      {showSuccessModal && successData && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+          onClick={() => setShowSuccessModal(false)}
+        >
+          <div
+            className="bg-white rounded-lg shadow-xl p-6 max-w-md mx-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start gap-3">
+              <div className="flex-shrink-0 w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                <span className="text-2xl">✅</span>
+              </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                  Guardado exitoso
+                </h3>
+                <div className="text-sm text-gray-700 space-y-1">
+                  <p>
+                    <span className="font-medium">Total Efectivo:</span> S/. {(successData.posCash / 100).toFixed(2)}
+                  </p>
+                  <p>
+                    <span className="font-medium">Total Tarjeta:</span> S/. {(successData.posCard / 100).toFixed(2)}
+                  </p>
+                  <p>
+                    <span className="font-medium">Estado:</span>{" "}
+                    <span className="uppercase font-semibold">{successData.status}</span>
+                  </p>
+                  <p>
+                    <span className="font-medium">Diferencia:</span> S/. {(Math.abs(successData.difference) / 100).toFixed(2)}
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div className="mt-5 flex justify-end">
+              <button
+                onClick={() => setShowSuccessModal(false)}
+                className="px-4 py-2 bg-gradient-to-br from-green-500 to-green-600 text-white rounded-md text-sm font-semibold hover:shadow-lg transition-all duration-200"
+              >
+                Aceptar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="print:hidden mt-4 text-center">
         <button

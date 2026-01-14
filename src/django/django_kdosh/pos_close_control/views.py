@@ -258,10 +258,18 @@ class PosCloseControlV2View(View):
     All amount fields are handled as integers (cents).
     """
 
+    @csrf_exempt
+    def dispatch(self, *args, **kwargs):
+        """
+        Override dispatch to apply csrf_exempt to all methods.
+        """
+        return super().dispatch(*args, **kwargs)
+
     def get(self, request, session_id):
         """
         GET method - retrieve POS session details.
         Adapted from v1 get_pos_details but returns integers instead of decimals.
+        Also checks for saved PosSessionV2 and merges data.
         """
         try:
             ps_table = "pos.session"
@@ -297,7 +305,9 @@ class PosCloseControlV2View(View):
                     absl_table, absl_filter, absl_fields, proxy=proxy
                 )
 
-                absl_sorted = sorted(account_bank_statement_lines, key=lambda x: x["id"])
+                absl_sorted = sorted(
+                    account_bank_statement_lines, key=lambda x: x["id"]
+                )
                 if len(absl_sorted) > 0:
                     for item in absl_sorted:
                         if "Opening Balance difference for" in item["payment_ref"]:
@@ -375,6 +385,36 @@ class PosCloseControlV2View(View):
                 "is_session_closed": bool(pos_session[0]["stop_at"]),
             }
 
+            # Check if this session has been saved in PosSessionV2
+            saved_session = PosSessionV2.objects.filter(
+                odoo_session_id=session_id
+            ).first()
+
+            if saved_session:
+                # Update saved session with latest Odoo values
+                saved_session.odoo_config_id = result["config_id"]
+                saved_session.odoo_cash = cash_int
+                saved_session.odoo_card = card_int
+                saved_session.start_at = start_at
+                saved_session.stop_at = stop_at
+                saved_session.save()
+
+                # Parse JSON to get React state
+                try:
+                    saved_data = json.loads(saved_session.json)
+                    result["saved_session"] = {
+                        "id": saved_session.id,
+                        "cashier": {"id": saved_session.cashier.id},
+                        "manager": {"id": saved_session.manager.id},
+                        "observations": saved_session.end_state_note,
+                        "cash_denominations": saved_data.get("cashDenominations", {}),
+                        "card_amounts": saved_data.get("cardAmounts", {}),
+                        "pos_cash": saved_session.pos_cash,
+                        "pos_card": saved_session.pos_card,
+                    }
+                except (json.JSONDecodeError, KeyError) as e:
+                    logger.warning(f"Failed to parse saved session JSON: {e}")
+
             data = {
                 "statusCode": 200,
                 "body": result,
@@ -386,7 +426,6 @@ class PosCloseControlV2View(View):
             logger.error(f"❌ Error in GET v2: {str(e)}")
             return JsonResponse({"error": str(e)}, status=500)
 
-    @csrf_exempt
     def post(self, request, session_id):
         """
         POST method - persist POS session data.
@@ -466,4 +505,86 @@ class PosCloseControlV2View(View):
             return JsonResponse({"error": f"Falta el campo: {str(e)}"}, status=400)
         except Exception as e:
             logger.error(f"❌ Error en POST V2: {str(e)}")
+            return JsonResponse({"error": str(e)}, status=500)
+
+    def put(self, request, session_id):
+        """
+        PUT method - update existing POS session data.
+        """
+        try:
+            # Log the received data
+            logger.info(f"📥 Update data recibida V2: {request.body}")
+
+            data = json.loads(request.body)
+
+            # Find existing session by odoo_session_id
+            saved_session = PosSessionV2.objects.filter(
+                odoo_session_id=session_id
+            ).first()
+
+            if not saved_session:
+                logger.error(f"Session {session_id} not found for update")
+                return JsonResponse(
+                    {"error": "Sesión no encontrada para actualizar"}, status=404
+                )
+
+            cashier_id = data["cashier"]["id"]
+            manager_id = data["manager"]["id"]
+
+            logger.info(
+                f"📌 Buscando Cajero ID: {cashier_id}, Gerente ID: {manager_id}"
+            )
+
+            # Verify employees exist
+            cashier = Employee.objects.filter(id=cashier_id, is_used=True).first()
+            manager = Employee.objects.filter(id=manager_id, is_used=True).first()
+
+            if not cashier:
+                logger.error(f"Cajero con ID {cashier_id} no encontrado o inactivo")
+            if not manager:
+                logger.error(f"Gerente con ID {manager_id} no encontrado o inactivo")
+
+            if not cashier or not manager:
+                return JsonResponse({"error": "Cajero o gerente inválido"}, status=400)
+
+            # Map endState
+            end_state_map = {"extra": "EX", "stable": "ST", "missing": "MS"}
+            end_state = end_state_map.get(data["endState"]["state"], "ST")
+
+            # Update the session
+            saved_session.pos_name = data["posName"]
+            saved_session.cashier = cashier
+            saved_session.manager = manager
+            saved_session.odoo_config_id = data["summary"]["configId"]
+            saved_session.odoo_cash = data["summary"]["odooCash"]
+            saved_session.odoo_card = data["summary"]["odooCard"]
+            saved_session.pos_cash = data["summary"]["posCash"]
+            saved_session.pos_card = data["summary"]["posCard"]
+            saved_session.profit_total = data["summary"]["profitTotal"]
+            saved_session.balance_start = data["summary"]["balanceStart"]
+            saved_session.balance_start_next_day = data["summary"][
+                "balanceStartNextDay"
+            ]
+            saved_session.session_name = data["summary"]["sessionName"]
+            saved_session.start_at = data["summary"]["startAt"]
+            saved_session.stop_at = data["summary"]["stopAt"]
+            saved_session.end_state = end_state
+            saved_session.end_state_amount = data["endState"]["amount"]
+            saved_session.end_state_note = data["endState"]["note"]
+            saved_session.json = json.dumps(data)
+            saved_session.save()
+
+            logger.info(f"✅ Sesión V2 actualizada con éxito: {saved_session.id}")
+            return JsonResponse(
+                {"message": "Sesión actualizada", "id": saved_session.id}, status=200
+            )
+
+        except json.JSONDecodeError:
+            logger.error("❌ JSON inválido")
+            return JsonResponse({"error": "JSON inválido"}, status=400)
+        except KeyError as e:
+            logger.error(f"❌ Falta el campo: {str(e)}")
+            return JsonResponse({"error": f"Falta el campo: {str(e)}"}, status=400)
+        except Exception as e:
+            logger.error(f"❌ Error en PUT V2: {str(e)}")
             return JsonResponse({"error": str(e)}, status=500)
