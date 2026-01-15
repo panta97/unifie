@@ -107,6 +107,79 @@ def save_order(request):
     return response
 
 
+# ==================== PURCHASE ORDER EDITING ENDPOINTS ====================
+from .purchase_order import (
+    search_purchase_order_by_name,
+    get_purchase_order_for_edit,
+    update_purchase_order,
+)
+
+
+def search_purchase_order_view(request, order_name):
+    """GET /api/product-rpc/purchase_order/search/<order_name>"""
+    try:
+        order = search_purchase_order_by_name(order_name)
+        if order:
+            return JsonResponse({"result": "SUCCESS", "order": order}, status=200)
+        else:
+            return JsonResponse(
+                {"result": "ERROR", "message": f"No se encontró la orden {order_name}"},
+                status=404,
+            )
+    except Exception as e:
+        return JsonResponse({"result": "ERROR", "message": str(e)}, status=400)
+
+
+@csrf_exempt
+def purchase_order_dispatcher(request, po_id):
+    if request.method == "GET":
+        return get_purchase_order_view(request, po_id)
+    elif request.method == "PUT":
+        return update_purchase_order_view(request, po_id)
+    else:
+        return JsonResponse(
+            {"result": "ERROR", "message": "Method not allowed"}, status=405
+        )
+
+
+def get_purchase_order_view(request, po_id):
+    """GET /api/product-rpc/purchase_order/<po_id>"""
+    try:
+        order_data = get_purchase_order_for_edit(po_id)
+        return JsonResponse({"result": "SUCCESS", "order": order_data}, status=200)
+    except Exception as e:
+        return JsonResponse({"result": "ERROR", "message": str(e)}, status=400)
+
+
+@csrf_exempt
+def update_purchase_order_view(request, po_id):
+    """PUT /api/product-rpc/purchase_order/<po_id>"""
+    try:
+        raw_json = json.loads(request.body)
+        print(f"🔵 [UPDATE VIEW] Recibiendo actualización para PO {po_id}")
+        print(f"📦 [UPDATE VIEW] Raw JSON recibido: {raw_json}")
+
+        transformed_order = transform_order_json(raw_json)
+        print(f"✅ [UPDATE VIEW] JSON transformado: {transformed_order}")
+        print(
+            f"📝 [UPDATE VIEW] Número de líneas de orden: {len(transformed_order['order_lines'])}"
+        )
+
+        order_id = update_purchase_order(po_id, transformed_order, request.user)
+        print(f"✅ [UPDATE VIEW] Orden actualizada en Odoo: {order_id}")
+
+        order_result = order_client_result(order_id)
+        print(f"📤 [UPDATE VIEW] Resultado a enviar al frontend: {order_result}")
+
+        return JsonResponse({"result": "SUCCESS", "order": order_result}, status=200)
+    except Exception as e:
+        print(f"❌ [UPDATE VIEW] Error: {str(e)}")
+        import traceback
+
+        traceback.print_exc()
+        return JsonResponse({"result": "ERROR", "message": str(e)}, status=400)
+
+
 @csrf_exempt
 @require_http_methods(["POST"])
 def get_report(request, type):

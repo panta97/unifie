@@ -16,6 +16,11 @@ from .views import (
     create_refund_invoice,
     pay_credit_note_view,
     ReportList,
+    # Purchase order editing
+    search_purchase_order_view,
+    get_purchase_order_view,
+    update_purchase_order_view,
+    purchase_order_dispatcher,
 )
 
 
@@ -30,11 +35,24 @@ urlpatterns = [
         name="get_purchase_order_product",
     ),
     path("purchase_order", save_order, name="save_order"),
+    # Purchase order editing endpoints
+    path(
+        "purchase_order/search/<str:order_name>",
+        search_purchase_order_view,
+        name="search_purchase_order",
+    ),
+    path(
+        "purchase_order/<int:po_id>",
+        purchase_order_dispatcher,
+        name="purchase_order_detail",
+    ),
     path("report/<str:type>", get_report, name="get_report"),
     path("attribute/list", get_attribute_vals, name="get_attribute_vals"),
     path("attribute/sort", sort_attribute_vals, name="sort_attribute_vals"),
     path("refund/invoice", get_invoice_details, name="get_invoice_details"),
-    path("credit-note/invoice", get_credit_note_details, name="get_credit_note_details"),
+    path(
+        "credit-note/invoice", get_credit_note_details, name="get_credit_note_details"
+    ),
     path("refund/create", create_refund_invoice, name="create_refund_invoice"),
     path("credit-note/pay", pay_credit_note_view, name="pay_credit_note"),
     path("reports", ReportList.as_view(), name="reports"),
