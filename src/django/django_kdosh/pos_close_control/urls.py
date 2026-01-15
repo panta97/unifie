@@ -1,6 +1,7 @@
 from django.urls import path
 
 from .views import get_pos_details, pos_persist, employee, PosCloseControlV2View
+from .snapshot_views import get_session_snapshots
 
 urlpatterns = [
     path(
@@ -19,5 +20,11 @@ urlpatterns = [
         "api/pos-close-control/v2/<int:session_id>",
         PosCloseControlV2View.as_view(),
         name="pos_close_control_v2",
+    ),
+    # Snapshot history endpoint
+    path(
+        "api/pos-close-control/v2/<int:session_id>/snapshots",
+        get_session_snapshots,
+        name="get_session_snapshots",
     ),
 ]

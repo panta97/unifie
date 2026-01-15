@@ -59,3 +59,22 @@ export interface POSState {
   cashier: Employee | null;
   manager: Employee | null;
 }
+
+// Snapshot-related types
+export type SessionStatus = "DR" | "CL"; // DRAFT or CLOSED
+
+export interface Snapshot {
+  id: number;
+  version: number;
+  snapshot_created_at: string;
+  pos_name: string;
+  status: SessionStatus;
+  cashier: string | null;
+  manager: string | null;
+}
+
+export interface SnapshotHistoryResponse {
+  session_id: number;
+  snapshot_count: number;
+  snapshots: Snapshot[];
+}

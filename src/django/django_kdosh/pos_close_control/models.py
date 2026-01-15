@@ -115,3 +115,65 @@ class PosSessionV2(models.Model):
     end_state_amount = models.IntegerField()
     json = models.TextField()
     odoo_version = models.IntegerField(default=17)
+
+    # Status field for session lifecycle tracking
+    DRAFT = "DR"
+    CLOSED = "CL"
+    STATUS_CHOICES = (
+        (DRAFT, "Draft"),
+        (CLOSED, "Closed"),
+    )
+    status = models.CharField(
+        max_length=2,
+        choices=STATUS_CHOICES,
+        default=DRAFT,
+    )
+
+
+class PosSessionV2Snapshot(models.Model):
+    """
+    Historical snapshot of a POS session.
+    Created when a CLOSED session is updated via PUT request.
+    """
+
+    id = models.AutoField(primary_key=True)
+    # Metadata
+    original_session_id = models.IntegerField()  # References odoo_session_id
+    snapshot_created_at = models.DateTimeField(auto_now_add=True)
+
+    # Copy of all PosSessionV2 fields at snapshot time
+    pos_name = models.CharField(max_length=50)
+    cashier = models.ForeignKey(
+        Employee,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="snapshot_cashier_v2",
+    )
+    manager = models.ForeignKey(
+        Employee,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="snapshot_manager_v2",
+    )
+    odoo_session_id = models.IntegerField()
+    odoo_config_id = models.IntegerField()
+    odoo_cash = models.IntegerField()
+    odoo_card = models.IntegerField()
+    pos_cash = models.IntegerField()
+    pos_card = models.IntegerField()
+    profit_total = models.IntegerField()
+    balance_start = models.IntegerField()
+    balance_start_next_day = models.IntegerField()
+    session_name = models.CharField(max_length=100)
+    start_at = models.DateTimeField()
+    stop_at = models.DateTimeField(null=True, blank=True)
+    end_state = models.CharField(max_length=2)
+    end_state_note = models.TextField()
+    end_state_amount = models.IntegerField()
+    json = models.TextField()
+    status = models.CharField(max_length=2)  # Status at snapshot time
+
+    def __str__(self):
+        return f"Snapshot of Session {self.odoo_session_id} at {self.snapshot_created_at}"

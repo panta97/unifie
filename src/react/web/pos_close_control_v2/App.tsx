@@ -3,12 +3,14 @@ import "./index.css";
 import { Header } from "./components/Header";
 import { LeftSection } from "./components/LeftSection";
 import { RightSection } from "./components/RightSection";
+import { SummaryPrint } from "./components/SummaryPrint";
 import {
   fetchSessionData,
   fetchEmployees,
   submitPosCloseControl,
   updatePosCloseControl,
   autosavePosCloseControl,
+  fetchSessionSnapshots,
 } from "./utils/api";
 import { FIXED_BALANCE_START } from "./types";
 import type {
@@ -17,6 +19,7 @@ import type {
   Employee,
   Summary as SummaryType,
   EndState,
+  Snapshot,
 } from "./types";
 import { useAutosave } from "./hooks/useAutosave";
 
@@ -86,6 +89,8 @@ function App() {
     difference: number;
   } | null>(null);
   const [isExistingSession, setIsExistingSession] = useState(false);
+  const [snapshots, setSnapshots] = useState<Snapshot[]>([]);
+  const [snapshotCount, setSnapshotCount] = useState(0);
 
   // Fetch employees on mount
   useEffect(() => {
@@ -187,6 +192,18 @@ function App() {
     try {
       const data = await fetchSessionData(Number(sessionId));
       setSummary(data);
+
+      // Fetch snapshots for this session
+      try {
+        const snapshotData = await fetchSessionSnapshots(Number(sessionId));
+        setSnapshots(snapshotData.snapshots);
+        setSnapshotCount(snapshotData.snapshot_count);
+      } catch (err) {
+        console.error("Failed to fetch snapshots:", err);
+        // Non-critical error, continue with session load
+        setSnapshots([]);
+        setSnapshotCount(0);
+      }
 
       // Check if this session has been saved before
       if (data.savedSession) {
@@ -367,6 +384,16 @@ function App() {
         setIsExistingSession(true);
       }
 
+      // Fetch updated snapshot history after successful save
+      try {
+        const snapshotData = await fetchSessionSnapshots(summary.sessionId);
+        setSnapshots(snapshotData.snapshots);
+        setSnapshotCount(snapshotData.snapshot_count);
+      } catch (err) {
+        console.error("Failed to fetch updated snapshots:", err);
+        // Non-critical error, continue with save success
+      }
+
       // Show success modal instead of alert
       setSuccessData({
         posCash,
@@ -409,6 +436,8 @@ function App() {
           stopAt={summary.stopAt}
           isSessionClosed={summary.isSessionClosed}
           loading={loading}
+          snapshotCount={snapshotCount}
+          snapshots={snapshots}
           onSessionIdChange={setSessionId}
           onFetchSession={handleFetchSession}
         />
@@ -439,6 +468,7 @@ function App() {
           observations={observations}
           onObservationsChange={setObservations}
           onSave={handleSave}
+          onPrint={handlePrint}
           disabled={summary.sessionId === 0}
         />
       </div>
@@ -495,15 +525,14 @@ function App() {
         </div>
       )}
 
-      <div className="print:hidden mt-4 text-center">
-        <button
-          onClick={handlePrint}
-          className="px-5 py-2.5 bg-gradient-to-br from-blue-500 to-blue-600 text-white border-none rounded-md cursor-pointer text-sm font-semibold uppercase tracking-wide transition-all duration-200 shadow-md hover:-translate-y-0.5 hover:shadow-lg active:translate-y-0"
-          disabled={loading}
-        >
-          {loading ? "LOADING..." : "IMPRIMIR"}
-        </button>
-      </div>
+      {/* Thermal Printer Summary Component */}
+      <SummaryPrint
+        summary={summary}
+        cashier={selectedCashier}
+        manager={selectedManager}
+        posCash={posCash}
+        posCard={posCard}
+      />
     </div>
   );
 }

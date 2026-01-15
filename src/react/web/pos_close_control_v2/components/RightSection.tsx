@@ -20,6 +20,7 @@ interface RightSectionProps {
   observations: string;
   onObservationsChange: (note: string) => void;
   onSave: () => void;
+  onPrint: () => void;
   disabled?: boolean;
 }
 
@@ -41,6 +42,7 @@ export const RightSection: React.FC<RightSectionProps> = ({
   observations,
   onObservationsChange,
   onSave,
+  onPrint,
   disabled = false,
 }) => {
   // Modal state
@@ -368,16 +370,25 @@ export const RightSection: React.FC<RightSectionProps> = ({
         </div>
 
         {/* Bottom Section */}
-        <div className="flex items-center justify-center">
+        <div className="flex flex-col items-center justify-center gap-2">
           {/* Save Button */}
           <button
             onClick={handleGuardarClick}
             className={`mt-3 px-5 py-3 border-none rounded-md text-sm font-semibold uppercase tracking-wide transition-all duration-200 shadow-md ${isGuardarDisabled
               ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-              : "bg-gradient-to-br from-blue-500 to-blue-600 cursor-pointer hover:-translate-y-0.5 hover:shadow-lg active:translate-y-0"
+              : "bg-gradient-to-br from-blue-500 to-blue-600 text-white cursor-pointer hover:-translate-y-0.5 hover:shadow-lg active:translate-y-0"
               }`}
           >
             {isExistingSession ? "ACTUALIZAR" : "GUARDAR"}
+          </button>
+
+          {/* Print Button */}
+          <button
+            onClick={onPrint}
+            className="px-5 py-2.5 bg-gradient-to-br from-blue-500 to-blue-600 text-white border-none rounded-md cursor-pointer text-sm font-semibold uppercase tracking-wide transition-all duration-200 shadow-md hover:-translate-y-0.5 hover:shadow-lg active:translate-y-0"
+            disabled={disabled}
+          >
+            IMPRIMIR
           </button>
         </div>
 

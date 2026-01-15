@@ -59,3 +59,22 @@ export const getDifferenceLabel = (difference: number): string => {
     if (difference > 0) return "Extra";
     return "Faltante";
 };
+
+/**
+ * Format date for thermal printer
+ * Example: "2024-01-15 14:30:00" -> "lunes 15 de enero 14:30"
+ */
+export const formatDateForPrint = (dateString: string): string => {
+    if (!dateString) return "-";
+    const date = new Date(dateString);
+    const days = ["domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado"];
+    const months = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
+
+    const dayName = days[date.getDay()];
+    const day = date.getDate();
+    const monthName = months[date.getMonth()];
+    const hours = String(date.getHours()).padStart(2, "0");
+    const minutes = String(date.getMinutes()).padStart(2, "0");
+
+    return `${dayName} ${day} de ${monthName} ${hours}:${minutes}`;
+};

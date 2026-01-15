@@ -1,4 +1,4 @@
-import type { Employee, POSState } from "../types";
+import type { Employee, POSState, SnapshotHistoryResponse } from "../types";
 
 /**
  * API response structure from backend GET endpoint
@@ -19,6 +19,7 @@ interface SessionDataResponse {
     credit_note: number; // in cents
     discounts: any[];
     is_session_closed: boolean;
+    snapshot_count?: number; // Number of snapshots for this session
     saved_session?: {
       id: number;
       cashier?: { id: number };
@@ -28,6 +29,7 @@ interface SessionDataResponse {
       card_amounts: any;
       pos_cash: number;
       pos_card: number;
+      status?: string; // Session status (DRAFT/CLOSED)
     };
   };
 }
@@ -68,6 +70,7 @@ export async function fetchSessionData(sessionId: number) {
     profitTotal: 0,
     balanceStartNextDay: 0,
     savedSession: data.body.saved_session, // Include saved session if exists
+    snapshotCount: data.body.snapshot_count || 0, // Include snapshot count
   };
 }
 
@@ -98,6 +101,32 @@ export async function fetchEmployees(
   }
 
   const data: Employee[] = await response.json();
+  return data;
+}
+
+/**
+ * Fetch snapshot history for a POS session
+ */
+export async function fetchSessionSnapshots(
+  sessionId: number
+): Promise<SnapshotHistoryResponse> {
+  const response = await fetch(
+    `/api/pos-close-control/v2/${sessionId}/snapshots`,
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error(
+      `Failed to fetch session snapshots: ${response.statusText}`
+    );
+  }
+
+  const data: SnapshotHistoryResponse = await response.json();
   return data;
 }
 
@@ -237,4 +266,5 @@ export async function updatePosCloseControl(sessionId: number, data: POSState) {
   const result = await response.json();
   return result;
 }
+
 

@@ -8,7 +8,7 @@ from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_exempt
 from .models import PosSession, Employee
 from django.views import View
-from .models import PosSessionV2
+from .models import PosSessionV2, PosSessionV2Snapshot
 
 logger = logging.getLogger(__name__)
 
@@ -410,6 +410,7 @@ class PosCloseControlV2View(View):
                         "card_amounts": saved_data.get("cardAmounts", {}),
                         "pos_cash": saved_session.pos_cash,
                         "pos_card": saved_session.pos_card,
+                        "status": saved_session.status,
                     }
                     if saved_session.cashier:
                         result["saved_session"]["cashier"] = {
@@ -421,6 +422,12 @@ class PosCloseControlV2View(View):
                         }
                 except (json.JSONDecodeError, KeyError) as e:
                     logger.warning(f"Failed to parse saved session JSON: {e}")
+                
+                # Get snapshot count for this session
+                snapshot_count = PosSessionV2Snapshot.objects.filter(
+                    original_session_id=session_id
+                ).count()
+                result["snapshot_count"] = snapshot_count
 
             data = {
                 "statusCode": 200,
@@ -437,6 +444,7 @@ class PosCloseControlV2View(View):
         """
         POST method - persist POS session data.
         Adapted from v1 pos_persist but expects integers from FE.
+        Sets status to CLOSED if stop_at is provided, otherwise DRAFT.
         """
         try:
             # Log the received data
@@ -467,6 +475,10 @@ class PosCloseControlV2View(View):
             end_state_map = {"extra": "EX", "stable": "ST", "missing": "MS"}
             end_state = end_state_map.get(data["endState"]["state"], "ST")
 
+            # Determine status based on stop_at
+            stop_at = data["summary"]["stopAt"]
+            status = PosSessionV2.CLOSED if stop_at else PosSessionV2.DRAFT
+
             # Create the v2 session with integer values
             # FE sends integers, we save them directly
             pos_session = PosSessionV2.objects.create(
@@ -490,16 +502,17 @@ class PosCloseControlV2View(View):
                 ],  # Already an integer from FE
                 session_name=data["summary"]["sessionName"],
                 start_at=data["summary"]["startAt"],
-                stop_at=data["summary"]["stopAt"],
+                stop_at=stop_at,
                 end_state=end_state,
                 end_state_amount=data["endState"][
                     "amount"
                 ],  # Already an integer from FE
                 end_state_note=data["endState"]["note"],
                 json=json.dumps(data),  # Save the entire JSON
+                status=status,
             )
 
-            logger.info(f"✅ Sesión V2 creada con éxito: {pos_session.id}")
+            logger.info(f"✅ Sesión V2 creada con éxito: {pos_session.id} (status={status})")
             return JsonResponse(
                 {"message": "Sesión guardada", "id": pos_session.id}, status=201
             )
@@ -517,6 +530,7 @@ class PosCloseControlV2View(View):
     def put(self, request, session_id):
         """
         PUT method - update existing POS session data.
+        Creates a snapshot if the session is CLOSED before updating.
         """
         try:
             # Log the received data
@@ -534,6 +548,38 @@ class PosCloseControlV2View(View):
                 return JsonResponse(
                     {"error": "Sesión no encontrada para actualizar"}, status=404
                 )
+
+            # Check if session is CLOSED - if so, create snapshot
+            snapshot_created = False
+            if saved_session.status == PosSessionV2.CLOSED:
+                logger.info(f"🔒 Session {session_id} is CLOSED, creating snapshot...")
+                
+                # Create snapshot with current session data
+                PosSessionV2Snapshot.objects.create(
+                    original_session_id=saved_session.odoo_session_id,
+                    pos_name=saved_session.pos_name,
+                    cashier=saved_session.cashier,
+                    manager=saved_session.manager,
+                    odoo_session_id=saved_session.odoo_session_id,
+                    odoo_config_id=saved_session.odoo_config_id,
+                    odoo_cash=saved_session.odoo_cash,
+                    odoo_card=saved_session.odoo_card,
+                    pos_cash=saved_session.pos_cash,
+                    pos_card=saved_session.pos_card,
+                    profit_total=saved_session.profit_total,
+                    balance_start=saved_session.balance_start,
+                    balance_start_next_day=saved_session.balance_start_next_day,
+                    session_name=saved_session.session_name,
+                    start_at=saved_session.start_at,
+                    stop_at=saved_session.stop_at,
+                    end_state=saved_session.end_state,
+                    end_state_note=saved_session.end_state_note,
+                    end_state_amount=saved_session.end_state_amount,
+                    json=saved_session.json,
+                    status=saved_session.status,
+                )
+                snapshot_created = True
+                logger.info(f"📸 Snapshot created for session {session_id}")
 
             cashier_id = data["cashier"]["id"]
             manager_id = data["manager"]["id"]
@@ -558,6 +604,10 @@ class PosCloseControlV2View(View):
             end_state_map = {"extra": "EX", "stable": "ST", "missing": "MS"}
             end_state = end_state_map.get(data["endState"]["state"], "ST")
 
+            # Determine status based on new stop_at value
+            new_stop_at = data["summary"]["stopAt"]
+            new_status = PosSessionV2.CLOSED if new_stop_at else PosSessionV2.DRAFT
+
             # Update the session
             saved_session.pos_name = data["posName"]
             saved_session.cashier = cashier
@@ -574,16 +624,31 @@ class PosCloseControlV2View(View):
             ]
             saved_session.session_name = data["summary"]["sessionName"]
             saved_session.start_at = data["summary"]["startAt"]
-            saved_session.stop_at = data["summary"]["stopAt"]
+            
+            # Keep the original stop_at or use new value
+            # Per user requirement: keep original stop_at value
+            if new_stop_at:
+                saved_session.stop_at = new_stop_at
+            # If new stop_at is None, keep the existing value (don't override)
+            
             saved_session.end_state = end_state
             saved_session.end_state_amount = data["endState"]["amount"]
             saved_session.end_state_note = data["endState"]["note"]
             saved_session.json = json.dumps(data)
+            saved_session.status = new_status
             saved_session.save()
 
-            logger.info(f"✅ Sesión V2 actualizada con éxito: {saved_session.id}")
+            logger.info(
+                f"✅ Sesión V2 actualizada: {saved_session.id} "
+                f"(snapshot_created={snapshot_created}, new_status={new_status})"
+            )
             return JsonResponse(
-                {"message": "Sesión actualizada", "id": saved_session.id}, status=200
+                {
+                    "message": "Sesión actualizada",
+                    "id": saved_session.id,
+                    "snapshot_created": snapshot_created,
+                },
+                status=200,
             )
 
         except json.JSONDecodeError:
