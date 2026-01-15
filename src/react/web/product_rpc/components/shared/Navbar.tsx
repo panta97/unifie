@@ -9,6 +9,7 @@ import {
 const Home = React.lazy(() => import("../home/Home"));
 const ProductProduct = React.lazy(() => import("../product_product/ProductProduct"));
 const PurchaseOrder = React.lazy(() => import("../purchase_order/PurchaseOrder"));
+const PurchaseOrderEdit = React.lazy(() => import("../purchase_order_edit/PurchaseOrderEdit"));
 const Credit = React.lazy(() => import("../credit/Credit"));
 const Refund = React.lazy(() => import("../refund/Refund"));
 const Report = React.lazy(() => import("../report/Report"));
@@ -56,6 +57,15 @@ export const Navbar: React.FC = () => {
             </li>
             <li>
               <NavLink
+                to={`${basePath}/purchase-order-edit`}
+                className={({ isActive }) => `inline-block px-2 py-1 ${isActive ? "bg-gray-100 text-gray-900" : ""}`}
+                tabIndex={-1}
+              >
+                Editar Orden
+              </NavLink>
+            </li>
+            <li>
+              <NavLink
                 to={`${basePath}/reports`}
                 className={({ isActive }) => `inline-block px-2 py-1 ${isActive ? "bg-gray-100 text-gray-900" : ""}`}
                 tabIndex={-1}
@@ -88,6 +98,7 @@ export const Navbar: React.FC = () => {
             <Route path={basePath} element={<Home />} />
             <Route path={`${basePath}/product-product`} element={<ProductProduct />} />
             <Route path={`${basePath}/purchase-order`} element={<PurchaseOrder />} />
+            <Route path={`${basePath}/purchase-order-edit`} element={<PurchaseOrderEdit />} />
             <Route path={`${basePath}/reports`} element={<Report />} />
             <Route path={`${basePath}/refunds`} element={<Refund />} />
             <Route path={`${basePath}/credit-notes`} element={<Credit />} />
