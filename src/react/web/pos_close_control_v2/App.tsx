@@ -418,6 +418,7 @@ function App() {
           cardAmounts={cardAmounts}
           onDenominationChange={handleDenominationChange}
           onCardAmountChange={handleCardAmountChange}
+          disabled={summary.sessionId === 0}
         />
 
         <RightSection
@@ -438,6 +439,7 @@ function App() {
           observations={observations}
           onObservationsChange={setObservations}
           onSave={handleSave}
+          disabled={summary.sessionId === 0}
         />
       </div>
 

@@ -10,6 +10,7 @@ interface LeftSectionProps {
     quantity: number
   ) => void;
   onCardAmountChange: (field: keyof CardAmounts, amount: number) => void;
+  disabled?: boolean;
 }
 
 const denominationValues: Array<{
@@ -17,24 +18,25 @@ const denominationValues: Array<{
   value: number;
   label: string;
 }> = [
-  { key: "d0_10", value: 0.1, label: "0.10" },
-  { key: "d0_20", value: 0.2, label: "0.20" },
-  { key: "d0_50", value: 0.5, label: "0.50" },
-  { key: "d1_00", value: 1, label: "1.00" },
-  { key: "d2_00", value: 2, label: "2.00" },
-  { key: "d5_00", value: 5, label: "5.00" },
-  { key: "d10_00", value: 10, label: "10.00" },
-  { key: "d20_00", value: 20, label: "20.00" },
-  { key: "d50_00", value: 50, label: "50.00" },
-  { key: "d100_00", value: 100, label: "100.00" },
-  { key: "d200_00", value: 200, label: "200.00" },
-];
+    { key: "d0_10", value: 0.1, label: "0.10" },
+    { key: "d0_20", value: 0.2, label: "0.20" },
+    { key: "d0_50", value: 0.5, label: "0.50" },
+    { key: "d1_00", value: 1, label: "1.00" },
+    { key: "d2_00", value: 2, label: "2.00" },
+    { key: "d5_00", value: 5, label: "5.00" },
+    { key: "d10_00", value: 10, label: "10.00" },
+    { key: "d20_00", value: 20, label: "20.00" },
+    { key: "d50_00", value: 50, label: "50.00" },
+    { key: "d100_00", value: 100, label: "100.00" },
+    { key: "d200_00", value: 200, label: "200.00" },
+  ];
 
 export const LeftSection: React.FC<LeftSectionProps> = ({
   denominations,
   cardAmounts,
   onDenominationChange,
   onCardAmountChange,
+  disabled = false,
 }) => {
   // Calculate total cash (in cents)
   const totalCash = denominationValues.reduce((sum, { key, value }) => {
@@ -87,7 +89,8 @@ export const LeftSection: React.FC<LeftSectionProps> = ({
                           parseInt(e.target.value || "0", 10)
                         )
                       }
-                      className="w-full px-2.5 py-1.5 border border-gray-200 rounded text-sm transition-all duration-200 text-right font-mono focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                      className="w-full px-2.5 py-1.5 border border-gray-200 rounded text-sm transition-all duration-200 text-right font-mono focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 disabled:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-60"
+                      disabled={disabled}
                     />
                   </td>
                   <td className="text-right font-mono text-sm px-2.5 py-1.5 border-b border-gray-100">
@@ -131,7 +134,8 @@ export const LeftSection: React.FC<LeftSectionProps> = ({
                       Math.round(parseFloat(e.target.value || "0") * 100)
                     )
                   }
-                  className="w-full px-2.5 py-1.5 border border-gray-200 rounded text-sm transition-all duration-200 text-right font-mono focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                  className="w-full px-2.5 py-1.5 border border-gray-200 rounded text-sm transition-all duration-200 text-right font-mono focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 disabled:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-60"
+                  disabled={disabled}
                 />
               </td>
             </tr>
@@ -149,7 +153,8 @@ export const LeftSection: React.FC<LeftSectionProps> = ({
                       Math.round(parseFloat(e.target.value || "0") * 100)
                     )
                   }
-                  className="w-full px-2.5 py-1.5 border border-gray-200 rounded text-sm transition-all duration-200 text-right font-mono focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                  className="w-full px-2.5 py-1.5 border border-gray-200 rounded text-sm transition-all duration-200 text-right font-mono focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 disabled:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-60"
+                  disabled={disabled}
                 />
               </td>
             </tr>
@@ -167,7 +172,8 @@ export const LeftSection: React.FC<LeftSectionProps> = ({
                       Math.round(parseFloat(e.target.value || "0") * 100)
                     )
                   }
-                  className="w-full px-2.5 py-1.5 border border-gray-200 rounded text-sm transition-all duration-200 text-right font-mono focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                  className="w-full px-2.5 py-1.5 border border-gray-200 rounded text-sm transition-all duration-200 text-right font-mono focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 disabled:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-60"
+                  disabled={disabled}
                 />
               </td>
             </tr>

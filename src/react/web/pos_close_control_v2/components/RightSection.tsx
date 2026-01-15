@@ -20,6 +20,7 @@ interface RightSectionProps {
   observations: string;
   onObservationsChange: (note: string) => void;
   onSave: () => void;
+  disabled?: boolean;
 }
 
 export const RightSection: React.FC<RightSectionProps> = ({
@@ -40,6 +41,7 @@ export const RightSection: React.FC<RightSectionProps> = ({
   observations,
   onObservationsChange,
   onSave,
+  disabled = false,
 }) => {
   // Modal state
   const [showModal, setShowModal] = useState(false);
@@ -87,8 +89,8 @@ export const RightSection: React.FC<RightSectionProps> = ({
     status === "Faltante"
       ? "text-red-900"
       : status === "Sobrante"
-      ? "text-amber-900"
-      : "text-green-900";
+        ? "text-amber-900"
+        : "text-green-900";
 
   // Check if observations is required (when Faltante)
   const isObservationsRequired = difference < 0;
@@ -302,11 +304,11 @@ export const RightSection: React.FC<RightSectionProps> = ({
           <select
             value={selectedManager?.id || ""}
             onChange={(e) => onManagerChange(Number(e.target.value))}
-            className={`w-full text-sm px-2.5 py-1.5 border rounded transition-all duration-200 cursor-pointer bg-white focus:outline-none ${
-              isManagerMissing
-                ? "border-red-500 ring-2 ring-red-200 focus:border-red-500 focus:ring-red-200"
-                : "border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-            }`}
+            className={`w-full text-sm px-2.5 py-1.5 border rounded transition-all duration-200 cursor-pointer bg-white focus:outline-none disabled:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-60 ${isManagerMissing
+              ? "border-red-500 ring-2 ring-red-200 focus:border-red-500 focus:ring-red-200"
+              : "border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+              }`}
+            disabled={disabled}
           >
             <option value="">Seleccionar Gerente</option>
             {managers.map((manager) => (
@@ -325,11 +327,11 @@ export const RightSection: React.FC<RightSectionProps> = ({
           <select
             value={selectedCashier?.id || ""}
             onChange={(e) => onCashierChange(Number(e.target.value))}
-            className={`w-full text-sm px-2.5 py-1.5 border rounded transition-all duration-200 cursor-pointer bg-white focus:outline-none ${
-              isCashierMissing
-                ? "border-red-500 ring-2 ring-red-200 focus:border-red-500 focus:ring-red-200"
-                : "border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-            }`}
+            className={`w-full text-sm px-2.5 py-1.5 border rounded transition-all duration-200 cursor-pointer bg-white focus:outline-none disabled:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-60 ${isCashierMissing
+              ? "border-red-500 ring-2 ring-red-200 focus:border-red-500 focus:ring-red-200"
+              : "border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+              }`}
+            disabled={disabled}
           >
             <option value="">Seleccionar Cajero</option>
             {cashiers.map((cashier) => (
@@ -357,11 +359,11 @@ export const RightSection: React.FC<RightSectionProps> = ({
                 : "Escribe observaciones aquí..."
             }
             rows={3}
-            className={`w-full text-sm px-2 py-2 border rounded transition-all duration-200 resize-y min-h-[60px] focus:outline-none ${
-              showObservationsError
-                ? "border-red-500 ring-2 ring-red-200 focus:border-red-500 focus:ring-red-200"
-                : "border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-            }`}
+            className={`w-full text-sm px-2 py-2 border rounded transition-all duration-200 resize-y min-h-[60px] focus:outline-none disabled:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-60 ${showObservationsError
+              ? "border-red-500 ring-2 ring-red-200 focus:border-red-500 focus:ring-red-200"
+              : "border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+              }`}
+            disabled={disabled}
           />
         </div>
 
@@ -370,11 +372,10 @@ export const RightSection: React.FC<RightSectionProps> = ({
           {/* Save Button */}
           <button
             onClick={handleGuardarClick}
-            className={`mt-3 px-5 py-3 border-none rounded-md text-sm font-semibold uppercase tracking-wide transition-all duration-200 shadow-md ${
-              isGuardarDisabled
-                ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                : "bg-gradient-to-br from-blue-500 to-blue-600 cursor-pointer hover:-translate-y-0.5 hover:shadow-lg active:translate-y-0"
-            }`}
+            className={`mt-3 px-5 py-3 border-none rounded-md text-sm font-semibold uppercase tracking-wide transition-all duration-200 shadow-md ${isGuardarDisabled
+              ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+              : "bg-gradient-to-br from-blue-500 to-blue-600 cursor-pointer hover:-translate-y-0.5 hover:shadow-lg active:translate-y-0"
+              }`}
           >
             {isExistingSession ? "ACTUALIZAR" : "GUARDAR"}
           </button>
