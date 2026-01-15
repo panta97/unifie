@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import "./index.css";
 import { Header } from "./components/Header";
 import { LeftSection } from "./components/LeftSection";
@@ -8,6 +8,7 @@ import {
   fetchEmployees,
   submitPosCloseControl,
   updatePosCloseControl,
+  autosavePosCloseControl,
 } from "./utils/api";
 import { FIXED_BALANCE_START } from "./types";
 import type {
@@ -17,6 +18,7 @@ import type {
   Summary as SummaryType,
   EndState,
 } from "./types";
+import { useAutosave } from "./hooks/useAutosave";
 
 function App() {
   // Session state
@@ -104,6 +106,44 @@ function App() {
     loadEmployees();
   }, []);
 
+  // Autosave setup
+  const handleAutosave = useCallback(async () => {
+    if (summary.sessionId === 0) {
+      // No session loaded yet, don't autosave
+      return;
+    }
+
+    try {
+      const result = await autosavePosCloseControl(
+        summary.sessionId,
+        cashDenominations,
+        cardAmounts
+      );
+
+      // If this was the first autosave, mark session as existing
+      if (!isExistingSession && result.created) {
+        setIsExistingSession(true);
+      }
+    } catch (err) {
+      console.error("Autosave failed:", err);
+      // Don't show error to user, just log it
+      // The manual save will still work
+    }
+  }, [summary.sessionId, cashDenominations, cardAmounts, isExistingSession]);
+
+  const { status: autosaveStatus, triggerAutosave } = useAutosave({
+    onSave: handleAutosave,
+    enabled: summary.sessionId !== 0, // Only enable after session is loaded
+  });
+
+  // Trigger autosave when denominations or card amounts change
+  useEffect(() => {
+    if (summary.sessionId !== 0) {
+      triggerAutosave();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cashDenominations, cardAmounts, summary.sessionId]);
+
   // Calculate total cash from denominations (in cents)
   const calculateTotalCash = () => {
     const denoms = cashDenominations;
@@ -175,7 +215,8 @@ function App() {
           const validCards = {
             pos1: Number(data.savedSession.card_amounts.pos1) || 0,
             pos2: Number(data.savedSession.card_amounts.pos2) || 0,
-            miscellaneous: Number(data.savedSession.card_amounts.miscellaneous) || 0,
+            miscellaneous:
+              Number(data.savedSession.card_amounts.miscellaneous) || 0,
           };
           setCardAmounts(validCards);
         }
@@ -185,10 +226,10 @@ function App() {
 
         // Restore employees
         const savedCashier = cashiers.find(
-          (c) => c.id === data.savedSession?.cashier.id
+          (c) => c.id === data.savedSession?.cashier?.id
         );
         const savedManager = managers.find(
-          (m) => m.id === data.savedSession?.manager.id
+          (m) => m.id === data.savedSession?.manager?.id
         );
         if (savedCashier) setSelectedCashier(savedCashier);
         if (savedManager) setSelectedManager(savedManager);
@@ -420,17 +461,22 @@ function App() {
                 </h3>
                 <div className="text-sm text-gray-700 space-y-1">
                   <p>
-                    <span className="font-medium">Total Efectivo:</span> S/. {(successData.posCash / 100).toFixed(2)}
+                    <span className="font-medium">Total Efectivo:</span> S/.{" "}
+                    {(successData.posCash / 100).toFixed(2)}
                   </p>
                   <p>
-                    <span className="font-medium">Total Tarjeta:</span> S/. {(successData.posCard / 100).toFixed(2)}
+                    <span className="font-medium">Total Tarjeta:</span> S/.{" "}
+                    {(successData.posCard / 100).toFixed(2)}
                   </p>
                   <p>
                     <span className="font-medium">Estado:</span>{" "}
-                    <span className="uppercase font-semibold">{successData.status}</span>
+                    <span className="uppercase font-semibold">
+                      {successData.status}
+                    </span>
                   </p>
                   <p>
-                    <span className="font-medium">Diferencia:</span> S/. {(Math.abs(successData.difference) / 100).toFixed(2)}
+                    <span className="font-medium">Diferencia:</span> S/.{" "}
+                    {(Math.abs(successData.difference) / 100).toFixed(2)}
                   </p>
                 </div>
               </div>

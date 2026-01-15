@@ -396,7 +396,8 @@ class PosCloseControlV2View(View):
                 saved_session.odoo_cash = cash_int
                 saved_session.odoo_card = card_int
                 saved_session.start_at = start_at
-                saved_session.stop_at = stop_at
+                if stop_at:
+                    saved_session.stop_at = stop_at
                 saved_session.save()
 
                 # Parse JSON to get React state
@@ -404,14 +405,20 @@ class PosCloseControlV2View(View):
                     saved_data = json.loads(saved_session.json)
                     result["saved_session"] = {
                         "id": saved_session.id,
-                        "cashier": {"id": saved_session.cashier.id},
-                        "manager": {"id": saved_session.manager.id},
                         "observations": saved_session.end_state_note,
                         "cash_denominations": saved_data.get("cashDenominations", {}),
                         "card_amounts": saved_data.get("cardAmounts", {}),
                         "pos_cash": saved_session.pos_cash,
                         "pos_card": saved_session.pos_card,
                     }
+                    if saved_session.cashier:
+                        result["saved_session"]["cashier"] = {
+                            "id": saved_session.cashier.id
+                        }
+                    if saved_session.manager:
+                        result["saved_session"]["manager"] = {
+                            "id": saved_session.manager.id
+                        }
                 except (json.JSONDecodeError, KeyError) as e:
                     logger.warning(f"Failed to parse saved session JSON: {e}")
 
@@ -587,4 +594,173 @@ class PosCloseControlV2View(View):
             return JsonResponse({"error": f"Falta el campo: {str(e)}"}, status=400)
         except Exception as e:
             logger.error(f"❌ Error en PUT V2: {str(e)}")
+            return JsonResponse({"error": str(e)}, status=500)
+
+    def patch(self, request, session_id):
+        """
+        PATCH method - autosave partial POS session data (cash denominations and card amounts only).
+        Creates a new session if one doesn't exist, updates if it does.
+        """
+        try:
+            # Log the received data
+            logger.info(f"📥 Autosave data recibida V2: {request.body}")
+
+            data = json.loads(request.body)
+
+            # Check if session already exists
+            saved_session = PosSessionV2.objects.filter(
+                odoo_session_id=session_id
+            ).first()
+
+            # Prepare JSON data for storage
+            json_data = {
+                "cashDenominations": data.get("cashDenominations", {}),
+                "cardAmounts": data.get("cardAmounts", {}),
+            }
+
+            if saved_session:
+                # Update existing session - only update JSON field with new amounts
+                try:
+                    existing_data = json.loads(saved_session.json)
+                    existing_data["cashDenominations"] = data.get(
+                        "cashDenominations", {}
+                    )
+                    existing_data["cardAmounts"] = data.get("cardAmounts", {})
+                    saved_session.json = json.dumps(existing_data)
+
+                    # Recalculate totals
+                    denoms = data.get("cashDenominations", {})
+                    cash_total = (
+                        denoms.get("d0_10", 0) * 10
+                        + denoms.get("d0_20", 0) * 20
+                        + denoms.get("d0_50", 0) * 50
+                        + denoms.get("d1_00", 0) * 100
+                        + denoms.get("d2_00", 0) * 200
+                        + denoms.get("d5_00", 0) * 500
+                        + denoms.get("d10_00", 0) * 1000
+                        + denoms.get("d20_00", 0) * 2000
+                        + denoms.get("d50_00", 0) * 5000
+                        + denoms.get("d100_00", 0) * 10000
+                        + denoms.get("d200_00", 0) * 20000
+                    )
+
+                    cards = data.get("cardAmounts", {})
+                    card_total = (
+                        cards.get("pos1", 0)
+                        + cards.get("pos2", 0)
+                        + cards.get("miscellaneous", 0)
+                    )
+
+                    saved_session.pos_cash = cash_total
+                    saved_session.pos_card = card_total
+                    saved_session.profit_total = (
+                        cash_total
+                        + card_total
+                        - saved_session.odoo_cash
+                        - saved_session.odoo_card
+                    )
+
+                    saved_session.save()
+
+                    logger.info(
+                        f"✅ Autosave: Sesión V2 actualizada: {saved_session.id}"
+                    )
+                    return JsonResponse(
+                        {
+                            "message": "Autosave successful (updated)",
+                            "id": saved_session.id,
+                            "created": False,
+                        },
+                        status=200,
+                    )
+                except (json.JSONDecodeError, KeyError) as e:
+                    logger.warning(f"Failed to parse existing JSON, creating new: {e}")
+                    # Fall through to create new session
+
+            # Create new session with placeholder data
+            # We need to get Odoo data for this session first
+            try:
+                ps_table = "pos.session"
+                ps_filter = [[["id", "=", session_id]]]
+                ps_fields = [
+                    "display_name",
+                    "config_id",
+                    "start_at",
+                    "stop_at",
+                    "cash_register_balance_start",
+                ]
+                proxy = get_proxy()
+                pos_session = get_model(ps_table, ps_filter, ps_fields, proxy=proxy)
+
+                if not pos_session or len(pos_session) == 0:
+                    return JsonResponse(
+                        {"error": "Session not found in Odoo"}, status=404
+                    )
+
+                # Calculate totals
+                denoms = data.get("cashDenominations", {})
+                cash_total = (
+                    denoms.get("d0_10", 0) * 10
+                    + denoms.get("d0_20", 0) * 20
+                    + denoms.get("d0_50", 0) * 50
+                    + denoms.get("d1_00", 0) * 100
+                    + denoms.get("d2_00", 0) * 200
+                    + denoms.get("d5_00", 0) * 500
+                    + denoms.get("d10_00", 0) * 1000
+                    + denoms.get("d20_00", 0) * 2000
+                    + denoms.get("d50_00", 0) * 5000
+                    + denoms.get("d100_00", 0) * 10000
+                    + denoms.get("d200_00", 0) * 20000
+                )
+
+                cards = data.get("cardAmounts", {})
+                card_total = (
+                    cards.get("pos1", 0)
+                    + cards.get("pos2", 0)
+                    + cards.get("miscellaneous", 0)
+                )
+
+                # Create session with placeholder values
+                pos_session_v2 = PosSessionV2.objects.create(
+                    pos_name=pos_session[0]["config_id"][1].split()[0],
+                    odoo_session_id=session_id,
+                    odoo_config_id=pos_session[0]["config_id"][0],
+                    odoo_cash=0,  # Will be updated on fetch
+                    odoo_card=0,  # Will be updated on fetch
+                    pos_cash=cash_total,
+                    pos_card=card_total,
+                    profit_total=0,  # Placeholder
+                    balance_start=int(
+                        round(pos_session[0]["cash_register_balance_start"] * 100)
+                    ),
+                    balance_start_next_day=300,  # Fixed value
+                    session_name=pos_session[0]["display_name"],
+                    start_at=pos_session[0]["start_at"],
+                    end_state="ST",  # Placeholder
+                    end_state_amount=0,
+                    end_state_note="",
+                    json=json.dumps(json_data),
+                )
+
+                logger.info(f"✅ Autosave: Nueva sesión V2 creada: {pos_session_v2.id}")
+                return JsonResponse(
+                    {
+                        "message": "Autosave successful (created)",
+                        "id": pos_session_v2.id,
+                        "created": True,
+                    },
+                    status=201,
+                )
+
+            except Exception as e:
+                logger.error(f"❌ Error creating session in autosave: {str(e)}")
+                return JsonResponse(
+                    {"error": f"Failed to create session: {str(e)}"}, status=500
+                )
+
+        except json.JSONDecodeError:
+            logger.error("❌ JSON inválido en autosave")
+            return JsonResponse({"error": "JSON inválido"}, status=400)
+        except Exception as e:
+            logger.error(f"❌ Error en PATCH V2: {str(e)}")
             return JsonResponse({"error": str(e)}, status=500)

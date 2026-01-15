@@ -65,14 +65,23 @@ class PosSessionV2(models.Model):
     All amount fields are stored as integers (cents) instead of decimals.
     For example, $123.45 is stored as 12345.
     """
+
     id = models.AutoField(primary_key=True)
     pos_name = models.CharField(max_length=50)
     cashier = models.ForeignKey(
-        Employee, on_delete=models.CASCADE, related_name="cashier_v2"
-    )
+        Employee,
+        on_delete=models.CASCADE,
+        related_name="cashier_v2",
+        null=True,
+        blank=True,
+    )  # will be null when creating session in autosave
     manager = models.ForeignKey(
-        Employee, on_delete=models.CASCADE, related_name="manager_v2"
-    )
+        Employee,
+        on_delete=models.CASCADE,
+        related_name="manager_v2",
+        null=True,
+        blank=True,
+    )  # will be null when creating session in autosave
     odoo_session_id = models.IntegerField()
     odoo_config_id = models.IntegerField(default=0)
     # Amount fields stored as integers (cents)
@@ -82,10 +91,12 @@ class PosSessionV2(models.Model):
     pos_card = models.IntegerField()
     profit_total = models.IntegerField()
     balance_start = models.IntegerField()
-    balance_start_next_day = models.IntegerField()
+    balance_start_next_day = models.IntegerField(default=0)
     session_name = models.CharField(max_length=100)
     start_at = models.DateTimeField()
-    stop_at = models.DateTimeField()
+    stop_at = models.DateTimeField(
+        blank=True, null=True
+    )  # will be null when creating session in autosave
 
     EXTRA = "EX"
     STABLE = "ST"

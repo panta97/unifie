@@ -21,8 +21,8 @@ interface SessionDataResponse {
     is_session_closed: boolean;
     saved_session?: {
       id: number;
-      cashier: { id: number };
-      manager: { id: number };
+      cashier?: { id: number };
+      manager?: { id: number };
       observations: string;
       cash_denominations: any;
       card_amounts: any;
@@ -99,6 +99,37 @@ export async function fetchEmployees(
 
   const data: Employee[] = await response.json();
   return data;
+}
+
+/**
+ * Autosave partial POS close control data (cash denominations and card amounts only)
+ */
+export async function autosavePosCloseControl(
+  sessionId: number,
+  cashDenominations: any,
+  cardAmounts: any
+) {
+  const response = await fetch(`/api/pos-close-control/v2/${sessionId}`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      cashDenominations,
+      cardAmounts,
+    }),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(
+      errorData.error ||
+      `Failed to autosave POS close control: ${response.statusText}`
+    );
+  }
+
+  const result = await response.json();
+  return result;
 }
 
 /**
