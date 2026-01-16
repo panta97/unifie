@@ -1,4 +1,10 @@
 from django.db import models
+from miscellaneous.constants import (
+    POS_END_STATE_CHOICES,
+    POS_STATUS_CHOICES,
+    STABLE,
+    DRAFT,
+)
 
 
 class Employee(models.Model):
@@ -98,17 +104,9 @@ class PosSessionV2(models.Model):
         blank=True, null=True
     )  # will be null when creating session in autosave
 
-    EXTRA = "EX"
-    STABLE = "ST"
-    MISSING = "MS"
-    END_STATE_CHOICES = (
-        (EXTRA, "Extra"),
-        (STABLE, "Stable"),
-        (MISSING, "Missing"),
-    )
     end_state = models.CharField(
-        max_length=2,
-        choices=END_STATE_CHOICES,
+        max_length=10,
+        choices=POS_END_STATE_CHOICES,
         default=STABLE,
     )
     end_state_note = models.TextField()
@@ -117,15 +115,9 @@ class PosSessionV2(models.Model):
     odoo_version = models.IntegerField(default=17)
 
     # Status field for session lifecycle tracking
-    DRAFT = "DR"
-    CLOSED = "CL"
-    STATUS_CHOICES = (
-        (DRAFT, "Draft"),
-        (CLOSED, "Closed"),
-    )
     status = models.CharField(
-        max_length=2,
-        choices=STATUS_CHOICES,
+        max_length=10,
+        choices=POS_STATUS_CHOICES,
         default=DRAFT,
     )
 
@@ -169,11 +161,21 @@ class PosSessionV2Snapshot(models.Model):
     session_name = models.CharField(max_length=100)
     start_at = models.DateTimeField()
     stop_at = models.DateTimeField(null=True, blank=True)
-    end_state = models.CharField(max_length=2)
+    end_state = models.CharField(
+        max_length=10,
+        choices=POS_END_STATE_CHOICES,
+        default=STABLE,
+    )
     end_state_note = models.TextField()
     end_state_amount = models.IntegerField()
     json = models.TextField()
-    status = models.CharField(max_length=2)  # Status at snapshot time
+    status = models.CharField(
+        max_length=10,
+        choices=POS_STATUS_CHOICES,
+        default=DRAFT,
+    )  # Status at snapshot time
 
     def __str__(self):
-        return f"Snapshot of Session {self.odoo_session_id} at {self.snapshot_created_at}"
+        return (
+            f"Snapshot of Session {self.odoo_session_id} at {self.snapshot_created_at}"
+        )
