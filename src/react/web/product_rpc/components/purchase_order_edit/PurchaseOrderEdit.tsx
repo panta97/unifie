@@ -36,7 +36,6 @@ const PurchaseOrderEdit = () => {
 
   const [editingOrderId, setEditingOrderId] = useState<number | null>(null);
   const [editingOrderName, setEditingOrderName] = useState<string>("");
-  const [incomingPickingCount, setIncomingPickingCount] = useState<number>(0);
   const [loadingOrder, setLoadingOrder] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
 
@@ -69,7 +68,6 @@ const PurchaseOrderEdit = () => {
         // Set editing state
         setEditingOrderId(order_details.po_id);
         setEditingOrderName(order_details.name);
-        setIncomingPickingCount(order_details.incoming_picking_count || 0);
 
         // Find partner name from catalog
         const partner = catalog.find((p) => p.id === order_details.partner_id);
@@ -165,40 +163,6 @@ const PurchaseOrderEdit = () => {
             >
               ← Cancelar y buscar otra orden
             </button>
-
-            {incomingPickingCount > 0 && (
-              <button
-                onClick={() => console.log("Reception button clicked")}
-                className="flex items-center px-4 py-2 bg-gray-100 rounded shadow-sm hover:bg-gray-200 transition-colors"
-                title="Recepciones"
-              >
-                <div className="mr-2 relative">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="20"
-                    height="20"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="text-gray-700"
-                  >
-                    <rect x="1" y="3" width="15" height="13"></rect>
-                    <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon>
-                    <circle cx="5.5" cy="18.5" r="2.5"></circle>
-                    <circle cx="18.5" cy="18.5" r="2.5"></circle>
-                  </svg>
-                  <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold px-1.5 py-0.5 rounded-full">
-                    {incomingPickingCount}
-                  </span>
-                </div>
-                <div className="font-medium text-gray-700 text-sm">
-                  Recepción
-                </div>
-              </button>
-            )}
           </div>
         </div>
       )}
