@@ -481,6 +481,7 @@ def get_purchase_order_for_edit(po_id):
         "state",
         "company_id",
         "picking_type_id",
+        "incoming_picking_count",
     ]
 
     orders = rpc.get_model(po_table, po_filter, po_fields, proxy=proxy)
@@ -576,6 +577,7 @@ def get_purchase_order_for_edit(po_id):
             "state": order["state"],
             "company_id": order["company_id"][0] if order["company_id"] else 1,
             "tax": True,  # Asumir que tiene IGV por defecto
+            "incoming_picking_count": order.get("incoming_picking_count", 0),
         },
         "order_items": order_items,
     }

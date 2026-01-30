@@ -46,6 +46,12 @@ def transform_product_json(data):
                 else [(6, 0, prod["pos_categ_ids"])]
             ),
             "attribute_line_ids": [],
+            "tracking": "lot" if prod.get("lot", False) else "none",
+            "use_expiration_date": prod.get("lot", False),
+            "expiration_time": 90 if prod.get("lot", False) else 0,
+            "use_time": 75 if prod.get("lot", False) else 0,
+            "removal_time": 85 if prod.get("lot", False) else 0,
+            "alert_time": 90 if prod.get("lot", False) else 0,
         }
         for attr in prod["attrs"]:
             product["attribute_line_ids"].append(
