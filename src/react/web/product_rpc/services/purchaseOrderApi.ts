@@ -40,11 +40,11 @@ export const purchaseOrderApi = {
    * Search for purchase order by name
    */
   searchByName: async (
-    orderName: string
+    orderName: string,
   ): Promise<ApiResponse<PurchaseOrderSearchResult>> => {
     try {
       const response = await fetch(
-        `${BASE_URL}/purchase_order/search/${encodeURIComponent(orderName)}`
+        `${BASE_URL}/purchase_order/search/${encodeURIComponent(orderName)}`,
       );
 
       if (!response.ok) {
@@ -90,13 +90,13 @@ export const purchaseOrderApi = {
       console.log("🌐 [API] purchaseOrderApi.update() llamado");
       console.log("🌐 [API] PO ID:", poId);
       console.log("🌐 [API] Order Data:", orderData);
-      
+
       const csrfToken = getCsrfToken();
       console.log("🔑 [API] CSRF Token:", csrfToken);
 
       const url = `${BASE_URL}/purchase_order/${poId}`;
       console.log("🌐 [API] URL:", url);
-      
+
       const response = await fetch(url, {
         method: "PUT",
         headers: {
@@ -117,7 +117,7 @@ export const purchaseOrderApi = {
 
       const jsonResponse = await response.json();
       console.log("✅ [API] JSON Response:", jsonResponse);
-      
+
       return jsonResponse;
     } catch (error) {
       console.error("❌ [API] Error en update:", error);

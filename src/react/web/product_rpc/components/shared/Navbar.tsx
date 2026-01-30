@@ -7,9 +7,16 @@ import {
 } from "react-router-dom";
 
 const Home = React.lazy(() => import("../home/Home"));
-const ProductProduct = React.lazy(() => import("../product_product/ProductProduct"));
-const PurchaseOrder = React.lazy(() => import("../purchase_order/PurchaseOrder"));
-const PurchaseOrderEdit = React.lazy(() => import("../purchase_order_edit/PurchaseOrderEdit"));
+const ProductProduct = React.lazy(
+  () => import("../product_product/ProductProduct"),
+);
+const PurchaseOrder = React.lazy(
+  () => import("../purchase_order/PurchaseOrder"),
+);
+const PurchaseOrderEdit = React.lazy(
+  () => import("../purchase_order_edit/PurchaseOrderEdit"),
+);
+const Lots = React.lazy(() => import("../lots/Lots"));
 const Credit = React.lazy(() => import("../credit/Credit"));
 const Refund = React.lazy(() => import("../refund/Refund"));
 const Report = React.lazy(() => import("../report/Report"));
@@ -17,7 +24,10 @@ const Report = React.lazy(() => import("../report/Report"));
 export const Navbar: React.FC = () => {
   const basePath = "/apps/product-rpc";
 
-  const handleReload = (event: React.MouseEvent<HTMLAnchorElement>, path: string) => {
+  const handleReload = (
+    event: React.MouseEvent<HTMLAnchorElement>,
+    path: string,
+  ) => {
     event.preventDefault();
     window.location.href = path;
   };
@@ -31,7 +41,9 @@ export const Navbar: React.FC = () => {
               <NavLink
                 end
                 to={basePath}
-                className={({ isActive }) => `inline-block px-2 py-1 ${isActive ? "bg-gray-100 text-gray-900" : ""}`}
+                className={({ isActive }) =>
+                  `inline-block px-2 py-1 ${isActive ? "bg-gray-100 text-gray-900" : ""}`
+                }
                 tabIndex={-1}
               >
                 Home
@@ -40,7 +52,9 @@ export const Navbar: React.FC = () => {
             <li>
               <NavLink
                 to={`${basePath}/product-product`}
-                className={({ isActive }) => `inline-block px-2 py-1 ${isActive ? "bg-gray-100 text-gray-900" : ""}`}
+                className={({ isActive }) =>
+                  `inline-block px-2 py-1 ${isActive ? "bg-gray-100 text-gray-900" : ""}`
+                }
                 tabIndex={-1}
               >
                 Productos
@@ -49,7 +63,9 @@ export const Navbar: React.FC = () => {
             <li>
               <NavLink
                 to={`${basePath}/purchase-order`}
-                className={({ isActive }) => `inline-block px-2 py-1 ${isActive ? "bg-gray-100 text-gray-900" : ""}`}
+                className={({ isActive }) =>
+                  `inline-block px-2 py-1 ${isActive ? "bg-gray-100 text-gray-900" : ""}`
+                }
                 tabIndex={-1}
               >
                 Ordenes de Compra
@@ -58,7 +74,9 @@ export const Navbar: React.FC = () => {
             <li>
               <NavLink
                 to={`${basePath}/purchase-order-edit`}
-                className={({ isActive }) => `inline-block px-2 py-1 ${isActive ? "bg-gray-100 text-gray-900" : ""}`}
+                className={({ isActive }) =>
+                  `inline-block px-2 py-1 ${isActive ? "bg-gray-100 text-gray-900" : ""}`
+                }
                 tabIndex={-1}
               >
                 Editar Orden
@@ -66,8 +84,21 @@ export const Navbar: React.FC = () => {
             </li>
             <li>
               <NavLink
+                to={`${basePath}/lots`}
+                className={({ isActive }) =>
+                  `inline-block px-2 py-1 ${isActive ? "bg-gray-100 text-gray-900" : ""}`
+                }
+                tabIndex={-1}
+              >
+                Lotes
+              </NavLink>
+            </li>
+            <li>
+              <NavLink
                 to={`${basePath}/reports`}
-                className={({ isActive }) => `inline-block px-2 py-1 ${isActive ? "bg-gray-100 text-gray-900" : ""}`}
+                className={({ isActive }) =>
+                  `inline-block px-2 py-1 ${isActive ? "bg-gray-100 text-gray-900" : ""}`
+                }
                 tabIndex={-1}
               >
                 Reportes
@@ -96,9 +127,19 @@ export const Navbar: React.FC = () => {
         <Suspense fallback={<div />}>
           <Routes>
             <Route path={basePath} element={<Home />} />
-            <Route path={`${basePath}/product-product`} element={<ProductProduct />} />
-            <Route path={`${basePath}/purchase-order`} element={<PurchaseOrder />} />
-            <Route path={`${basePath}/purchase-order-edit`} element={<PurchaseOrderEdit />} />
+            <Route
+              path={`${basePath}/product-product`}
+              element={<ProductProduct />}
+            />
+            <Route
+              path={`${basePath}/purchase-order`}
+              element={<PurchaseOrder />}
+            />
+            <Route
+              path={`${basePath}/purchase-order-edit`}
+              element={<PurchaseOrderEdit />}
+            />
+            <Route path={`${basePath}/lots`} element={<Lots />} />
             <Route path={`${basePath}/reports`} element={<Report />} />
             <Route path={`${basePath}/refunds`} element={<Refund />} />
             <Route path={`${basePath}/credit-notes`} element={<Credit />} />

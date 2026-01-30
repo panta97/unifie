@@ -17,10 +17,7 @@ import {
   resetOrderDetails,
   updateHelperProps,
 } from "../../app/slice/order/orderDetailsSlice";
-import {
-  addItem,
-  resetOrderList,
-} from "../../app/slice/order/orderListSlice";
+import { addItem, resetOrderList } from "../../app/slice/order/orderListSlice";
 import { ProductFormState } from "../../types/product";
 import { Loader } from "../shared/Loader";
 import { OrderDetails } from "../purchase_order/order_details/OrderDetails";
@@ -58,7 +55,7 @@ const PurchaseOrderEdit = () => {
   const handleOrderFound = async (
     orderId: number,
     orderName: string,
-    orderState: string
+    orderState: string,
   ) => {
     setLoadingOrder(true);
     setLoadError(null);
@@ -83,22 +80,22 @@ const PurchaseOrderEdit = () => {
           updatePartner({
             partnerId: order_details.partner_id,
             partnerName: partnerName,
-          })
+          }),
         );
         dispatch(
           updatePartnerRef({
             partnerRef: order_details.partner_ref,
-          })
+          }),
         );
         dispatch(
           updateTax({
             isTaxed: order_details.tax,
-          })
+          }),
         );
         dispatch(
           updateCompany({
             company_id: order_details.company_id,
-          })
+          }),
         );
 
         // Set odoo_id and odoo_link
@@ -106,7 +103,7 @@ const PurchaseOrderEdit = () => {
           updateHelperProps({
             odooId: order_details.po_id,
             odooLink: `${window.location.origin}/odoo/purchase/${order_details.po_id}`,
-          })
+          }),
         );
 
         // Reset and populate order list
@@ -132,7 +129,9 @@ const PurchaseOrderEdit = () => {
 
   const handleCancelEdit = () => {
     if (
-      confirm("¿Deseas cancelar la edición? Se perderán los cambios no guardados.")
+      confirm(
+        "¿Deseas cancelar la edición? Se perderán los cambios no guardados.",
+      )
     ) {
       setEditingOrderId(null);
       setEditingOrderName("");
@@ -149,15 +148,16 @@ const PurchaseOrderEdit = () => {
       </h1>
 
       {/* Search Section */}
-      {!editingOrderId && (
-        <OrderSearch onOrderFound={handleOrderFound} />
-      )}
+      {!editingOrderId && <OrderSearch onOrderFound={handleOrderFound} />}
 
       {/* Edit Mode - Show order name with Odoo link */}
       {editingOrderId && (
         <div className="mb-6">
-          <EditOrderName orderName={editingOrderName} orderId={editingOrderId} />
-          
+          <EditOrderName
+            orderName={editingOrderName}
+            orderId={editingOrderId}
+          />
+
           <div className="flex justify-between items-center mt-2">
             <button
               onClick={handleCancelEdit}
@@ -194,7 +194,9 @@ const PurchaseOrderEdit = () => {
                     {incomingPickingCount}
                   </span>
                 </div>
-                <div className="font-medium text-gray-700 text-sm">Recepción</div>
+                <div className="font-medium text-gray-700 text-sm">
+                  Recepción
+                </div>
               </button>
             )}
           </div>

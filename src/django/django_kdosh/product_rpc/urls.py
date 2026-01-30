@@ -21,6 +21,8 @@ from .views import (
     get_purchase_order_view,
     update_purchase_order_view,
     purchase_order_dispatcher,
+    get_pending_pickings_view,
+    generate_lots_view,
 )
 
 
@@ -45,6 +47,16 @@ urlpatterns = [
         "purchase_order/<int:po_id>",
         purchase_order_dispatcher,
         name="purchase_order_detail",
+    ),
+    path(
+        "purchase_order/<int:po_id>/pickings",
+        get_pending_pickings_view,
+        name="get_pending_pickings",
+    ),
+    path(
+        "picking/<int:picking_id>/generate_lots",
+        generate_lots_view,
+        name="generate_lots",
     ),
     path("report/<str:type>", get_report, name="get_report"),
     path("attribute/list", get_attribute_vals, name="get_attribute_vals"),

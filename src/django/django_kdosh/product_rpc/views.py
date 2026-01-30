@@ -112,7 +112,31 @@ from .purchase_order import (
     search_purchase_order_by_name,
     get_purchase_order_for_edit,
     update_purchase_order,
+    get_pending_pickings_by_po_id,
+    generate_lots_for_picking,
 )
+
+
+def get_pending_pickings_view(request, po_id):
+    """GET /api/product-rpc/purchase_order/<po_id>/pickings"""
+    try:
+        pickings = get_pending_pickings_by_po_id(po_id)
+        return JsonResponse({"result": "SUCCESS", "pickings": pickings}, status=200)
+    except Exception as e:
+        return JsonResponse({"result": "ERROR", "message": str(e)}, status=400)
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def generate_lots_view(request, picking_id):
+    """POST /api/product-rpc/picking/<picking_id>/generate_lots"""
+    try:
+        body = json.loads(request.body)
+        lots_config = body.get("lots_config", {})
+        results = generate_lots_for_picking(picking_id, lots_config)
+        return JsonResponse({"result": "SUCCESS", "results": results}, status=200)
+    except Exception as e:
+        return JsonResponse({"result": "ERROR", "message": str(e)}, status=400)
 
 
 def search_purchase_order_view(request, order_name):
