@@ -45,6 +45,11 @@ class Product:
         self.volume = 0
         self.sale_delay = 0
         self.tracking = "none"
+        self.use_expiration_date = False
+        self.expiration_time = 0
+        self.use_time = 0
+        self.removal_time = 0
+        self.alert_time = 0
         self.property_stock_production = 15
         self.property_stock_inventory = 14
         self.packaging_ids = []
@@ -96,6 +101,12 @@ class Product:
         self.categ_id = dict["categ_id"]
         self.pos_categ_ids = dict.get("pos_categ_ids", [])
         self.attribute_line_ids = []
+        self.tracking = dict.get("tracking", "none")
+        self.use_expiration_date = dict.get("use_expiration_date", False)
+        self.expiration_time = dict.get("expiration_time", 0)
+        self.use_time = dict.get("use_time", 0)
+        self.removal_time = dict.get("removal_time", 0)
+        self.alert_time = dict.get("alert_time", 0)
         self.__set_attrs(dict["attribute_line_ids"])
 
     def clear_prod_vals(self):
