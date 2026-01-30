@@ -87,16 +87,8 @@ export const purchaseOrderApi = {
    */
   update: async (poId: number, orderData: any): Promise<ApiResponse> => {
     try {
-      console.log("🌐 [API] purchaseOrderApi.update() llamado");
-      console.log("🌐 [API] PO ID:", poId);
-      console.log("🌐 [API] Order Data:", orderData);
-
       const csrfToken = getCsrfToken();
-      console.log("🔑 [API] CSRF Token:", csrfToken);
-
       const url = `${BASE_URL}/purchase_order/${poId}`;
-      console.log("🌐 [API] URL:", url);
-
       const response = await fetch(url, {
         method: "PUT",
         headers: {
@@ -106,9 +98,6 @@ export const purchaseOrderApi = {
         body: JSON.stringify(orderData),
       });
 
-      console.log("📡 [API] Response status:", response.status);
-      console.log("📡 [API] Response ok:", response.ok);
-
       if (!response.ok) {
         const errorText = await response.text();
         console.error("❌ [API] Error response:", errorText);
@@ -116,7 +105,6 @@ export const purchaseOrderApi = {
       }
 
       const jsonResponse = await response.json();
-      console.log("✅ [API] JSON Response:", jsonResponse);
 
       return jsonResponse;
     } catch (error) {

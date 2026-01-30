@@ -1,7 +1,13 @@
 import os
 import pandas as pd
-import psycopg2
-from psycopg2.extras import RealDictCursor
+
+try:
+    import psycopg2
+    from psycopg2.extras import RealDictCursor
+except ImportError:
+    import psycopg as psycopg2
+    from psycopg.rows import dict_row
+    RealDictCursor = dict_row
 
 # DB_CREDENTIALS = {
 #      "PG_NAME_V17": "",
@@ -61,7 +67,12 @@ def select(sql, odoo_version, params=None):
     try:
         connstr = get_connstr(odoo_version)
         conn = psycopg2.connect(connstr)
-        cursor = conn.cursor(cursor_factory=RealDictCursor)
+        
+        try:
+            cursor = conn.cursor(cursor_factory=RealDictCursor)
+        except TypeError:
+            cursor = conn.cursor(row_factory=RealDictCursor)
+        
         if params:
             cursor.execute(sql, params)
         else:

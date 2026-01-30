@@ -40,16 +40,8 @@ export const CreateButton: React.FC<CreateButtonProps> = ({
 
   const handleUploadOrder = async () => {
     try {
-      console.log("🔵 [CreateButton] Iniciando proceso de subida/actualización");
-      console.log("🔵 [CreateButton] Edit mode:", editMode);
-      console.log("🔵 [CreateButton] Current Order ID:", currentOrderId);
-      
       await orderDetailsSchema.validate(orderDetails);
       await orderListSchema.validate(orderList);
-      
-      console.log("✅ [CreateButton] Validación exitosa");
-      console.log("📦 [CreateButton] Order Details:", orderDetails);
-      console.log("📦 [CreateButton] Order List:", orderList);
       
       dispatch(updateOrderFormStatus({ status: FetchStatus.LOADING }));
 
@@ -58,27 +50,17 @@ export const CreateButton: React.FC<CreateButtonProps> = ({
         order_list: orderList,
       };
       
-      console.log("📤 [CreateButton] Datos a enviar:", orderData);
-
       let json;
 
       if (editMode && currentOrderId) {
-        // UPDATE mode
-        console.log("🔄 [CreateButton] Modo UPDATE - Llamando purchaseOrderApi.update()");
-        console.log("🔄 [CreateButton] Order ID:", currentOrderId);
-        
         const response = await purchaseOrderApi.update(currentOrderId, orderData);
         json = response;
-        
-        console.log("📥 [CreateButton] Respuesta del servidor:", json);
         
         if (json.result === fetchResult.SUCCESS && onUpdateSuccess) {
           console.log("✅ [CreateButton] Update SUCCESS - Llamando onUpdateSuccess");
           onUpdateSuccess();
         }
       } else {
-        // CREATE mode
-        console.log("🆕 [CreateButton] Modo CREATE - Llamando fetch");
         const params = {
           method: "POST",
           headers: {
@@ -89,16 +71,11 @@ export const CreateButton: React.FC<CreateButtonProps> = ({
         };
         const response = await fetch("/api/product-rpc/purchase_order", params);
         json = await response.json();
-        
-        console.log("📥 [CreateButton] Respuesta del servidor:", json);
       }
 
       if (json.result === fetchResult.SUCCESS) {
-        console.log("✅ [CreateButton] Resultado SUCCESS - Actualizando estado");
         batch(() => {
           const orderResult: OrderResult = json.order;
-          console.log("📦 [CreateButton] Order Result:", orderResult);
-          
           dispatch(
             updateHelperProps({
               odooId: orderResult.odoo_id,
@@ -110,15 +87,12 @@ export const CreateButton: React.FC<CreateButtonProps> = ({
           );
         });
       } else {
-        console.error("❌ [CreateButton] Resultado ERROR:", json.message);
         throw new Error(json.message);
       }
     } catch (error) {
-      console.error("❌ [CreateButton] Error capturado:", error);
       alert(error);
     } finally {
       dispatch(updateOrderFormStatus({ status: FetchStatus.IDLE }));
-      console.log("🏁 [CreateButton] Proceso finalizado");
     }
   };
 
