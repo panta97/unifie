@@ -1,6 +1,12 @@
 import React, { useState } from "react";
 import { purchaseOrderApi } from "../../services/purchaseOrderApi";
-import { lotsApi, Picking, LotsConfig } from "../../services/lotsApi";
+import {
+  lotsApi,
+  Picking,
+  LotsConfig,
+  PickingMove,
+} from "../../services/lotsApi";
+import { Svg } from "../shared/Svg";
 
 export const Lots: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -15,6 +21,17 @@ export const Lots: React.FC = () => {
     [pickingId: number]: LotsConfig;
   }>({});
   const [generating, setGenerating] = useState(false);
+  interface QueuedPicking {
+    id: number;
+    name: string;
+    moves: PickingMove[];
+    config: LotsConfig;
+    poName: string;
+    poId: number;
+  }
+
+  const [queuedPickings, setQueuedPickings] = useState<QueuedPicking[]>([]);
+  const [processingQueue, setProcessingQueue] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const handleSearch = async () => {
@@ -52,11 +69,15 @@ export const Lots: React.FC = () => {
     try {
       const response = await lotsApi.getPendingPickings(poId);
       if (response.result === "SUCCESS" && response.pickings) {
-        setPickings(response.pickings);
+        const queuedIds = queuedPickings.map((q) => q.id);
+        const availablePickings = response.pickings.filter(
+          (p) => !queuedIds.includes(p.id),
+        );
 
-        // Initialize lot configs for each picking
+        setPickings(availablePickings);
+
         const initialConfigs: { [pickingId: number]: LotsConfig } = {};
-        response.pickings.forEach((picking) => {
+        availablePickings.forEach((picking) => {
           const config: LotsConfig = {};
           picking.moves.forEach((move) => {
             if (move.tracking !== "none") {
@@ -133,39 +154,111 @@ export const Lots: React.FC = () => {
     });
   };
 
-  const handleGenerateLots = async (pickingId: number) => {
-    setGenerating(true);
+  const handleAddToQueue = (pickingId: number) => {
     setError(null);
     setSuccessMessage(null);
 
+    const config = lotsConfigs[pickingId];
+    for (const productId in config) {
+      for (const lot of config[productId]) {
+        if (!lot.lot_name.trim()) {
+          setError("Todos los lotes deben tener un nombre");
+          return;
+        }
+        if (lot.quantity <= 0) {
+          setError("La cantidad debe ser mayor a 0");
+          return;
+        }
+      }
+    }
+
+    const picking = pickings.find((p) => p.id === pickingId);
+    if (!picking || !poData) return;
+
+    const newQueuedPicking: QueuedPicking = {
+      id: picking.id,
+      name: picking.name,
+      moves: picking.moves,
+      config: config,
+      poName: poData.name,
+      poId: poData.id,
+    };
+
+    setQueuedPickings((prev) => [...prev, newQueuedPicking]);
+
+    setPickings((prev) => prev.filter((p) => p.id !== pickingId));
+
+    setLotsConfigs((prev) => {
+      const { [pickingId]: _, ...rest } = prev;
+      return rest;
+    });
+
+    setSuccessMessage("Agregado a la cola de pendientes");
+  };
+
+  const handleEditQueue = (queued: QueuedPicking) => {
+    setQueuedPickings((prev) => prev.filter((p) => p.id !== queued.id));
+
+    setSearchTerm(queued.poName);
+    setPoData({ id: queued.poId, name: queued.poName });
+
+    setPickings((prev) => {
+      if (prev.find((p) => p.id === queued.id)) return prev;
+      const restoredPicking: Picking = {
+        id: queued.id,
+        name: queued.name,
+        moves: queued.moves,
+      };
+      return [...prev, restoredPicking];
+    });
+
+    setLotsConfigs((prev) => ({
+      ...prev,
+      [queued.id]: queued.config,
+    }));
+  };
+
+  const handleDeleteQueue = (pickingId: number) => {
+    setQueuedPickings((prev) => prev.filter((p) => p.id !== pickingId));
+  };
+
+  const handleProcessAll = async () => {
+    if (queuedPickings.length === 0) return;
+    setProcessingQueue(true);
+    setError(null);
+    setSuccessMessage(null);
+
+    let successCount = 0;
+    let errors: string[] = [];
+
     try {
-      const config = lotsConfigs[pickingId];
-      for (const productId in config) {
-        for (const lot of config[productId]) {
-          if (!lot.lot_name.trim()) {
-            setError("Todos los lotes deben tener un nombre");
-            setGenerating(false);
-            return;
-          }
-          if (lot.quantity <= 0) {
-            setError("La cantidad debe ser mayor a 0");
-            setGenerating(false);
-            return;
-          }
+      for (const queued of queuedPickings) {
+        const response = await lotsApi.generateLots(queued.id, queued.config);
+        if (response.result === "SUCCESS") {
+          successCount++;
+        } else {
+          errors.push(`Error en recepción ${queued.name}: ${response.message}`);
         }
       }
 
-      const response = await lotsApi.generateLots(pickingId, config);
-      if (response.result === "SUCCESS") {
-        setSuccessMessage(`Lotes generados exitosamente para la recepción`);
-        if (poData) fetchPickings(poData.id);
-      } else {
-        setError(response.message || "Error al generar lotes");
+      if (errors.length > 0) {
+        setError(`Procesado con errores: ${errors.join(". ")}`);
       }
-    } catch (err) {
-      setError("Error al generar lotes");
+
+      if (successCount > 0) {
+        setSuccessMessage(
+          `Se procesaron ${successCount} recepciones exitosamente.`,
+        );
+
+        if (errors.length === 0) {
+          setQueuedPickings([]);
+          setPickings([]);
+        }
+      }
+    } catch (err: any) {
+      setError("Error crítico al procesar la cola: " + err.message);
     } finally {
-      setGenerating(false);
+      setProcessingQueue(false);
     }
   };
 
@@ -173,6 +266,40 @@ export const Lots: React.FC = () => {
     if (e.key === "Enter") {
       handleSearch();
     }
+  };
+
+  const formatDateForInput = (dateString: string) => {
+    if (!dateString) return "";
+
+    const utcString = dateString.replace(" ", "T") + "Z";
+    const date = new Date(utcString);
+
+    if (isNaN(date.getTime())) return "";
+
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    const hours = String(date.getHours()).padStart(2, "0");
+    const minutes = String(date.getMinutes()).padStart(2, "0");
+    const seconds = String(date.getSeconds()).padStart(2, "0");
+
+    return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
+  };
+
+  const formatDateForState = (dateString: string) => {
+    if (!dateString) return "";
+
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return "";
+
+    const year = date.getUTCFullYear();
+    const month = String(date.getUTCMonth() + 1).padStart(2, "0");
+    const day = String(date.getUTCDate()).padStart(2, "0");
+    const hours = String(date.getUTCHours()).padStart(2, "0");
+    const minutes = String(date.getUTCMinutes()).padStart(2, "0");
+    const seconds = String(date.getUTCSeconds()).padStart(2, "0");
+
+    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
   };
 
   return (
@@ -242,11 +369,10 @@ export const Lots: React.FC = () => {
                 <div className="text-xs text-gray-500">ID: {picking.id}</div>
               </div>
               <button
-                onClick={() => handleGenerateLots(picking.id)}
-                disabled={generating}
-                className="px-3 py-1.5 bg-green-600 text-white rounded hover:bg-green-700 disabled:bg-gray-400 font-medium transition-colors text-sm"
+                onClick={() => handleAddToQueue(picking.id)}
+                className="px-3 py-1.5 bg-green-600 text-white rounded hover:bg-green-700 font-medium transition-colors text-sm"
               >
-                {generating ? "Generando..." : "Asignar Lotes"}
+                Agregar
               </button>
             </div>
 
@@ -338,17 +464,21 @@ export const Lots: React.FC = () => {
                                     }
                                   />
                                   <input
-                                    type="text"
+                                    type="datetime-local"
+                                    step="1"
+                                    width="200px"
                                     placeholder="Vencimiento (Opcional)"
-                                    className="px-1 py-0.5 border border-gray-200 rounded w-44"
-                                    value={lot.expiration_date || ""}
+                                    className="px-1 py-0.5 border border-gray-200 rounded w-auto"
+                                    value={formatDateForInput(
+                                      lot.expiration_date || "",
+                                    )}
                                     onChange={(e) =>
                                       handleLotChange(
                                         picking.id,
                                         move.product_id,
                                         idx,
                                         "expiration_date",
-                                        e.target.value,
+                                        formatDateForState(e.target.value),
                                       )
                                     }
                                   />
@@ -388,6 +518,96 @@ export const Lots: React.FC = () => {
             </div>
           </div>
         ))
+      )}
+
+      {queuedPickings.length > 0 && (
+        <div className="mt-8 pt-6 border-t border-gray-300">
+          <h2 className="text-xl font-bold mb-4 text-gray-800">
+            Lotes en Cola (Pendiente de Procesar)
+          </h2>
+          <div className="bg-white border border-gray-300 rounded-lg overflow-hidden shadow-sm">
+            <table className="w-full text-sm">
+              <thead className="bg-gray-100 text-gray-700">
+                <tr>
+                  <th className="px-4 py-2 text-left">Orden / Recepción</th>
+                  <th className="px-4 py-2 text-left">Resumen de Lotes</th>
+                  <th className="px-4 py-2 text-right">Acciones</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {queuedPickings.map((queue) => {
+                  return (
+                    <tr key={queue.id}>
+                      <td className="px-4 py-3">
+                        <div className="font-semibold">{queue.poName}</div>
+                        <div className="text-xs text-gray-500">
+                          {queue.name}
+                        </div>
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex flex-col gap-1">
+                          {queue.moves.map((move) => {
+                            const lots = queue.config[move.product_id];
+                            if (!lots || lots.length === 0) return null;
+                            return (
+                              <div key={move.product_id} className="text-xs">
+                                <span className="font-medium">
+                                  {move.product_name}:
+                                </span>{" "}
+                                {lots.map((l) => `${l.lot_name}`).join(", ")}
+                                <span className="text-gray-500 ml-1">
+                                  ({lots.length} lotes)
+                                </span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        <div className="flex justify-end gap-2">
+                          <span
+                            title="Editar"
+                            className="p-1 hover:bg-gray-100 rounded-full cursor-pointer transition-colors"
+                          >
+                            <Svg.PencilAlt
+                              className="h-5 w-5 text-gray-500 hover:text-blue-600"
+                              onClick={() => handleEditQueue(queue)}
+                            />
+                          </span>
+                          <span
+                            title="Eliminar"
+                            className="p-1 hover:bg-gray-100 rounded-full cursor-pointer transition-colors"
+                          >
+                            <Svg.Trash
+                              className="h-5 w-5 text-gray-500 hover:text-red-600"
+                              onClick={() => handleDeleteQueue(queue.id)}
+                            />
+                          </span>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+            <div className="p-4 bg-gray-50 border-t border-gray-200 flex justify-end">
+              <button
+                onClick={handleProcessAll}
+                disabled={processingQueue}
+                className="px-6 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:bg-gray-400 font-medium transition-colors shadow-sm flex items-center gap-2"
+              >
+                {processingQueue ? (
+                  <>
+                    <span className="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
+                    Procesando...
+                  </>
+                ) : (
+                  "Procesar Todos los Lotes"
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

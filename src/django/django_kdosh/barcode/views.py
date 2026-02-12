@@ -109,8 +109,9 @@ def get_product_template(request, pt_id):
         "product_tmpl_id",
     ]
     # GET PRODUCTS WITH FILTERED PRODUCT IDS
+    pp_fields.append("tracking")
     products = get_model(proxy, pp_table, pp_filter, pp_fields)
-
+    
     ptav_table = "product.template.attribute.value"
     ptav_filter = [[["product_tmpl_id", "=", pt_id]]]
     ptav_fields = ["product_attribute_value_id"]
@@ -150,24 +151,51 @@ def get_product_template(request, pt_id):
     labels = []
 
     for product in products:
-        pass
         attribute = list(
             filter(
                 lambda e: e["id"] in product["product_attribute_value_ids"],
                 attribute_values,
             )
         )
-        labels.append(
-            {
-                "quantity": 1,  # DEFAULT QTY
-                "code": product["barcode"],
-                "desc": product["name"],
-                "mCode": product["default_code"],
-                "cats": product["categ_id"][1],
-                "price": product["lst_price"],
-                "attr": list(map(lambda e: e["display_name"], attribute)),
-            }
-        )
+        
+        lots_found = False
+        if product.get("tracking") == 'lot':
+            try:
+                lot_table = "stock.lot"
+                lot_filter = [[["product_id", "=", product["id"]]]]
+                lot_fields = ["lot_name"]
+                lots = get_model(proxy, lot_table, lot_filter, lot_fields)
+                
+                if lots:
+                    lots_found = True
+                    for lot in lots:
+                        labels.append(
+                            {
+                                "quantity": 1,
+                                "code": lot["lot_name"],
+                                "desc": product["name"],
+                                "mCode": product["default_code"],
+                                "cats": product["categ_id"][1],
+                                "price": product["lst_price"],
+                                "attr": list(map(lambda e: e["display_name"], attribute)),
+                            }
+                        )
+            except Exception as e:
+                print(f"Error fetching lots: {e}")
+                pass
+
+        if not lots_found:
+            labels.append(
+                {
+                    "quantity": 1,
+                    "code": product["barcode"],
+                    "desc": product["name"],
+                    "mCode": product["default_code"],
+                    "cats": product["categ_id"][1],
+                    "price": product["lst_price"],
+                    "attr": list(map(lambda e: e["display_name"], attribute)),
+                }
+            )
 
     data = {
         "statusCode": 200,
