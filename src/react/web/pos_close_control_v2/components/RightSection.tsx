@@ -263,7 +263,7 @@ export const RightSection: React.FC<RightSectionProps> = ({
           <table className="w-full text-sm">
             <tbody>
               <tr className="hover:bg-gray-50">
-                <td className="w-1/2 px-2.5 py-2 border-b border-gray-100">
+                <td className="w-1/2 px-2.5 py-2 border-b border-gray-100 font-medium text-slate-700">
                   Total Odoo:
                 </td>
                 <td className="text-right font-mono text-sm px-2.5 py-2 border-b border-gray-100">
@@ -271,7 +271,7 @@ export const RightSection: React.FC<RightSectionProps> = ({
                 </td>
               </tr>
               <tr className="hover:bg-gray-50">
-                <td className="w-1/2 px-2.5 py-2 border-b border-gray-100">
+                <td className="w-1/2 px-2.5 py-2 border-b border-gray-100 font-medium text-slate-700">
                   Total Caja:
                 </td>
                 <td className="text-right font-mono text-sm px-2.5 py-2 border-b border-gray-100">
@@ -279,7 +279,7 @@ export const RightSection: React.FC<RightSectionProps> = ({
                 </td>
               </tr>
               <tr className="hover:bg-gray-50">
-                <td className="w-1/2 px-2.5 py-2 border-b border-gray-100">
+                <td className="w-1/2 px-2.5 py-2 border-b border-gray-100 font-medium text-slate-700">
                   Nota de Crédito:
                 </td>
                 <td className="text-right font-mono text-sm px-2.5 py-2 border-b border-gray-100">
@@ -287,7 +287,7 @@ export const RightSection: React.FC<RightSectionProps> = ({
                 </td>
               </tr>
               <tr className="hover:bg-gray-50">
-                <td className="w-1/2 px-2.5 py-2 border-b border-gray-100">
+                <td className="w-1/2 px-2.5 py-2 border-b border-gray-100 font-medium text-slate-700">
                   Inicio:
                 </td>
                 <td className="text-right font-mono text-sm px-2.5 py-2 border-b border-gray-100">
@@ -347,7 +347,7 @@ export const RightSection: React.FC<RightSectionProps> = ({
         </div>
 
         {/* Observations */}
-        <div className="mt-3">
+        <div className="mt-4">
           <label className="block mb-1.5 font-medium text-sm text-slate-600">
             Observaciones:
             {isObservationsRequired && (
@@ -363,7 +363,7 @@ export const RightSection: React.FC<RightSectionProps> = ({
                 : "Escribe observaciones aquí..."
             }
             rows={3}
-            className={`w-full text-sm px-2 py-2 border rounded transition-all duration-200 resize-y min-h-[60px] focus:outline-none disabled:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-60 ${
+            className={`w-full text-sm px-2.5 py-2 border rounded transition-all duration-200 resize-y min-h-[60px] focus:outline-none disabled:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-60 ${
               showObservationsError
                 ? "border-red-500 ring-2 ring-red-200 focus:border-red-500 focus:ring-red-200"
                 : "border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
@@ -373,11 +373,11 @@ export const RightSection: React.FC<RightSectionProps> = ({
         </div>
 
         {/* Bottom Section */}
-        <div className="flex flex-col items-center justify-center gap-2">
+        <div className="flex flex-col gap-2">
           {/* Save Button */}
           <button
             onClick={handleGuardarClick}
-            className={`mt-3 px-5 py-3 border-none rounded-md text-sm font-semibold uppercase tracking-wide transition-all duration-200 shadow-md ${
+            className={`w-full mt-4 py-3 border-none rounded-md text-sm font-semibold uppercase tracking-wide transition-all duration-200 shadow-md ${
               isGuardarDisabled
                 ? "bg-gray-300 text-gray-500 cursor-not-allowed"
                 : "bg-gradient-to-br from-blue-500 to-blue-600 text-white cursor-pointer hover:-translate-y-0.5 hover:shadow-lg active:translate-y-0"

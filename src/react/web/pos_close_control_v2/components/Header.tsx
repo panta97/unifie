@@ -55,7 +55,7 @@ export const Header: React.FC<HeaderProps> = ({
   }, [showSnapshots]);
 
   return (
-    <div className="col-span-2 row-start-1 grid grid-cols-[1fr_2fr_1fr] gap-4 py-3 px-4 rounded-md shadow-sm items-center">
+    <div className="col-span-2 row-start-1 grid grid-cols-[1fr_2fr_1fr] gap-4 py-3 px-4 bg-white border border-gray-200 rounded-lg shadow-sm items-center">
       <div>
         <div className="flex gap-1.5 mt-1 items-center">
           <input
@@ -68,7 +68,7 @@ export const Header: React.FC<HeaderProps> = ({
             disabled={loading}
           />
           <button
-            className="px-4 py-1 bg-gradient-to-br from-emerald-500 to-emerald-600 border-none rounded cursor-pointer text-xs font-semibold uppercase tracking-wide transition-all duration-200 shadow-sm hover:shadow-md whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-4 py-1 bg-gradient-to-br from-emerald-500 to-emerald-600 text-white border-none rounded cursor-pointer text-xs font-semibold uppercase tracking-wide transition-all duration-200 shadow-sm hover:shadow-md whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
             onClick={onFetchSession}
             disabled={loading}
           >
@@ -105,7 +105,7 @@ export const Header: React.FC<HeaderProps> = ({
         <div className="text-base font-semibold mb-0.5">
           Sesión: {sessionName || "-"}
         </div>
-        <div className="text-xs opacity-85">{configDisplayName || "-"}</div>
+        <div className="text-xs text-slate-500">{configDisplayName || "-"}</div>
         {/* Version History Display */}
         {snapshotCount > 0 && (
           <div className="mt-2 relative" ref={dropdownRef}>

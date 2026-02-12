@@ -419,9 +419,9 @@ function App() {
   console.log({ summary });
 
   return (
-    <div className="p-3 max-w-screen-2xl mx-auto bg-gray-50 min-h-screen">
+    <div className="p-3 max-w-screen-2xl mx-auto bg-slate-50 min-h-screen">
       {error && (
-        <div className="mb-3 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+        <div className="mb-3 p-3 bg-red-50 border border-red-300 text-red-700 rounded-lg shadow-sm">
           {error}
         </div>
       )}

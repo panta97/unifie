@@ -99,7 +99,7 @@ export const LeftSection: React.FC<LeftSectionProps> = ({
                 </tr>
               );
             })}
-            <tr>
+            <tr className="bg-gray-50">
               <td colSpan={2} className="text-right px-2.5 py-1.5 border-b-0">
                 <strong className="text-slate-800">TOTAL</strong>
               </td>
@@ -177,7 +177,7 @@ export const LeftSection: React.FC<LeftSectionProps> = ({
                 />
               </td>
             </tr>
-            <tr>
+            <tr className="bg-gray-50">
               <td className="text-right px-2.5 py-1.5 border-b-0">
                 <strong className="text-slate-800">TOTAL</strong>
               </td>
