@@ -34,7 +34,26 @@ function Barcode({
           </div>
 
           <div className="bottom">
-            <p className="code">{code}</p>
+            <p className="code">
+              {code.includes("/") ? (
+                <>
+                  <span style={{ display: "block", textAlign: "center", marginTop: "8px" }}>
+                    {code.split("/")[0]}
+                  </span>
+                  <span
+                    style={{
+                      display: "block",
+                      fontWeight: "bold",
+                      textAlign: "center",
+                    }}
+                  >
+                    {code.split("/")[1]}
+                  </span>
+                </>
+              ) : (
+                code
+              )}
+            </p>
             <p className="desc">{desc}</p>
           </div>
         </div>
@@ -60,7 +79,27 @@ function Barcode({
                 // ❌ QUITAR: renderAs={"svg"}
               />
             </div>
-            <p className="code">{code}</p>
+            <p className="code">
+              {code.includes("/") ? (
+                <>
+                  <span style={{ display: "block", fontSize: "7px", textAlign: "center" }}>
+                    {code.split("/")[0]}
+                  </span>
+                  <span
+                    style={{
+                      display: "block",
+                      fontSize: "7px",
+                      fontWeight: "bold",
+					            textAlign: "center"
+                    }}
+                  >
+                    {code.split("/")[1]}
+                  </span>
+                </>
+              ) : (
+                code
+              )}
+            </p>
           </div>
         </div>
       </div>
@@ -84,7 +123,31 @@ function Barcode({
                 level={"H"}
                 // ❌ QUITAR: renderAs={"svg"}
               />
-              <p className="code">{code}</p>
+              <p className="code">
+                {code.includes("/") ? (
+                  <>
+                    <span
+                      style={{
+                        display: "block",
+                        textAlign: "center",
+                      }}
+                    >
+                      {code.split("/")[0]}
+                    </span>
+                    <span
+                      style={{
+                        display: "block",
+                        fontWeight: "bold",
+                        textAlign: "center",
+                      }}
+                    >
+                      {code.split("/")[1]}
+                    </span>
+                  </>
+                ) : (
+                  code
+                )}
+              </p>
             </div>
           </div>
 
@@ -126,7 +189,26 @@ function Barcode({
           </div>
 
           <div className="bottom">
-            <p className="code">{code}</p>
+            <p className="code">
+              {code.includes("/") ? (
+                <>
+                  <span style={{ display: "block", textAlign: "center", marginTop: "2px" }}>
+                    {code.split("/")[0]}
+                  </span>
+                  <span
+                    style={{
+                      display: "block",
+                      fontWeight: "bold",
+                      textAlign: "center",
+                    }}
+                  >
+                    {code.split("/")[1]}
+                  </span>
+                </>
+              ) : (
+                code
+              )}
+            </p>
             <p className="desc">{desc}</p>
           </div>
         </div>
@@ -183,7 +265,26 @@ function Barcode({
           </div>
 
           <div className="bottom">
-            <p className="code">{code}</p>
+            <p className="code">
+              {code.includes("/") ? (
+                <>
+                  <span style={{ display: "block", textAlign: "center" }}>
+                    {code.split("/")[0]}
+                  </span>
+                  <span
+                    style={{
+                      display: "block",
+                      fontWeight: "bold",
+                      textAlign: "center",
+                    }}
+                  >
+                    {code.split("/")[1]}
+                  </span>
+                </>
+              ) : (
+                code
+              )}
+            </p>
             <p className="desc">{desc}</p>
           </div>
         </div>
