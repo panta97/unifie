@@ -37,7 +37,10 @@ export const Header: React.FC<HeaderProps> = ({
   // Click-outside detection to close dropdown
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
         setShowSnapshots(false);
       }
     };
@@ -157,12 +160,15 @@ export const Header: React.FC<HeaderProps> = ({
                         <div>Gerente: {snapshot.manager || "N/A"}</div>
                         <div className="mt-0.5">
                           <span
-                            className={`inline-block px-1.5 py-0.5 rounded text-xs font-medium ${snapshot.status === "CL"
-                              ? "bg-green-100 text-green-700"
-                              : "bg-yellow-100 text-yellow-700"
-                              }`}
+                            className={`inline-block px-1.5 py-0.5 rounded text-xs font-medium ${
+                              snapshot.status === "CLOSED"
+                                ? "bg-green-100 text-green-700"
+                                : "bg-yellow-100 text-yellow-700"
+                            }`}
                           >
-                            {snapshot.status === "CL" ? "Cerrado" : "Borrador"}
+                            {snapshot.status === "CLOSED"
+                              ? "Cerrado"
+                              : "Borrador"}
                           </span>
                         </div>
                       </div>

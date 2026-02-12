@@ -61,7 +61,7 @@ export interface POSState {
 }
 
 // Snapshot-related types
-export type SessionStatus = "DR" | "CL"; // DRAFT or CLOSED
+export type SessionStatus = "DRAFT" | "CLOSED";
 
 export interface Snapshot {
   id: number;
