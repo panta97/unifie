@@ -15,6 +15,7 @@ interface HeaderProps {
   snapshots: Snapshot[];
   onSessionIdChange: (id: string) => void;
   onFetchSession: () => void;
+  onLock: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -30,6 +31,7 @@ export const Header: React.FC<HeaderProps> = ({
   snapshots,
   onSessionIdChange,
   onFetchSession,
+  onLock,
 }) => {
   const [showSnapshots, setShowSnapshots] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -146,7 +148,7 @@ export const Header: React.FC<HeaderProps> = ({
                         </span>
                         <span className="text-gray-500">
                           {new Date(
-                            snapshot.snapshot_created_at
+                            snapshot.snapshot_created_at,
                           ).toLocaleDateString("es-PE", {
                             month: "short",
                             day: "numeric",
@@ -157,7 +159,7 @@ export const Header: React.FC<HeaderProps> = ({
                       </div>
                       <div className="mt-1 text-gray-600">
                         <div>Cajero: {snapshot.cashier || "N/A"}</div>
-                        <div>Gerente: {snapshot.manager || "N/A"}</div>
+                        <div>Supervisor: {snapshot.manager || "N/A"}</div>
                         <div className="mt-0.5">
                           <span
                             className={`inline-block px-1.5 py-0.5 rounded text-xs font-medium ${
@@ -181,23 +183,45 @@ export const Header: React.FC<HeaderProps> = ({
         )}
       </div>
 
-      <div className="text-right text-sm">
+      <div className="text-right text-sm flex flex-col items-end gap-2">
         <div>
-          Apertura:{" "}
-          <span>
-            {startAt
-              ? formatDate(startAt).replace(/\//g, "-").slice(0, 16)
-              : "08:00 AM"}
-          </span>
+          <div>
+            Apertura:{" "}
+            <span>
+              {startAt
+                ? formatDate(startAt).replace(/\//g, "-").slice(0, 16)
+                : "08:00 AM"}
+            </span>
+          </div>
+          <div className="mt-0.5">
+            Cierre:{" "}
+            {isSessionClosed ? (
+              <span>{formatDate(stopAt).replace(/\//g, "-").slice(0, 16)}</span>
+            ) : (
+              <span className="text-red-600 font-semibold">Pendiente</span>
+            )}
+          </div>
         </div>
-        <div className="mt-0.5">
-          Cierre:{" "}
-          {isSessionClosed ? (
-            <span>{formatDate(stopAt).replace(/\//g, "-").slice(0, 16)}</span>
-          ) : (
-            <span className="text-red-600 font-semibold">Pendiente</span>
-          )}
-        </div>
+        <button
+          onClick={onLock}
+          className="flex items-center gap-1.5 px-3 py-1 text-xs font-medium text-slate-600 bg-slate-100 border border-slate-300 rounded hover:bg-slate-200 transition-colors"
+          title="Bloquear pantalla"
+        >
+          <svg
+            className="w-3.5 h-3.5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+            />
+          </svg>
+          Bloquear
+        </button>
       </div>
     </div>
   );

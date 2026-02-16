@@ -1,4 +1,6 @@
+import uuid
 from django.db import models
+from django.utils import timezone
 from miscellaneous.constants import (
     POS_END_STATE_CHOICES,
     POS_STATUS_CHOICES,
@@ -19,9 +21,28 @@ class Employee(models.Model):
     )
     type = models.CharField(max_length=2, choices=TYPE_CHOICES, default=CASHIER)
     is_used = models.BooleanField(default=True)
+    totp_secret = models.CharField(max_length=32, blank=True, default="")
 
     def __str__(self):
         return f"{self.first_name} {self.last_name}"
+
+
+class OTPSession(models.Model):
+    token = models.UUIDField(default=uuid.uuid4, unique=True, db_index=True)
+    employee = models.ForeignKey(Employee, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+    last_activity = models.DateTimeField(auto_now_add=True)
+    is_active = models.BooleanField(default=True)
+
+    def is_expired(self):
+        return (timezone.now() - self.last_activity).total_seconds() > 600
+
+    def refresh(self):
+        self.last_activity = timezone.now()
+        self.save(update_fields=["last_activity"])
+
+    def __str__(self):
+        return f"OTPSession {self.token} for {self.employee}"
 
 
 class PosSession(models.Model):

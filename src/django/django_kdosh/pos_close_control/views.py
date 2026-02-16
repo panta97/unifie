@@ -9,6 +9,11 @@ from django.views.decorators.csrf import csrf_exempt
 from .models import PosSession, Employee
 from django.views import View
 from .models import PosSessionV2, PosSessionV2Snapshot
+from .otp_decorators import OTPSessionMixin
+from miscellaneous.constants import (
+    CLOSED,
+    DRAFT,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -252,7 +257,7 @@ def employee(request, type):
         return JsonResponse(managers, safe=False)
 
 
-class PosCloseControlV2View(View):
+class PosCloseControlV2View(OTPSessionMixin, View):
     """
     V2 API for POS Close Control.
     All amount fields are handled as integers (cents).
@@ -422,7 +427,7 @@ class PosCloseControlV2View(View):
                         }
                 except (json.JSONDecodeError, KeyError) as e:
                     logger.warning(f"Failed to parse saved session JSON: {e}")
-                
+
                 # Get snapshot count for this session
                 snapshot_count = PosSessionV2Snapshot.objects.filter(
                     original_session_id=session_id
@@ -477,7 +482,7 @@ class PosCloseControlV2View(View):
 
             # Determine status based on stop_at
             stop_at = data["summary"]["stopAt"]
-            status = PosSessionV2.CLOSED if stop_at else PosSessionV2.DRAFT
+            status = CLOSED if stop_at else DRAFT
 
             # Create the v2 session with integer values
             # FE sends integers, we save them directly
@@ -512,7 +517,9 @@ class PosCloseControlV2View(View):
                 status=status,
             )
 
-            logger.info(f"✅ Sesión V2 creada con éxito: {pos_session.id} (status={status})")
+            logger.info(
+                f"✅ Sesión V2 creada con éxito: {pos_session.id} (status={status})"
+            )
             return JsonResponse(
                 {"message": "Sesión guardada", "id": pos_session.id}, status=201
             )
@@ -551,9 +558,9 @@ class PosCloseControlV2View(View):
 
             # Check if session is CLOSED - if so, create snapshot
             snapshot_created = False
-            if saved_session.status == PosSessionV2.CLOSED:
+            if saved_session.status == CLOSED:
                 logger.info(f"🔒 Session {session_id} is CLOSED, creating snapshot...")
-                
+
                 # Create snapshot with current session data
                 PosSessionV2Snapshot.objects.create(
                     original_session_id=saved_session.odoo_session_id,
@@ -606,7 +613,7 @@ class PosCloseControlV2View(View):
 
             # Determine status based on new stop_at value
             new_stop_at = data["summary"]["stopAt"]
-            new_status = PosSessionV2.CLOSED if new_stop_at else PosSessionV2.DRAFT
+            new_status = CLOSED if new_stop_at else DRAFT
 
             # Update the session
             saved_session.pos_name = data["posName"]
@@ -624,13 +631,13 @@ class PosCloseControlV2View(View):
             ]
             saved_session.session_name = data["summary"]["sessionName"]
             saved_session.start_at = data["summary"]["startAt"]
-            
+
             # Keep the original stop_at or use new value
             # Per user requirement: keep original stop_at value
             if new_stop_at:
                 saved_session.stop_at = new_stop_at
             # If new stop_at is None, keep the existing value (don't override)
-            
+
             saved_session.end_state = end_state
             saved_session.end_state_amount = data["endState"]["amount"]
             saved_session.end_state_note = data["endState"]["note"]
@@ -798,7 +805,7 @@ class PosCloseControlV2View(View):
                     balance_start=int(
                         round(pos_session[0]["cash_register_balance_start"] * 100)
                     ),
-                    balance_start_next_day=300,  # Fixed value
+                    balance_start_next_day=30000,  # Default S/. 300.00 in cents
                     session_name=pos_session[0]["display_name"],
                     start_at=pos_session[0]["start_at"],
                     end_state="ST",  # Placeholder

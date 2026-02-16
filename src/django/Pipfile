@@ -5,14 +5,16 @@ name = "pypi"
 
 [packages]
 django = "*"
-gunicorn = "*"
+gunicorn = "~=21.2"
 psycopg2-binary = "*"
-dj-database-url = "*"
+dj-database-url = "==2.0.0"
 requests = "*"
 pandas = "*"
 xlsxwriter = "*"
 djangorestframework = "*"
 numpy = "*"
+pyotp = "*"
+qrcode = {extras = ["pil"], version = "*"}
 
 [dev-packages]
 

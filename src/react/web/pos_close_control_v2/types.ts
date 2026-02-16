@@ -1,4 +1,4 @@
-export const FIXED_BALANCE_START = 20000; // Fixed starting balance in cents (200.00)
+export const FIXED_BALANCE_START = 30000; // Fixed starting balance in cents (300.00)
 
 export interface CashDenominations {
   d0_10: number; // 0.10
@@ -77,4 +77,24 @@ export interface SnapshotHistoryResponse {
   session_id: number;
   snapshot_count: number;
   snapshots: Snapshot[];
+}
+
+// OTP types
+export interface OTPVerifyResponse {
+  token: string;
+  employee: {
+    id: number;
+    first_name: string;
+    last_name: string;
+  };
+}
+
+export interface OTPValidateResponse {
+  valid: boolean;
+  reason?: string;
+  employee?: {
+    id: number;
+    first_name: string;
+    last_name: string;
+  };
 }

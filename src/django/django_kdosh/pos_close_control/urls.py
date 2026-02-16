@@ -2,6 +2,7 @@ from django.urls import path
 
 from .views import get_pos_details, pos_persist, employee, PosCloseControlV2View
 from .snapshot_views import get_session_snapshots
+from .otp_views import verify_otp, validate_session
 
 urlpatterns = [
     path(
@@ -27,4 +28,7 @@ urlpatterns = [
         get_session_snapshots,
         name="get_session_snapshots",
     ),
+    # OTP endpoints
+    path("api/pos-close-control/otp/verify", verify_otp, name="otp_verify"),
+    path("api/pos-close-control/otp/validate", validate_session, name="otp_validate"),
 ]

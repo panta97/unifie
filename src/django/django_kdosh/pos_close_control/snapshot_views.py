@@ -2,12 +2,14 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 from .models import PosSessionV2Snapshot
+from .otp_decorators import require_otp_session
 import logging
 
 logger = logging.getLogger(__name__)
 
 
 @csrf_exempt
+@require_otp_session
 @require_http_methods(["GET"])
 def get_session_snapshots(request, session_id):
     """

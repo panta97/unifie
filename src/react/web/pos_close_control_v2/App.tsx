@@ -4,6 +4,7 @@ import { Header } from "./components/Header";
 import { LeftSection } from "./components/LeftSection";
 import { RightSection } from "./components/RightSection";
 import { SummaryPrint } from "./components/SummaryPrint";
+import { LockScreen } from "./components/LockScreen";
 import {
   fetchSessionData,
   fetchEmployees,
@@ -11,6 +12,7 @@ import {
   updatePosCloseControl,
   autosavePosCloseControl,
   fetchSessionSnapshots,
+  validateSession,
 } from "./utils/api";
 import { FIXED_BALANCE_START } from "./types";
 import type {
@@ -22,10 +24,20 @@ import type {
   Snapshot,
 } from "./types";
 import { useAutosave } from "./hooks/useAutosave";
+import { useInactivityTimer } from "./hooks/useInactivityTimer";
+
+const OTP_TOKEN_KEY = "otp_token";
 
 function App() {
+  // Auth state
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [authLoading, setAuthLoading] = useState(true);
+
+  // Read sessionId from URL query param
+  const urlSessionId = new URLSearchParams(window.location.search).get("sessionId");
+
   // Session state
-  const [sessionId, setSessionId] = useState<string>("");
+  const [sessionId, setSessionId] = useState<string>(urlSessionId || "");
   const [summary, setSummary] = useState<SummaryType>({
     sessionId: 0,
     configId: 0,
@@ -91,6 +103,59 @@ function App() {
   const [isExistingSession, setIsExistingSession] = useState(false);
   const [snapshots, setSnapshots] = useState<Snapshot[]>([]);
   const [snapshotCount, setSnapshotCount] = useState(0);
+
+  // Lock handler
+  const handleLock = useCallback(() => {
+    sessionStorage.removeItem(OTP_TOKEN_KEY);
+    setIsAuthenticated(false);
+  }, []);
+
+  // Validate existing token on mount
+  useEffect(() => {
+    const checkExistingToken = async () => {
+      const token = sessionStorage.getItem(OTP_TOKEN_KEY);
+      if (token) {
+        try {
+          const result = await validateSession(token);
+          if (result.valid) {
+            setIsAuthenticated(true);
+            if (result.employee) {
+              setSelectedManager(result.employee);
+            }
+          } else {
+            sessionStorage.removeItem(OTP_TOKEN_KEY);
+          }
+        } catch {
+          sessionStorage.removeItem(OTP_TOKEN_KEY);
+        }
+      }
+      setAuthLoading(false);
+    };
+
+    checkExistingToken();
+  }, []);
+
+  // Listen for otp-session-expired events (from API 401 responses)
+  useEffect(() => {
+    const handleExpired = () => handleLock();
+    window.addEventListener("otp-session-expired", handleExpired);
+    return () =>
+      window.removeEventListener("otp-session-expired", handleExpired);
+  }, [handleLock]);
+
+  // Inactivity timer - 10 minutes
+  useInactivityTimer({
+    timeoutMs: 600000,
+    onTimeout: handleLock,
+    enabled: isAuthenticated,
+  });
+
+  // Auto-fetch session from URL query param after authentication
+  useEffect(() => {
+    if (isAuthenticated && sessionId && summary.sessionId === 0) {
+      handleFetchSession();
+    }
+  }, [isAuthenticated]);
 
   // Fetch employees on mount
   useEffect(() => {
@@ -241,15 +306,11 @@ function App() {
           setObservations(data.savedSession.observations);
         }
 
-        // Restore employees
+        // Restore cashier from saved session (manager comes from OTP auth)
         const savedCashier = cashiers.find(
           (c) => c.id === data.savedSession?.cashier?.id
         );
-        const savedManager = managers.find(
-          (m) => m.id === data.savedSession?.manager?.id
-        );
         if (savedCashier) setSelectedCashier(savedCashier);
-        if (savedManager) setSelectedManager(savedManager);
       } else {
         // Reset to default state for new sessions
         setIsExistingSession(false);
@@ -273,7 +334,6 @@ function App() {
         });
         setObservations("");
         setSelectedCashier(null);
-        setSelectedManager(null);
       }
     } catch (err) {
       const errorMessage =
@@ -304,11 +364,6 @@ function App() {
   const handleCashierChange = (cashierId: number) => {
     const cashier = cashiers.find((c) => c.id === cashierId);
     setSelectedCashier(cashier || null);
-  };
-
-  const handleManagerChange = (managerId: number) => {
-    const manager = managers.find((m) => m.id === managerId);
-    setSelectedManager(manager || null);
   };
 
   const handleSave = async () => {
@@ -416,7 +471,31 @@ function App() {
     window.print();
   };
 
+  const handleAuthenticated = (token: string, employee: Employee) => {
+    setIsAuthenticated(true);
+    setSelectedManager(employee);
+  };
+
   console.log({ summary });
+
+  // Show loading while checking existing token
+  if (authLoading) {
+    return (
+      <div className="fixed inset-0 bg-gradient-to-br from-slate-800 to-slate-900 flex items-center justify-center">
+        <div className="text-white text-lg">Cargando...</div>
+      </div>
+    );
+  }
+
+  // Show lock screen if not authenticated
+  if (!isAuthenticated) {
+    return (
+      <LockScreen
+        managers={managers}
+        onAuthenticated={handleAuthenticated}
+      />
+    );
+  }
 
   return (
     <div className="p-3 max-w-screen-2xl mx-auto bg-slate-50 min-h-screen">
@@ -440,6 +519,7 @@ function App() {
           snapshots={snapshots}
           onSessionIdChange={setSessionId}
           onFetchSession={handleFetchSession}
+          onLock={handleLock}
         />
 
         <LeftSection
@@ -459,9 +539,7 @@ function App() {
           balanceStart={summary.balanceStart}
           isSessionClosed={summary.isSessionClosed}
           isExistingSession={isExistingSession}
-          managers={managers}
           selectedManager={selectedManager}
-          onManagerChange={handleManagerChange}
           cashiers={cashiers}
           selectedCashier={selectedCashier}
           onCashierChange={handleCashierChange}

@@ -1,4 +1,80 @@
-import type { Employee, POSState, SnapshotHistoryResponse } from "../types";
+import type {
+  Employee,
+  POSState,
+  SnapshotHistoryResponse,
+  OTPVerifyResponse,
+  OTPValidateResponse,
+} from "../types";
+
+const OTP_TOKEN_KEY = "otp_token";
+
+/**
+ * Get auth headers with OTP token from sessionStorage
+ */
+function getAuthHeaders(): Record<string, string> {
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+  const token = sessionStorage.getItem(OTP_TOKEN_KEY);
+  if (token) {
+    headers["X-OTP-Token"] = token;
+  }
+  return headers;
+}
+
+/**
+ * Check response for OTP session expiry (401 with otp_required)
+ */
+async function handleOTPExpiry(response: Response): Promise<void> {
+  if (response.status === 401) {
+    try {
+      const data = await response.clone().json();
+      if (data.otp_required) {
+        window.dispatchEvent(new CustomEvent("otp-session-expired"));
+      }
+    } catch {
+      // Ignore parse errors
+    }
+  }
+}
+
+/**
+ * Verify OTP code for a manager
+ */
+export async function verifyOTP(
+  employeeId: number,
+  otpCode: string
+): Promise<OTPVerifyResponse> {
+  const response = await fetch("/api/pos-close-control/otp/verify", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ employee_id: employeeId, otp_code: otpCode }),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.error || "OTP verification failed");
+  }
+
+  return response.json();
+}
+
+/**
+ * Validate an existing OTP session token
+ */
+export async function validateSession(
+  token: string
+): Promise<OTPValidateResponse> {
+  const response = await fetch("/api/pos-close-control/otp/validate", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-OTP-Token": token,
+    },
+  });
+
+  return response.json();
+}
 
 /**
  * API response structure from backend GET endpoint
@@ -40,10 +116,10 @@ interface SessionDataResponse {
 export async function fetchSessionData(sessionId: number) {
   const response = await fetch(`/api/pos-close-control/v2/${sessionId}`, {
     method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-    },
+    headers: getAuthHeaders(),
   });
+
+  await handleOTPExpiry(response);
 
   if (!response.ok) {
     throw new Error(`Failed to fetch session data: ${response.statusText}`);
@@ -114,11 +190,11 @@ export async function fetchSessionSnapshots(
     `/api/pos-close-control/v2/${sessionId}/snapshots`,
     {
       method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: getAuthHeaders(),
     }
   );
+
+  await handleOTPExpiry(response);
 
   if (!response.ok) {
     throw new Error(
@@ -140,14 +216,14 @@ export async function autosavePosCloseControl(
 ) {
   const response = await fetch(`/api/pos-close-control/v2/${sessionId}`, {
     method: "PATCH",
-    headers: {
-      "Content-Type": "application/json",
-    },
+    headers: getAuthHeaders(),
     body: JSON.stringify({
       cashDenominations,
       cardAmounts,
     }),
   });
+
+  await handleOTPExpiry(response);
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
@@ -167,9 +243,7 @@ export async function autosavePosCloseControl(
 export async function submitPosCloseControl(sessionId: number, data: POSState) {
   const response = await fetch(`/api/pos-close-control/v2/${sessionId}`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
+    headers: getAuthHeaders(),
     body: JSON.stringify({
       posName: data.summary.posName,
       cashier: {
@@ -201,6 +275,8 @@ export async function submitPosCloseControl(sessionId: number, data: POSState) {
       cardAmounts: data.cardAmounts,
     }),
   });
+
+  await handleOTPExpiry(response);
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
@@ -220,9 +296,7 @@ export async function submitPosCloseControl(sessionId: number, data: POSState) {
 export async function updatePosCloseControl(sessionId: number, data: POSState) {
   const response = await fetch(`/api/pos-close-control/v2/${sessionId}`, {
     method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
-    },
+    headers: getAuthHeaders(),
     body: JSON.stringify({
       posName: data.summary.posName,
       cashier: {
@@ -255,6 +329,8 @@ export async function updatePosCloseControl(sessionId: number, data: POSState) {
     }),
   });
 
+  await handleOTPExpiry(response);
+
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
     throw new Error(
@@ -266,5 +342,3 @@ export async function updatePosCloseControl(sessionId: number, data: POSState) {
   const result = await response.json();
   return result;
 }
-
-

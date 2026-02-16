@@ -11,9 +11,7 @@ interface RightSectionProps {
   balanceStart: number;
   isSessionClosed: boolean;
   isExistingSession: boolean;
-  managers: Employee[];
   selectedManager: Employee | null;
-  onManagerChange: (managerId: number) => void;
   cashiers: Employee[];
   selectedCashier: Employee | null;
   onCashierChange: (cashierId: number) => void;
@@ -33,9 +31,7 @@ export const RightSection: React.FC<RightSectionProps> = ({
   balanceStart,
   isSessionClosed,
   isExistingSession,
-  managers,
   selectedManager,
-  onManagerChange,
   cashiers,
   selectedCashier,
   onCashierChange,
@@ -91,23 +87,21 @@ export const RightSection: React.FC<RightSectionProps> = ({
     status === "Faltante"
       ? "text-red-900"
       : status === "Sobrante"
-      ? "text-amber-900"
-      : "text-green-900";
+        ? "text-amber-900"
+        : "text-green-900";
 
   // Check if observations is required (when Faltante)
   const isObservationsRequired = difference < 0;
   const isObservationsEmpty = observations.trim() === "";
   const showObservationsError = isObservationsRequired && isObservationsEmpty;
 
-  // Check if manager and cashier are selected (always required)
-  const isManagerMissing = !selectedManager;
+  // Check if cashier is selected (always required)
   const isCashierMissing = !selectedCashier;
 
   // Check if Guardar button should be disabled
   const isGuardarDisabled =
     !isSessionClosed ||
     (isObservationsRequired && isObservationsEmpty) ||
-    isManagerMissing ||
     isCashierMissing;
 
   // Handle Guardar button click
@@ -128,9 +122,6 @@ export const RightSection: React.FC<RightSectionProps> = ({
     }
     if (isObservationsRequired && isObservationsEmpty) {
       reasons.push("Las observaciones son requeridas cuando hay un Faltante");
-    }
-    if (isManagerMissing) {
-      reasons.push("Debe seleccionar un Gerente");
     }
     if (isCashierMissing) {
       reasons.push("Debe seleccionar un Cajero");
@@ -298,28 +289,16 @@ export const RightSection: React.FC<RightSectionProps> = ({
           </table>
         </div>
 
-        {/* Manager Dropdown */}
+        {/* Supervisor (from OTP auth) */}
         <div className="mt-4">
           <label className="block mb-1.5 font-medium text-sm text-slate-600">
-            Gerente:<span className="text-red-500 ml-1">*</span>
+            Supervisor:
           </label>
-          <select
-            value={selectedManager?.id || ""}
-            onChange={(e) => onManagerChange(Number(e.target.value))}
-            className={`w-full text-sm px-2.5 py-1.5 border rounded transition-all duration-200 cursor-pointer bg-white focus:outline-none disabled:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-60 ${
-              isManagerMissing
-                ? "border-red-500 ring-2 ring-red-200 focus:border-red-500 focus:ring-red-200"
-                : "border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-            }`}
-            disabled={disabled}
-          >
-            <option value="">Seleccionar Gerente</option>
-            {managers.map((manager) => (
-              <option key={manager.id} value={manager.id}>
-                {manager.first_name} {manager.last_name.charAt(0)}.
-              </option>
-            ))}
-          </select>
+          <div className="w-full text-sm px-2.5 py-1.5 border border-gray-200 rounded bg-gray-50 text-slate-700">
+            {selectedManager
+              ? `${selectedManager.first_name} ${selectedManager.last_name.charAt(0)}.`
+              : "\u2014"}
+          </div>
         </div>
 
         {/* Cajero Dropdown */}
