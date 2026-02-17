@@ -362,7 +362,7 @@ export const RightSection: React.FC<RightSectionProps> = ({
                 : "bg-gradient-to-br from-blue-500 to-blue-600 text-white cursor-pointer hover:-translate-y-0.5 hover:shadow-lg active:translate-y-0"
             }`}
           >
-            {isExistingSession ? "ACTUALIZAR" : "GUARDAR"}
+            GUARDAR
           </button>
         </div>
 
