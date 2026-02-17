@@ -86,6 +86,7 @@ class PosSessionAdmin(admin.ModelAdmin):
 @admin.register(PosSessionV2)
 class PosSessionV2Admin(admin.ModelAdmin):
     list_display = (
+        "odoo_session_id",
         "id",
         "pos_name",
         "cashier",
@@ -107,6 +108,7 @@ class PosSessionV2Admin(admin.ModelAdmin):
 @admin.register(PosSessionV2Snapshot)
 class PosSessionV2SnapshotAdmin(admin.ModelAdmin):
     list_display = (
+        "odoo_session_id",
         "id",
         "original_session_id",
         "snapshot_created_at",
