@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useRef } from "react";
 import { formatCurrency } from "../utils/formatters";
 import type { CashDenominations, CardAmounts } from "../types";
 
@@ -38,6 +38,18 @@ export const LeftSection: React.FC<LeftSectionProps> = ({
   onCardAmountChange,
   disabled = false,
 }) => {
+  const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+
+  const handleKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      inputRefs.current[index + 1]?.focus();
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      inputRefs.current[index - 1]?.focus();
+    }
+  };
+
   // Calculate total cash (in cents)
   const totalCash = denominationValues.reduce((sum, { key, value }) => {
     return sum + denominations[key] * value * 100;
@@ -69,7 +81,7 @@ export const LeftSection: React.FC<LeftSectionProps> = ({
             </tr>
           </thead>
           <tbody>
-            {denominationValues.map(({ key, value, label }) => {
+            {denominationValues.map(({ key, value, label }, i) => {
               const quantity = denominations[key];
               const total = quantity * value * 100; // in cents
 
@@ -80,6 +92,7 @@ export const LeftSection: React.FC<LeftSectionProps> = ({
                   </td>
                   <td className="px-2.5 py-1.5 text-left border-b border-gray-100">
                     <input
+                      ref={(el) => { inputRefs.current[i] = el; }}
                       type="number"
                       min="0"
                       value={quantity}
@@ -89,6 +102,8 @@ export const LeftSection: React.FC<LeftSectionProps> = ({
                           parseInt(e.target.value || "0", 10)
                         )
                       }
+                      onKeyDown={(e) => handleKeyDown(i, e)}
+                      onFocus={(e) => e.target.select()}
                       className="w-full px-2.5 py-1.5 border border-gray-200 rounded text-sm transition-all duration-200 text-right font-mono focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 disabled:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-60"
                       disabled={disabled}
                     />
@@ -126,6 +141,7 @@ export const LeftSection: React.FC<LeftSectionProps> = ({
               </td>
               <td className="w-1/2 px-2.5 py-1.5 text-left border-b border-gray-100">
                 <input
+                  ref={(el) => { inputRefs.current[11] = el; }}
                   type="number"
                   value={cardAmounts.pos1 / 100}
                   onChange={(e) =>
@@ -134,6 +150,8 @@ export const LeftSection: React.FC<LeftSectionProps> = ({
                       Math.round(parseFloat(e.target.value || "0") * 100)
                     )
                   }
+                  onKeyDown={(e) => handleKeyDown(11, e)}
+                  onFocus={(e) => e.target.select()}
                   className="w-full px-2.5 py-1.5 border border-gray-200 rounded text-sm transition-all duration-200 text-right font-mono focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 disabled:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-60"
                   disabled={disabled}
                 />
@@ -145,6 +163,7 @@ export const LeftSection: React.FC<LeftSectionProps> = ({
               </td>
               <td className="px-2.5 py-1.5 text-left border-b border-gray-100">
                 <input
+                  ref={(el) => { inputRefs.current[12] = el; }}
                   type="number"
                   value={cardAmounts.pos2 / 100}
                   onChange={(e) =>
@@ -153,6 +172,8 @@ export const LeftSection: React.FC<LeftSectionProps> = ({
                       Math.round(parseFloat(e.target.value || "0") * 100)
                     )
                   }
+                  onKeyDown={(e) => handleKeyDown(12, e)}
+                  onFocus={(e) => e.target.select()}
                   className="w-full px-2.5 py-1.5 border border-gray-200 rounded text-sm transition-all duration-200 text-right font-mono focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 disabled:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-60"
                   disabled={disabled}
                 />
@@ -164,6 +185,7 @@ export const LeftSection: React.FC<LeftSectionProps> = ({
               </td>
               <td className="px-2.5 py-1.5 text-left border-b border-gray-100">
                 <input
+                  ref={(el) => { inputRefs.current[13] = el; }}
                   type="number"
                   value={cardAmounts.miscellaneous / 100}
                   onChange={(e) =>
@@ -172,6 +194,8 @@ export const LeftSection: React.FC<LeftSectionProps> = ({
                       Math.round(parseFloat(e.target.value || "0") * 100)
                     )
                   }
+                  onKeyDown={(e) => handleKeyDown(13, e)}
+                  onFocus={(e) => e.target.select()}
                   className="w-full px-2.5 py-1.5 border border-gray-200 rounded text-sm transition-all duration-200 text-right font-mono focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 disabled:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-60"
                   disabled={disabled}
                 />
