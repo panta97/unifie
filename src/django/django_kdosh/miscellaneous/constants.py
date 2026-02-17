@@ -27,3 +27,20 @@ STORE_CHOICES = [
     (STORE_ABTAO, STORE_ABTAO),
     (STORE_TINGO_MARIA, STORE_TINGO_MARIA),
 ]
+
+DRAFT = "DRAFT"
+CLOSED = "CLOSED"
+POS_STATUS_CHOICES = (
+    (DRAFT, "Draft"),
+    (CLOSED, "Closed"),
+)
+
+
+EXTRA = "EXTRA"
+STABLE = "STABLE"
+MISSING = "MISSING"
+POS_END_STATE_CHOICES = (
+    (EXTRA, "Extra"),
+    (STABLE, "Stable"),
+    (MISSING, "Missing"),
+)
