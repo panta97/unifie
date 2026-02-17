@@ -139,10 +139,33 @@ def transform_order_json(data):
 
 
 def order_client_result(order_id):
-    result = {
-        "odoo_link": "{}/web#id={}&cids=1-2-3&menu_id=407&action=599&model=purchase.order&view_type=form".format(
-            settings.ODOO_URL, order_id
-        ),
-        "odoo_id": order_id,
-    }
-    return result
+    """
+    Retorna el resultado de una orden para el cliente.
+    Ahora retorna la orden completa con detalles e items.
+    """
+    from .purchase_order import get_purchase_order_for_edit
+
+    # Obtener la orden completa actualizada
+    try:
+        import time
+
+        time.sleep(1)  # Esperar propagación en Odoo
+        order_data = get_purchase_order_for_edit(order_id)
+        # Agregar odoo_id y odoo_link al resultado
+        order_data["odoo_id"] = order_id
+        order_data["odoo_link"] = (
+            "{}/web#id={}&cids=1-2-3&menu_id=407&action=599&model=purchase.order&view_type=form".format(
+                settings.ODOO_URL, order_id
+            )
+        )
+        return order_data
+    except Exception as e:
+        # Fallback al formato antiguo si hay error
+        print(f"⚠️ [order_client_result] Error obteniendo orden completa: {e}")
+        result = {
+            "odoo_link": "{}/web#id={}&cids=1-2-3&menu_id=407&action=599&model=purchase.order&view_type=form".format(
+                settings.ODOO_URL, order_id
+            ),
+            "odoo_id": order_id,
+        }
+        return result

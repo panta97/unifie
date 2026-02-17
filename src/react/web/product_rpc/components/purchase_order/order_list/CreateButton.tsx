@@ -20,8 +20,19 @@ import { fetchResult, FetchStatus } from "../../../types/fetch";
 import { ProductFormState } from "../../../types/product";
 import { OrderResult } from "../../../types/purchaseOrder";
 import { orderDetailsSchema, orderListSchema } from "../Validation";
+import { purchaseOrderApi } from "../../../services/purchaseOrderApi";
 
-export const CreateButton = () => {
+interface CreateButtonProps {
+  editMode?: boolean;
+  currentOrderId?: number | null;
+  onUpdateSuccess?: () => void;
+}
+
+export const CreateButton: React.FC<CreateButtonProps> = ({ 
+  editMode = false, 
+  currentOrderId = null,
+  onUpdateSuccess 
+}) => {
   const formState = useAppSelector(selectFormOrderState);
   const orderDetails = useAppSelector(selectOrderDetails);
   const orderList = useAppSelector(selectOrderList);
@@ -29,25 +40,65 @@ export const CreateButton = () => {
 
   const handleUploadOrder = async () => {
     try {
+      console.log("🔵 [CreateButton] Iniciando proceso de subida/actualización");
+      console.log("🔵 [CreateButton] Edit mode:", editMode);
+      console.log("🔵 [CreateButton] Current Order ID:", currentOrderId);
+      
       await orderDetailsSchema.validate(orderDetails);
       await orderListSchema.validate(orderList);
+      
+      console.log("✅ [CreateButton] Validación exitosa");
+      console.log("📦 [CreateButton] Order Details:", orderDetails);
+      console.log("📦 [CreateButton] Order List:", orderList);
+      
       dispatch(updateOrderFormStatus({ status: FetchStatus.LOADING }));
-      const params = {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${window.localStorage.getItem("token")}`,
-        },
-        body: JSON.stringify({
-          order_details: orderDetails,
-          order_list: orderList,
-        }),
+
+      const orderData = {
+        order_details: orderDetails,
+        order_list: orderList,
       };
-      const response = await fetch("/api/product-rpc/purchase_order", params);
-      const json = await response.json();
+      
+      console.log("📤 [CreateButton] Datos a enviar:", orderData);
+
+      let json;
+
+      if (editMode && currentOrderId) {
+        // UPDATE mode
+        console.log("🔄 [CreateButton] Modo UPDATE - Llamando purchaseOrderApi.update()");
+        console.log("🔄 [CreateButton] Order ID:", currentOrderId);
+        
+        const response = await purchaseOrderApi.update(currentOrderId, orderData);
+        json = response;
+        
+        console.log("📥 [CreateButton] Respuesta del servidor:", json);
+        
+        if (json.result === fetchResult.SUCCESS && onUpdateSuccess) {
+          console.log("✅ [CreateButton] Update SUCCESS - Llamando onUpdateSuccess");
+          onUpdateSuccess();
+        }
+      } else {
+        // CREATE mode
+        console.log("🆕 [CreateButton] Modo CREATE - Llamando fetch");
+        const params = {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${window.localStorage.getItem("token")}`,
+          },
+          body: JSON.stringify(orderData),
+        };
+        const response = await fetch("/api/product-rpc/purchase_order", params);
+        json = await response.json();
+        
+        console.log("📥 [CreateButton] Respuesta del servidor:", json);
+      }
+
       if (json.result === fetchResult.SUCCESS) {
+        console.log("✅ [CreateButton] Resultado SUCCESS - Actualizando estado");
         batch(() => {
           const orderResult: OrderResult = json.order;
+          console.log("📦 [CreateButton] Order Result:", orderResult);
+          
           dispatch(
             updateHelperProps({
               odooId: orderResult.odoo_id,
@@ -58,11 +109,16 @@ export const CreateButton = () => {
             updateOrderFormState({ formState: ProductFormState.CREATED })
           );
         });
-      } else throw new Error(json.message);
+      } else {
+        console.error("❌ [CreateButton] Resultado ERROR:", json.message);
+        throw new Error(json.message);
+      }
     } catch (error) {
+      console.error("❌ [CreateButton] Error capturado:", error);
       alert(error);
     } finally {
       dispatch(updateOrderFormStatus({ status: FetchStatus.IDLE }));
+      console.log("🏁 [CreateButton] Proceso finalizado");
     }
   };
 
@@ -75,6 +131,8 @@ export const CreateButton = () => {
     });
   };
 
+  const buttonText = editMode ? "Actualizar" : "Crear";
+
   return formState === ProductFormState.DRAF ? (
     <button
       onClick={(e) => {
@@ -83,7 +141,7 @@ export const CreateButton = () => {
       }}
       className="rounded bg-gray-100 px-2 py-1 cursor-pointer w-24"
     >
-      Crear
+      {buttonText}
     </button>
   ) : (
     <button
