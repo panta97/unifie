@@ -65,8 +65,8 @@ export const LeftSection: React.FC<LeftSectionProps> = ({
   return (
     <div className="col-start-1 row-start-2 bg-white rounded-lg shadow-sm border border-gray-200 overflow-auto flex flex-col min-h-0">
       {/* Efectivo Section */}
-      <div className="bg-white overflow-hidden border-b-2 border-gray-200">
-        <div className="font-semibold text-sm text-center py-2.5 px-4 bg-gradient-to-br from-slate-600 to-slate-700 text-white uppercase tracking-wide m-0 rounded-t-lg">
+      <div className="bg-white overflow-scroll border-b-2 border-gray-200">
+        <div className="font-semibold text-sm text-center py-2.5 px-4 bg-gradient-to-br from-slate-600 to-slate-700 text-white uppercase tracking-wide m-0 rounded-t-lg sticky top-0 z-10">
           EFECTIVO EN CAJA
         </div>
         <table className="w-full border-collapse text-sm m-0 px-4 py-3">
@@ -134,8 +134,8 @@ export const LeftSection: React.FC<LeftSectionProps> = ({
       </div>
 
       {/* Tarjeta Section */}
-      <div className="bg-white overflow-hidden">
-        <div className="font-semibold text-sm text-center py-2.5 px-4 bg-gradient-to-br from-slate-600 to-slate-700 text-white uppercase tracking-wide m-0">
+      <div className="bg-white overflow-scroll">
+        <div className="font-semibold text-sm text-center py-2.5 px-4 bg-gradient-to-br from-slate-600 to-slate-700 text-white uppercase tracking-wide m-0 sticky top-0 z-10">
           TARJETA
         </div>
         <table className="w-full border-collapse text-sm m-0 px-4 py-3">
