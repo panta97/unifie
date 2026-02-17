@@ -7,7 +7,7 @@ interface LeftSectionProps {
   cardAmounts: CardAmounts;
   onDenominationChange: (
     denom: keyof CashDenominations,
-    quantity: number
+    quantity: number,
   ) => void;
   onCardAmountChange: (field: keyof CardAmounts, amount: number) => void;
   disabled?: boolean;
@@ -18,18 +18,18 @@ const denominationValues: Array<{
   value: number;
   label: string;
 }> = [
-    { key: "d0_10", value: 0.1, label: "0.10" },
-    { key: "d0_20", value: 0.2, label: "0.20" },
-    { key: "d0_50", value: 0.5, label: "0.50" },
-    { key: "d1_00", value: 1, label: "1.00" },
-    { key: "d2_00", value: 2, label: "2.00" },
-    { key: "d5_00", value: 5, label: "5.00" },
-    { key: "d10_00", value: 10, label: "10.00" },
-    { key: "d20_00", value: 20, label: "20.00" },
-    { key: "d50_00", value: 50, label: "50.00" },
-    { key: "d100_00", value: 100, label: "100.00" },
-    { key: "d200_00", value: 200, label: "200.00" },
-  ];
+  { key: "d0_10", value: 0.1, label: "0.10" },
+  { key: "d0_20", value: 0.2, label: "0.20" },
+  { key: "d0_50", value: 0.5, label: "0.50" },
+  { key: "d1_00", value: 1, label: "1.00" },
+  { key: "d2_00", value: 2, label: "2.00" },
+  { key: "d5_00", value: 5, label: "5.00" },
+  { key: "d10_00", value: 10, label: "10.00" },
+  { key: "d20_00", value: 20, label: "20.00" },
+  { key: "d50_00", value: 50, label: "50.00" },
+  { key: "d100_00", value: 100, label: "100.00" },
+  { key: "d200_00", value: 200, label: "200.00" },
+];
 
 export const LeftSection: React.FC<LeftSectionProps> = ({
   denominations,
@@ -40,7 +40,10 @@ export const LeftSection: React.FC<LeftSectionProps> = ({
 }) => {
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
-  const handleKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyDown = (
+    index: number,
+    e: React.KeyboardEvent<HTMLInputElement>,
+  ) => {
     if (e.key === "ArrowDown") {
       e.preventDefault();
       inputRefs.current[index + 1]?.focus();
@@ -60,7 +63,7 @@ export const LeftSection: React.FC<LeftSectionProps> = ({
     cardAmounts.pos1 + cardAmounts.pos2 + cardAmounts.miscellaneous;
 
   return (
-    <div className="col-start-1 row-start-2 bg-white rounded-lg shadow-sm border border-gray-200 overflow-auto flex flex-col">
+    <div className="col-start-1 row-start-2 bg-white rounded-lg shadow-sm border border-gray-200 overflow-auto flex flex-col min-h-0">
       {/* Efectivo Section */}
       <div className="bg-white overflow-hidden border-b-2 border-gray-200">
         <div className="font-semibold text-sm text-center py-2.5 px-4 bg-gradient-to-br from-slate-600 to-slate-700 text-white uppercase tracking-wide m-0 rounded-t-lg">
@@ -92,14 +95,16 @@ export const LeftSection: React.FC<LeftSectionProps> = ({
                   </td>
                   <td className="px-2.5 py-1.5 text-left border-b border-gray-100">
                     <input
-                      ref={(el) => { inputRefs.current[i] = el; }}
+                      ref={(el) => {
+                        inputRefs.current[i] = el;
+                      }}
                       type="number"
                       min="0"
                       value={quantity}
                       onChange={(e) =>
                         onDenominationChange(
                           key,
-                          parseInt(e.target.value || "0", 10)
+                          parseInt(e.target.value || "0", 10),
                         )
                       }
                       onKeyDown={(e) => handleKeyDown(i, e)}
@@ -141,13 +146,15 @@ export const LeftSection: React.FC<LeftSectionProps> = ({
               </td>
               <td className="w-1/2 px-2.5 py-1.5 text-left border-b border-gray-100">
                 <input
-                  ref={(el) => { inputRefs.current[11] = el; }}
+                  ref={(el) => {
+                    inputRefs.current[11] = el;
+                  }}
                   type="number"
                   value={cardAmounts.pos1 / 100}
                   onChange={(e) =>
                     onCardAmountChange(
                       "pos1",
-                      Math.round(parseFloat(e.target.value || "0") * 100)
+                      Math.round(parseFloat(e.target.value || "0") * 100),
                     )
                   }
                   onKeyDown={(e) => handleKeyDown(11, e)}
@@ -163,13 +170,15 @@ export const LeftSection: React.FC<LeftSectionProps> = ({
               </td>
               <td className="px-2.5 py-1.5 text-left border-b border-gray-100">
                 <input
-                  ref={(el) => { inputRefs.current[12] = el; }}
+                  ref={(el) => {
+                    inputRefs.current[12] = el;
+                  }}
                   type="number"
                   value={cardAmounts.pos2 / 100}
                   onChange={(e) =>
                     onCardAmountChange(
                       "pos2",
-                      Math.round(parseFloat(e.target.value || "0") * 100)
+                      Math.round(parseFloat(e.target.value || "0") * 100),
                     )
                   }
                   onKeyDown={(e) => handleKeyDown(12, e)}
@@ -185,13 +194,15 @@ export const LeftSection: React.FC<LeftSectionProps> = ({
               </td>
               <td className="px-2.5 py-1.5 text-left border-b border-gray-100">
                 <input
-                  ref={(el) => { inputRefs.current[13] = el; }}
+                  ref={(el) => {
+                    inputRefs.current[13] = el;
+                  }}
                   type="number"
                   value={cardAmounts.miscellaneous / 100}
                   onChange={(e) =>
                     onCardAmountChange(
                       "miscellaneous",
-                      Math.round(parseFloat(e.target.value || "0") * 100)
+                      Math.round(parseFloat(e.target.value || "0") * 100),
                     )
                   }
                   onKeyDown={(e) => handleKeyDown(13, e)}
