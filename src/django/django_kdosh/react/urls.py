@@ -41,13 +41,13 @@ urlpatterns = [
         name="product_rpc",
     ),
     re_path(
-        r"^apps/pos-close-control/v2",
-        pos_close_control_view_v2,
-        name="pos_close_control",
+        r"^apps/pos-close-control/v1/(|cash|card|balance-start|discount-invoices|cash-unlocked)",
+        pos_close_control_view,
+        name="pos_close_control_v1",
     ),
     re_path(
-        r"^apps/pos-close-control/(|cash|card|balance-start|discount-invoices|cash-unlocked)",
-        pos_close_control_view,
+        r"^apps/pos-close-control/(?:|cash|card|balance-start|discount-invoices|cash-unlocked)",
+        pos_close_control_view_v2,
         name="pos_close_control",
     ),
     re_path(
