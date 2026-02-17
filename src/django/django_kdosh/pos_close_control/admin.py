@@ -32,6 +32,7 @@ class EmployeeAdmin(admin.ModelAdmin):
             return mark_safe(
                 f'<img src="data:image/png;base64,{img_str}" width="200" height="200" />'
                 f"<br><small>Scan with Google Authenticator or similar app</small>"
+                f'<br><br><code style="word-break: break-all;">{uri}</code>'
             )
         except ImportError:
             return "Install pyotp and qrcode[pil] to display QR code"
