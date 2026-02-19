@@ -610,6 +610,7 @@ function App() {
         manager={selectedManager}
         posCash={posCash}
         posCard={posCard}
+        balanceStart={summary.balanceStart}
       />
     </div>
   );
