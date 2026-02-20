@@ -187,7 +187,9 @@ function App() {
       const result = await autosavePosCloseControl(
         summary.sessionId,
         cashDenominations,
-        cardAmounts
+        cardAmounts,
+        selectedCashier?.id ?? null,
+        observations
       );
 
       // If this was the first autosave, mark session as existing
@@ -199,7 +201,7 @@ function App() {
       // Don't show error to user, just log it
       // The manual save will still work
     }
-  }, [summary.sessionId, cashDenominations, cardAmounts, isExistingSession]);
+  }, [summary.sessionId, cashDenominations, cardAmounts, selectedCashier, observations, isExistingSession]);
 
   const { status: autosaveStatus, triggerAutosave } = useAutosave({
     onSave: handleAutosave,
@@ -212,7 +214,7 @@ function App() {
       triggerAutosave();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cashDenominations, cardAmounts, summary.sessionId]);
+  }, [cashDenominations, cardAmounts, selectedCashier, observations, summary.sessionId]);
 
   // Calculate total cash from denominations (in cents)
   const calculateTotalCash = () => {

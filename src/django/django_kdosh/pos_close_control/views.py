@@ -698,6 +698,23 @@ class PosCloseControlV2View(OTPSessionMixin, View):
                         "cashDenominations", {}
                     )
                     existing_data["cardAmounts"] = data.get("cardAmounts", {})
+
+                    # Update cashier if provided
+                    if "cashierId" in data:
+                        cashier_id = data["cashierId"]
+                        if cashier_id:
+                            cashier = Employee.objects.filter(id=cashier_id, is_used=True).first()
+                            if cashier:
+                                saved_session.cashier = cashier
+                        else:
+                            saved_session.cashier = None
+                        existing_data["cashierId"] = cashier_id
+
+                    # Update observations if provided
+                    if "observations" in data:
+                        saved_session.end_state_note = data["observations"]
+                        existing_data["observations"] = data["observations"]
+
                     saved_session.json = json.dumps(existing_data)
 
                     # Recalculate totals
@@ -792,9 +809,24 @@ class PosCloseControlV2View(OTPSessionMixin, View):
                     + cards.get("miscellaneous", 0)
                 )
 
+                # Resolve cashier if provided
+                cashier_obj = None
+                if data.get("cashierId"):
+                    cashier_obj = Employee.objects.filter(id=data["cashierId"], is_used=True).first()
+
+                # Resolve observations if provided
+                end_state_note = data.get("observations", "")
+
+                # Store cashierId and observations in json_data
+                if "cashierId" in data:
+                    json_data["cashierId"] = data["cashierId"]
+                if "observations" in data:
+                    json_data["observations"] = data["observations"]
+
                 # Create session with placeholder values
                 pos_session_v2 = PosSessionV2.objects.create(
                     pos_name=pos_session[0]["config_id"][1].split()[0],
+                    cashier=cashier_obj,
                     odoo_session_id=session_id,
                     odoo_config_id=pos_session[0]["config_id"][0],
                     odoo_cash=0,  # Will be updated on fetch
@@ -810,7 +842,7 @@ class PosCloseControlV2View(OTPSessionMixin, View):
                     start_at=pos_session[0]["start_at"],
                     end_state="ST",  # Placeholder
                     end_state_amount=0,
-                    end_state_note="",
+                    end_state_note=end_state_note,
                     json=json.dumps(json_data),
                 )
 

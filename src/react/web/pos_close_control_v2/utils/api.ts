@@ -207,20 +207,23 @@ export async function fetchSessionSnapshots(
 }
 
 /**
- * Autosave partial POS close control data (cash denominations and card amounts only)
+ * Autosave partial POS close control data (cash denominations, card amounts, cashier, observations)
  */
 export async function autosavePosCloseControl(
   sessionId: number,
   cashDenominations: any,
-  cardAmounts: any
+  cardAmounts: any,
+  cashierId?: number | null,
+  observations?: string
 ) {
+  const body: any = { cashDenominations, cardAmounts };
+  if (cashierId != null) body.cashierId = cashierId;
+  if (observations !== undefined) body.observations = observations;
+
   const response = await fetch(`/api/pos-close-control/v2/${sessionId}`, {
     method: "PATCH",
     headers: getAuthHeaders(),
-    body: JSON.stringify({
-      cashDenominations,
-      cardAmounts,
-    }),
+    body: JSON.stringify(body),
   });
 
   await handleOTPExpiry(response);
