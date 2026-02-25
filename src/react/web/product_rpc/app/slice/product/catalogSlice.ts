@@ -13,6 +13,7 @@ const initialState: CatalogState = {
   product_attribute: [],
   product_attribute_value: [],
   weight_list: [],
+  show_lots: false,
 };
 
 export const catalogSlice = createSlice({
@@ -21,7 +22,7 @@ export const catalogSlice = createSlice({
   reducers: {
     updateMost: (
       state,
-      { payload: { catalogs } }: PayloadAction<{ catalogs: Catalogs }>
+      { payload: { catalogs } }: PayloadAction<{ catalogs: Catalogs }>,
     ) => {
       state.product_category_line = catalogs.product_category_line;
       state.product_category_family = catalogs.product_category_family;
@@ -30,12 +31,13 @@ export const catalogSlice = createSlice({
       state.pos_category = catalogs.pos_category;
       state.product_attribute = catalogs.product_attribute;
       state.product_attribute_value = catalogs.product_attribute_value;
+      state.show_lots = catalogs.show_lots ?? false;
     },
     updateWeight: (
       state,
       {
         payload: { weightCatalog },
-      }: PayloadAction<{ weightCatalog: WeightCatalog }>
+      }: PayloadAction<{ weightCatalog: WeightCatalog }>,
     ) => {
       state.weight_list = weightCatalog.weight_list;
     },

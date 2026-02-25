@@ -232,8 +232,28 @@ def get_product_catalogs():
         for attr_val in attribute_val
     ]
 
-    return catalogs
+    show_lots = False
+    try:
+        url = settings.ODOO_URL
+        db = settings.ODOO_DB
+        password = settings.ODOO_PWD
+        uid = int(settings.ODOO_UID)
+        models = xmlrpclib.ServerProxy("{}/xmlrpc/2/object".format(url))
+        
+        fields = models.execute_kw(
+            db, uid, password,
+            'product.template', 'fields_get',
+            [['use_expiration_date']],
+            {'attributes': ['string']}
+        )
+        if 'use_expiration_date' in fields:
+            show_lots = True
+    except Exception:
+        show_lots = False
 
+    catalogs["show_lots"] = show_lots
+
+    return catalogs
 
 def update_order_catalogs():
     url = settings.ODOO_URL

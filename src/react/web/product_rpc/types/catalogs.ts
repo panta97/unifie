@@ -43,6 +43,7 @@ export interface Catalogs {
   product_attribute: ProductAttribute[];
   product_attribute_value: ProductAttributeValue[];
   weight_list: WeightItem[];
+  show_lots?: boolean;
 }
 
 export interface WeightCatalog {
