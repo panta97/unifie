@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { formatCurrency } from "../utils/formatters";
-import type { Employee } from "../types";
+import type { Employee, CashDenominations } from "../types";
+import { TargetBalanceModal } from "./TargetBalanceModal";
 
 interface RightSectionProps {
   odooCash: number;
@@ -20,6 +21,7 @@ interface RightSectionProps {
   onSave: () => void;
   onPrint: () => void;
   disabled?: boolean;
+  cashDenominations: CashDenominations;
 }
 
 export const RightSection: React.FC<RightSectionProps> = ({
@@ -40,9 +42,11 @@ export const RightSection: React.FC<RightSectionProps> = ({
   onSave,
   onPrint,
   disabled = false,
+  cashDenominations,
 }) => {
   // Modal state
   const [showModal, setShowModal] = useState(false);
+  const [showTargetBalanceModal, setShowTargetBalanceModal] = useState(false);
   // Calculate totals
   const odooTotal = odooCash + odooCard;
   const cajaTotal = posCash + posCard;
@@ -279,7 +283,15 @@ export const RightSection: React.FC<RightSectionProps> = ({
               </tr>
               <tr className="hover:bg-gray-50">
                 <td className="w-1/2 px-2.5 py-2 border-b border-gray-100 font-medium text-slate-700">
-                  Inicio:
+                  <div className="flex items-center gap-2">
+                    <span>Inicio:</span>
+                    <button
+                      onClick={() => setShowTargetBalanceModal(true)}
+                      className="text-[10px] px-1.5 py-0.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded border border-slate-300 transition-colors"
+                    >
+                      Calcular Inicio
+                    </button>
+                  </div>
                 </td>
                 <td className="text-right font-mono text-sm px-2.5 py-2 border-b border-gray-100">
                   {formatCurrency(balanceStart)}
@@ -365,6 +377,14 @@ export const RightSection: React.FC<RightSectionProps> = ({
             GUARDAR
           </button>
         </div>
+
+        {/* Target Balance Modal */}
+        <TargetBalanceModal
+          isOpen={showTargetBalanceModal}
+          onClose={() => setShowTargetBalanceModal(false)}
+          cashDenominations={cashDenominations}
+          balanceStart={balanceStart}
+        />
 
         {/* Modal */}
         {showModal && (

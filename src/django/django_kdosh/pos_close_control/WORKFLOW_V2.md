@@ -503,6 +503,78 @@ User types in denomination/card field
 
 The frontend uses a constant `FIXED_BALANCE_START = 30000` (S/. 300.00) for `balanceStartNextDay` when saving.
 
+### 7.7 Balance Calculator Algorithm (Web Worker)
+
+The file `pos_close_control_v2/workers/balanceCalculator.worker.ts` runs off the main thread to solve a **subset-sum variant**: given the denominations physically counted in the register (each with a maximum available quantity), find **all** combinations that sum to a target amount. This is used to suggest how to compose a next-day starting balance from the cash on hand.
+
+#### Implicit tree structure
+
+The recursive `findCandidates` function builds a decision tree **implicitly** through the call stack. Each recursion level corresponds to one denomination, and the branches at that level correspond to the quantity choices (from `maxQty` down to `0`):
+
+```
+                              root (accumulated = 0)
+                              level 0: S/.200 (max 2)
+                     ┌────────────┼────────────┐
+                   qty=2        qty=1         qty=0
+                 acc=400       acc=200        acc=0
+                   │             │              │
+              level 1: S/.100 (max 3)
+            ┌────┬────┬────┐
+          qty=3 qty=2 qty=1 qty=0    ← same branching at each node
+            │    │    │    │
+           ...  ...  ...  ...
+              level 2: S/.50 (max 5)
+                     ...
+              level 3: S/.20 (max 4)
+                     ...
+                      ↓
+              level N (leaf): if accumulated === target → collect result
+```
+
+Each path from root to leaf represents one complete denomination assignment. The tree has up to 11 levels (one per denomination) and branches according to the available quantity at each level.
+
+#### Why backtracking with the call stack, not an explicit tree
+
+An explicit tree would allocate a node object for every combination at every level. The implicit approach is better here for four reasons:
+
+1. **The call stack IS the tree.** Each stack frame holds the current `level`, `accAmount`, `amounts`, and `score` — exactly the data a tree node would store. When the function returns, the frame is popped, which is the "backtrack" step. No separate data structure is needed.
+
+2. **Only leaf results matter.** The algorithm doesn't need to inspect or traverse internal nodes after the search — it only collects valid combinations at the leaves. An explicit tree would allocate interior nodes that are never revisited.
+
+3. **Memory stays O(depth) instead of O(total nodes).** The call stack holds at most 11 frames (one per denomination). An explicit tree could have millions of nodes (product of all quantity choices across all levels). The only growing structure is the `results` array, which is capped at `MAX_CANDIDATES = 500`.
+
+4. **Pruning skips subtrees without allocating them.** When a branch is pruned (overshoot or `canReachTarget` fails), the algorithm simply decrements `qty` and continues the loop — no child nodes were ever created. With an explicit tree, you'd either pre-allocate nodes then delete them, or add conditional logic before allocation, which amounts to the same control flow the recursion already provides.
+
+#### Pruning strategies
+
+Two checks cut branches early:
+
+- **Overshoot check** — If `accumulated > targetAmount + 0.001`, the current quantity is too large. The algorithm decrements `qty` and tries the next smaller quantity. Since quantities are tried from max to 0, once overshoot is detected all higher quantities for this denomination are also invalid.
+
+- **`canReachTarget` heuristic** — A lightweight feasibility check that asks: "Can the remaining gap (`target - accumulated`) be filled exactly by a single remaining denomination?" It iterates over denominations from the next level onward and checks if the gap is divisible by any of them. This is not exhaustive (it misses multi-denomination solutions), but it cheaply prunes many dead branches. All arithmetic is done in integer cents to avoid floating-point rounding issues.
+
+The search also hard-caps at `MAX_CANDIDATES = 500` results to bound compute time and memory.
+
+#### Scoring
+
+Each denomination has a weight in `BALANCE_POINTS`:
+
+| Denomination | Points |
+|-------------|--------|
+| S/. 0.10   | 1000   |
+| S/. 0.20   | 500    |
+| S/. 0.50   | 200    |
+| S/. 1.00   | 100    |
+| S/. 2.00   | 50     |
+| S/. 5.00   | 20     |
+| S/. 10.00  | 10     |
+| S/. 20.00  | 5      |
+| S/. 50.00  | 2      |
+| S/. 100.00 | 1      |
+| S/. 200.00 | 1      |
+
+A candidate's score is the sum of `points × qty` for each denomination used. Smaller denominations score much higher, so **candidates that use more coins/small bills are ranked first**. This matches the business preference: cashiers prefer to carry forward small denominations as the next-day starting balance, keeping larger bills available for deposit. Results are sorted best-score-first before being sent back to the UI.
+
 ---
 
 ## 8. Validation Rules

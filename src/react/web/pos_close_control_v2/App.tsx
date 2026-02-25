@@ -550,6 +550,7 @@ function App() {
           onSave={handleSave}
           onPrint={handlePrint}
           disabled={summary.sessionId === 0}
+          cashDenominations={cashDenominations}
         />
       </div>
 
