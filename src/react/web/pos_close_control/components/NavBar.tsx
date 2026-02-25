@@ -9,7 +9,7 @@ const NavBar = () => {
     }
     return styles;
   };
-  const basePath = "/apps/pos-close-control";
+  const basePath = "/apps/pos-close-control/v1";
 
   return (
     <>

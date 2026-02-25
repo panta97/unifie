@@ -44,7 +44,7 @@ function App() {
   
   // Detectar si estamos en ruta admin
   const isAdminRoute = window.location.pathname.includes('/pos-close-control-admin');
-  const basePath = isAdminRoute ? "/apps/pos-close-control-admin" : "/apps/pos-close-control";
+  const basePath = isAdminRoute ? "/apps/pos-close-control-admin" : "/apps/pos-close-control/v1";
 
   useEffect(() => {
     dispatch(setFetchStatusesToIdle());
@@ -74,12 +74,12 @@ function App() {
         
         <Routes>
           {/* Rutas normales */}
-          <Route path="/apps/pos-close-control" element={<Summary />} />
-          <Route path="/apps/pos-close-control/cash" element={<Cash />} />
-          <Route path="/apps/pos-close-control/card" element={<Card />} />
-          <Route path="/apps/pos-close-control/balance-start" element={<BalanceStart />} />
-          <Route path="/apps/pos-close-control/discount-invoices" element={<DiscountInvoices />} />
-          <Route path="/apps/pos-close-control/cash-unlocked" element={<CashUnlocked />} />
+          <Route path="/apps/pos-close-control/v1" element={<Summary />} />
+          <Route path="/apps/pos-close-control/v1/cash" element={<Cash />} />
+          <Route path="/apps/pos-close-control/v1/card" element={<Card />} />
+          <Route path="/apps/pos-close-control/v1/balance-start" element={<BalanceStart />} />
+          <Route path="/apps/pos-close-control/v1/discount-invoices" element={<DiscountInvoices />} />
+          <Route path="/apps/pos-close-control/v1/cash-unlocked" element={<CashUnlocked />} />
           
           {/* Rutas admin */}
           <Route path="/apps/pos-close-control-admin" element={<AdminHome />} />

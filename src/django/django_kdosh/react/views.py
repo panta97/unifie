@@ -49,6 +49,12 @@ def product_rpc_view(request, param):
 def pos_close_control_view(request, param):
     return render_react_app(request, "pos_close_control", "Caja Cuadre")
 
+
+@login_required
+def pos_close_control_view_v2(request):
+    return render_react_app(request, "pos_close_control_v2", "Caja Cuadre")
+
+
 @login_required
 def pos_close_control_admin_view(request, param=""):
     return render_react_app(request, "pos_close_control", "Caja Cuadre Admin")
@@ -62,6 +68,7 @@ def generator_qr_code_view(request):
 @login_required
 def reports_credit_note_view(request):
     return render_react_app(request, "reports_credit_note", "Reportes Nota de Crédito")
+
 
 @login_required
 def prices_list_view(request):

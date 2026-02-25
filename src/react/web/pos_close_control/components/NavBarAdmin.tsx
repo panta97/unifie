@@ -28,7 +28,7 @@ const NavBarAdmin = () => {
                 </NavLink>
                 <a
                     className="px-2 py-1 ml-4 bg-blue-100 hover:bg-blue-200"
-                    href="/apps/pos-close-control/"
+                    href="/apps/pos-close-control/v1/"
                 >
                     ← VOLVER
                 </a>

@@ -50,6 +50,6 @@ def get_series_list(store, year):
         elif store == "san_martin":
             series = ["B010", "F010"]
         elif store == "tingo_maria":
-            series = ["B011", "B012", "B013", "F011", "F012", "F013"]
+            series = ["B011", "B012", "B013", "B015", "F011", "F012", "F013", "F015"]
 
     return series

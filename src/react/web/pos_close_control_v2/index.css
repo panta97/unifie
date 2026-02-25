@@ -1,0 +1,29 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Print styles for thermal printer */
+@media print {
+
+    /* Hide everything except the print div */
+    body>*:not(#print) {
+        display: none !important;
+    }
+
+    /* Ensure print div is visible and positioned correctly */
+    #print {
+        display: block !important;
+        position: absolute;
+        top: 0;
+        left: 0;
+    }
+
+    /* Remove page margins for thermal printer */
+    @page {
+        margin: 0;
+    }
+
+    body {
+        margin: 0;
+    }
+}
