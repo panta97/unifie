@@ -481,6 +481,7 @@ def get_purchase_order_for_edit(po_id):
         "state",
         "company_id",
         "picking_type_id",
+        "incoming_picking_count",
     ]
 
     orders = rpc.get_model(po_table, po_filter, po_fields, proxy=proxy)
@@ -576,6 +577,7 @@ def get_purchase_order_for_edit(po_id):
             "state": order["state"],
             "company_id": order["company_id"][0] if order["company_id"] else 1,
             "tax": True,  # Asumir que tiene IGV por defecto
+            "incoming_picking_count": order.get("incoming_picking_count", 0),
         },
         "order_items": order_items,
     }
@@ -671,3 +673,178 @@ def update_purchase_order(po_id, order_data, user):
         import traceback
         traceback.print_exc()
         raise e
+
+
+def get_pending_pickings_by_po_id(po_id):
+    """
+    Busca recepciones (pickings) pendientes para una Purchase Order.
+    Optimizado con batching para evitar el problema N+1.
+    """
+    proxy = rpc.get_proxy()
+    db = settings.ODOO_DB
+    uid = int(settings.ODOO_UID)
+    pwd = settings.ODOO_PWD
+    
+    # 1. Obtener datos de la PO
+    po_data = proxy.execute_kw(
+        db, uid, pwd, 'purchase.order', 'read', [po_id], {'fields': ['name', 'picking_ids']}
+    )
+    if not po_data:
+        return []
+    po = po_data[0]
+
+    # 2. Buscar pickings (recepciones) pendientes
+    pickings = proxy.execute_kw(
+        db, uid, pwd, 'stock.picking', 'search_read',
+        [[('id', 'in', po['picking_ids']), ('state', 'not in', ['done', 'cancel'])]],
+        {'fields': ['id', 'name', 'move_ids_without_package']}
+    )
+    
+    if not pickings:
+        return []
+
+    # 3. Batching: Obtener todos los move_ids de todos los pickings
+    all_move_ids = []
+    for pick in pickings:
+        all_move_ids.extend(pick['move_ids_without_package'])
+    
+    if not all_move_ids:
+        return pickings # Retornar pickings vacíos si no hay movimientos
+
+    # 4. Batching: Obtener todos los moves en una sola llamada
+    all_moves = proxy.execute_kw(
+        db, uid, pwd, 'stock.move', 'search_read',
+        [[('id', 'in', all_move_ids)]],
+        {'fields': ['id', 'product_id', 'product_uom_qty', 'picking_id']}
+    )
+
+    # 5. Batching: Obtener tracking de todos los productos involucrados
+    product_ids = list(set([move['product_id'][0] for move in all_moves]))
+    products_info = proxy.execute_kw(
+        db, uid, pwd, 'product.product', 'read',
+        [product_ids], {'fields': ['tracking']}
+    )
+    product_tracking_map = {p['id']: p['tracking'] for p in products_info}
+
+    # 6. Batching: Obtener solo move lines con lote asignado (reduce payload/latencia)
+    all_move_lines = proxy.execute_kw(
+        db, uid, pwd, "stock.move.line", "search_read",
+        [[
+            ("move_id", "in", all_move_ids),
+            "|",
+            ("lot_id", "!=", False),
+            ("lot_name", "!=", False),
+        ]],
+        {"fields": ["move_id", "lot_id", "lot_name", "quantity", "expiration_date"]},
+    )
+    
+    # Agrupar move_lines por move_id
+    move_lines_map = {}
+    for ml in all_move_lines:
+        m_id = ml["move_id"][0]
+        if m_id not in move_lines_map:
+            move_lines_map[m_id] = []
+        lot_name = ml.get("lot_name") or (ml["lot_id"][1] if ml.get("lot_id") else "")
+        move_lines_map[m_id].append(
+            {
+                "lot_name": lot_name,
+                "quantity": ml.get("quantity") or 0,
+                "expiration_date": ml.get("expiration_date") or "",
+            }
+        )
+
+    # 7. Reconstruir la estructura
+    # Mapear moves a sus pickings
+    picking_moves_map = {pick['id']: [] for pick in pickings}
+    for move in all_moves:
+        p_id = move['picking_id'][0]
+        prod_id = move['product_id'][0]
+        
+        move_data = {
+            'id': move['id'],
+            'product_id': prod_id,
+            'product_name': move['product_id'][1],
+            'product_uom_qty': move['product_uom_qty'],
+            'tracking': product_tracking_map.get(prod_id, 'none'),
+            'existing_lots': move_lines_map.get(move['id'], [])
+        }
+        picking_moves_map[p_id].append(move_data)
+
+    result = []
+    for pick in pickings:
+        result.append({
+            'id': pick['id'],
+            'name': pick['name'],
+            'moves': picking_moves_map.get(pick['id'], [])
+        })
+        
+    return result
+
+
+def generate_lots_for_picking(picking_id, lots_config):
+    """
+    Genera lotes para una recepción específica basándose en la configuración.
+    lots_config: { product_id: [{lot_name: str, quantity: float, expiration_date: str}, ...] }
+    """
+    proxy = rpc.get_proxy()
+    db = settings.ODOO_DB
+    uid = int(settings.ODOO_UID)
+    pwd = settings.ODOO_PWD
+    
+    # Obtener el picking y sus moves
+    pick_data = proxy.execute_kw(
+        db, uid, pwd, 'stock.picking', 'read', [picking_id], 
+        {'fields': ['move_ids_without_package']}
+    )
+    if not pick_data:
+        raise Exception(f"No se encontró el picking {picking_id}")
+    
+    picking = pick_data[0]
+    move_ids = picking['move_ids_without_package']
+    
+    # Buscar los moves para mapear product_id -> move_id
+    moves = proxy.execute_kw(
+        db, uid, pwd, 'stock.move', 'search_read',
+        [[('id', 'in', move_ids)]],
+        {'fields': ['id', 'product_id']}
+    )
+    
+    product_to_move = {move['product_id'][0]: move['id'] for move in moves}
+    
+    results = []
+    
+    for product_id_str, lot_list in lots_config.items():
+        product_id = int(product_id_str)
+        if product_id not in product_to_move:
+            continue
+            
+        move_id = product_to_move[product_id]
+        
+        # Limpiar líneas previas (detalles de la operación)
+        existing_lines = proxy.execute_kw(
+            db, uid, pwd, 'stock.move.line', 'search', 
+            [[('move_id', '=', move_id)]]
+        )
+        if existing_lines:
+            proxy.execute_kw(db, uid, pwd, 'stock.move.line', 'unlink', [existing_lines])
+        
+        # Crear nuevos lotes
+        for lot_info in lot_list:
+            vals = {
+                'picking_id': picking_id,
+                'move_id': move_id,
+                'product_id': product_id,
+                'lot_name': lot_info['lot_name'],
+                'quantity': lot_info['quantity'],
+            }
+            if lot_info.get('expiration_date'):
+                vals['expiration_date'] = lot_info['expiration_date']
+            
+            new_line_id = proxy.execute_kw(db, uid, pwd, 'stock.move.line', 'create', [vals])
+            results.append({
+                'product_id': product_id,
+                'lot_name': lot_info['lot_name'],
+                'line_id': new_line_id
+            })
+            
+    return results

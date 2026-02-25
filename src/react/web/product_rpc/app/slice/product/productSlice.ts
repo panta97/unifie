@@ -23,6 +23,7 @@ const initialState: ProductState = {
   list_price: 1,
   default_code: "",
   weight: 0,
+  lot: false,
   category_line_name: "",
   category_line_id: 0,
   category_family_name: "",
@@ -47,13 +48,13 @@ export const productSlice = createSlice({
     },
     updateListPrice: (
       state,
-      { payload }: PayloadAction<{ listPrice: number }>
+      { payload }: PayloadAction<{ listPrice: number }>,
     ) => {
       state.list_price = payload.listPrice;
     },
     updateDefaultCode: (
       state,
-      { payload }: PayloadAction<{ defaultCode: string }>
+      { payload }: PayloadAction<{ defaultCode: string }>,
     ) => {
       state.default_code = payload.defaultCode;
     },
@@ -64,10 +65,10 @@ export const productSlice = createSlice({
       }: PayloadAction<{
         categoryLineId: number;
         categoryLines: ProductCategoryLine[];
-      }>
+      }>,
     ) => {
       const categoryLine = payload.categoryLines.find(
-        (line) => line.id === payload.categoryLineId
+        (line) => line.id === payload.categoryLineId,
       );
       if (categoryLine) {
         state.category_line_id = categoryLine.id;
@@ -89,9 +90,19 @@ export const productSlice = createSlice({
         payload,
       }: PayloadAction<{
         weight: number;
-      }>
+      }>,
     ) => {
       state.weight = payload.weight;
+    },
+    updateLot: (
+      state,
+      {
+        payload,
+      }: PayloadAction<{
+        lot: boolean;
+      }>,
+    ) => {
+      state.lot = payload.lot;
     },
     updateFamily: (
       state,
@@ -100,10 +111,10 @@ export const productSlice = createSlice({
       }: PayloadAction<{
         categoryFamilyId: number;
         categoryFamilies: ProductCategoryFamily[];
-      }>
+      }>,
     ) => {
       const categoryFamily = payload.categoryFamilies.find(
-        (family) => family.id === payload.categoryFamilyId
+        (family) => family.id === payload.categoryFamilyId,
       );
       if (categoryFamily) {
         state.category_family_id = categoryFamily.id;
@@ -124,10 +135,10 @@ export const productSlice = createSlice({
       }: PayloadAction<{
         categoryBrandId: number;
         categoryBrands: ProductCategoryBrand[];
-      }>
+      }>,
     ) => {
       const categoryBrand = payload.categoryBrands.find(
-        (brand) => brand.id === payload.categoryBrandId
+        (brand) => brand.id === payload.categoryBrandId,
       );
       if (categoryBrand) {
         state.category_brand_id = categoryBrand.id;
@@ -146,10 +157,10 @@ export const productSlice = createSlice({
       }: PayloadAction<{
         categoryLastId: number;
         categoryLasts: ProductCategoryLast[];
-      }>
+      }>,
     ) => {
       const categoryLast = payload.categoryLasts.find(
-        (last) => last.id === payload.categoryLastId
+        (last) => last.id === payload.categoryLastId,
       );
       if (categoryLast) {
         state.category_last_id = categoryLast.id;
@@ -163,10 +174,10 @@ export const productSlice = createSlice({
       state,
       {
         payload,
-      }: PayloadAction<{ posCatId: number; posCategories: PosCategory[] }>
+      }: PayloadAction<{ posCatId: number; posCategories: PosCategory[] }>,
     ) => {
       const posCat = payload.posCategories.find(
-        (posCat) => posCat.id === payload.posCatId
+        (posCat) => posCat.id === payload.posCatId,
       );
       if (posCat) {
         state.pos_categ_ids = posCat.id;
@@ -184,7 +195,7 @@ export const productSlice = createSlice({
         attrId: number;
         attrIndex: number;
         attributes: ProductAttribute[];
-      }>
+      }>,
     ) => {
       // ATTRIBUTES MUST BEE DISTINCT
       if (!state.attrs.some((attr) => attr.attr.id === attrId)) {
@@ -198,7 +209,7 @@ export const productSlice = createSlice({
       state,
       {
         payload: { newTags, attrId },
-      }: PayloadAction<{ newTags: TagData[]; attrId: number }>
+      }: PayloadAction<{ newTags: TagData[]; attrId: number }>,
     ) => {
       let oldAttrVals = [];
       // TODO: improve code you might increment the array for new tags instead of replacing it
@@ -210,14 +221,14 @@ export const productSlice = createSlice({
       });
       // ATTR DEFAULT CODE SIDE EFFECT
       const groupedAttrDC = state.attrs.filter(
-        (attr) => attr.is_default_code_grouped
+        (attr) => attr.is_default_code_grouped,
       );
       if (groupedAttrDC.length > 0 && oldAttrVals.length !== newTags.length)
         state.attr_default_code = cartesianDC(groupedAttrDC);
       if (groupedAttrDC.length === 0) state.attr_default_code = [];
       // ATTR LIST PRICE SIDE EFFECT
       const groupedAttrLP = state.attrs.filter(
-        (attr) => attr.is_list_price_grouped
+        (attr) => attr.is_list_price_grouped,
       );
       if (groupedAttrLP.length > 0 && oldAttrVals.length !== newTags.length)
         state.attr_list_price = cartesianLP(groupedAttrLP, state.list_price);
@@ -240,21 +251,21 @@ export const productSlice = createSlice({
     },
     deleteAttr: (
       state,
-      { payload: { attrId } }: PayloadAction<{ attrId: number }>
+      { payload: { attrId } }: PayloadAction<{ attrId: number }>,
     ) => {
       const idx = state.attrs.findIndex((attr) => attr.attr.id === attrId);
       if (idx !== -1) {
         state.attrs.splice(idx, 1);
         // ATTR DEFAULT CODE SIDE EFFECT
         const groupedAttrDC = state.attrs.filter(
-          (attr) => attr.is_default_code_grouped
+          (attr) => attr.is_default_code_grouped,
         );
         if (groupedAttrDC.length > 0)
           state.attr_default_code = cartesianDC(groupedAttrDC);
         else state.attr_default_code = [];
         // ATTR LIST PRICE SIDE EFFECT
         const groupedAttrLP = state.attrs.filter(
-          (attr) => attr.is_list_price_grouped
+          (attr) => attr.is_list_price_grouped,
         );
         if (groupedAttrLP.length > 0)
           state.attr_list_price = cartesianLP(groupedAttrLP, state.list_price);
@@ -263,7 +274,7 @@ export const productSlice = createSlice({
     },
     updateIsEditingAttr: (
       state,
-      { payload: { attrIndex } }: PayloadAction<{ attrIndex: number }>
+      { payload: { attrIndex } }: PayloadAction<{ attrIndex: number }>,
     ) => {
       state.attrs.map((attr, idx) => {
         attr.editing = idx === attrIndex;
@@ -278,7 +289,7 @@ export const productSlice = createSlice({
         attrChecked: boolean;
         attrId: number;
         groupedType: "dc" | "lp";
-      }>
+      }>,
     ) => {
       if (groupedType === "dc") {
         state.attrs.forEach((attr) => {
@@ -289,7 +300,7 @@ export const productSlice = createSlice({
         });
         // ATTR DEFAULT CODE MAP
         const groupedAttr = state.attrs.filter(
-          (attr) => attr.is_default_code_grouped
+          (attr) => attr.is_default_code_grouped,
         );
         if (groupedAttr.length > 0) {
           const newAttrDefaultCode = cartesianDC(groupedAttr);
@@ -305,7 +316,7 @@ export const productSlice = createSlice({
         });
         // ATTR LIST PRICE MAP
         const groupedAttr = state.attrs.filter(
-          (attr) => attr.is_list_price_grouped
+          (attr) => attr.is_list_price_grouped,
         );
         if (groupedAttr.length > 0) {
           const newAttrListPrice = cartesianLP(groupedAttr, state.list_price);
@@ -319,7 +330,7 @@ export const productSlice = createSlice({
       state,
       {
         payload: { defaultCode, attrDefaultCodeIdx },
-      }: PayloadAction<{ defaultCode: string; attrDefaultCodeIdx: number }>
+      }: PayloadAction<{ defaultCode: string; attrDefaultCodeIdx: number }>,
     ) => {
       state.attr_default_code.map((attrDc, idx) => {
         if (attrDefaultCodeIdx === idx) attrDc.default_code = defaultCode;
@@ -330,7 +341,7 @@ export const productSlice = createSlice({
       state,
       {
         payload: { listPrice, attrListPriceIdx },
-      }: PayloadAction<{ listPrice: number; attrListPriceIdx: number }>
+      }: PayloadAction<{ listPrice: number; attrListPriceIdx: number }>,
     ) => {
       state.attr_list_price.map((attrLp, idx) => {
         if (attrListPriceIdx === idx) attrLp.list_price = listPrice;
@@ -339,7 +350,7 @@ export const productSlice = createSlice({
     },
     replaceProduct: (
       state,
-      { payload: { product } }: PayloadAction<{ product: ProductProductForm }>
+      { payload: { product } }: PayloadAction<{ product: ProductProductForm }>,
     ) => {
       state.id = product.id;
       state.is_in_list = product.is_in_list;
@@ -347,6 +358,7 @@ export const productSlice = createSlice({
       state.list_price = product.list_price;
       state.default_code = product.default_code;
       state.weight = product.weight;
+      state.lot = product.lot;
       state.category_line_name = product.category_line_name;
       state.category_line_id = product.category_line_id;
       state.category_family_name = product.category_family_name;
@@ -368,6 +380,7 @@ export const productSlice = createSlice({
       state.list_price = 1;
       state.default_code = "";
       state.weight = 0;
+      state.lot = false;
       state.category_line_name = "";
       state.category_line_id = 0;
       state.category_family_name = "";
@@ -405,6 +418,7 @@ export const {
   replaceProduct,
   reset,
   updateWeight,
+  updateLot,
 } = productSlice.actions;
 
 export const selectProduct = (state: RootState) => state.product.product;
@@ -415,6 +429,7 @@ export const selectProductListPrice = (state: RootState) =>
   state.product.product.list_price;
 export const selectProductDefaultCode = (state: RootState) =>
   state.product.product.default_code;
+export const selectProductLot = (state: RootState) => state.product.product.lot;
 export const selectProductLineId = (state: RootState) =>
   state.product.product.category_line_id;
 export const selectProductFamilyId = (state: RootState) =>

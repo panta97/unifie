@@ -1,5 +1,7 @@
 from xmlrpc import client as xmlrpclib
 from datetime import datetime, timedelta
+import re
+
 from django.conf import settings
 from django.http import JsonResponse
 from .rpc import get_model
@@ -109,8 +111,9 @@ def get_product_template(request, pt_id):
         "product_tmpl_id",
     ]
     # GET PRODUCTS WITH FILTERED PRODUCT IDS
+    pp_fields.append("tracking")
     products = get_model(proxy, pp_table, pp_filter, pp_fields)
-
+    
     ptav_table = "product.template.attribute.value"
     ptav_filter = [[["product_tmpl_id", "=", pt_id]]]
     ptav_fields = ["product_attribute_value_id"]
@@ -150,24 +153,51 @@ def get_product_template(request, pt_id):
     labels = []
 
     for product in products:
-        pass
         attribute = list(
             filter(
                 lambda e: e["id"] in product["product_attribute_value_ids"],
                 attribute_values,
             )
         )
-        labels.append(
-            {
-                "quantity": 1,  # DEFAULT QTY
-                "code": product["barcode"],
-                "desc": product["name"],
-                "mCode": product["default_code"],
-                "cats": product["categ_id"][1],
-                "price": product["lst_price"],
-                "attr": list(map(lambda e: e["display_name"], attribute)),
-            }
-        )
+        
+        lots_found = False
+        if product.get("tracking") == 'lot':
+            try:
+                lot_table = "stock.lot"
+                lot_filter = [[["product_id", "=", product["id"]]]]
+                lot_fields = ["lot_name"]
+                lots = get_model(proxy, lot_table, lot_filter, lot_fields)
+                
+                if lots:
+                    lots_found = True
+                    for lot in lots:
+                        labels.append(
+                            {
+                                "quantity": 1,
+                                "code": lot["lot_name"],
+                                "desc": product["name"],
+                                "mCode": product["default_code"],
+                                "cats": product["categ_id"][1],
+                                "price": product["lst_price"],
+                                "attr": list(map(lambda e: e["display_name"], attribute)),
+                            }
+                        )
+            except Exception as e:
+                print(f"Error fetching lots: {e}")
+                pass
+
+        if not lots_found:
+            labels.append(
+                {
+                    "quantity": 1,
+                    "code": product["barcode"],
+                    "desc": product["name"],
+                    "mCode": product["default_code"],
+                    "cats": product["categ_id"][1],
+                    "price": product["lst_price"],
+                    "attr": list(map(lambda e: e["display_name"], attribute)),
+                }
+            )
 
     data = {
         "statusCode": 200,
@@ -333,6 +363,7 @@ def get_purchase_order_sheet(request, po_id):
         "display_name",
         "categ_id",
         "product_tmpl_id",
+        "default_code",
     ]
     # GET PRODUCTS WITH FILTERED PRODUCT IDS
     products = get_model(proxy, pp_table, pp_filter, pp_fields)
@@ -356,8 +387,47 @@ def get_purchase_order_sheet(request, po_id):
                 "cats": product["categ_id"][1],
                 "quantity": order_line[i]["product_qty"],
                 "datetime": order_line[i]["date_planned"],
+                "default_code": product.get("default_code") or "",
             }
         )
+
+    def get_sort_key(line):
+        name = line["name"]
+        code = line["default_code"]
+        
+        if not code:
+            match_code = re.search(r'\[(.*?)\]', name)
+            code = match_code.group(1) if match_code else ""
+            
+        clean_name = re.sub(r'\[.*?\]\s*', '', name)
+        clean_name = re.sub(r'\s*\(.*?\)$', '', clean_name)
+        
+        variant_keys = []
+        match_variants = re.search(r'\((.*?)\)$', name)
+        if match_variants:
+            attrs = [a.strip() for a in match_variants.group(1).split(',')]
+            size_map = {
+                'XS': 1, 'S': 2, 'M': 3, 'L': 4, 'XL': 5, 'XXL': 6, 'XXXL': 7,
+                '28': 28, '30': 30, '32': 32, '34': 34, '36': 36, '38': 38, '40': 40
+            }
+            for attr in attrs:
+                upper_attr = attr.upper()
+                if upper_attr in size_map:
+                    variant_keys.append((0, size_map[upper_attr], upper_attr))
+                else:
+                    try:
+                        num_match = re.search(r'(\d+)', attr)
+                        if num_match:
+                            variant_keys.append((1, int(num_match.group(1)), upper_attr))
+                        else:
+                            variant_keys.append((2, upper_attr, upper_attr))
+                    except:
+                        variant_keys.append((2, upper_attr, upper_attr))
+        
+        return (code, clean_name, variant_keys, name)
+
+    order_lines.sort(key=get_sort_key)
+
 
     date_obj = datetime.strptime(
         order[0]["date_order"], "%Y-%m-%d %H:%M:%S"

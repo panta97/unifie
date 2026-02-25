@@ -70,6 +70,7 @@ export interface ProductProductForm {
   attr_default_code: AttributeDefaultCodeForm[];
   attr_list_price: AttributeListPrice[];
   weight: number;
+  lot: boolean;
 }
 
 export interface ProductResult {
