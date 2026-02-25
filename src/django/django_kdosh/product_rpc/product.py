@@ -218,7 +218,14 @@ def create_product_new(
 ):
 
     # CREATE PRODUCT
+    fields_to_check = ['use_expiration_date', 'expiration_time', 'use_time', 'removal_time', 'alert_time']
+    if product_template.get('tracking') == 'none' or not product_template.get('use_expiration_date'):
+        for field in fields_to_check:
+            if field in product_template:
+                del product_template[field]
+
     tmpl_id = rpc.create_model("product.template", product_template, uid, proxy=proxy)
+
     # CREATE COMMENT
     comment_obj = {
         "body": f"Creado por: {user.first_name} {user.last_name}",
