@@ -205,7 +205,7 @@ export const TargetBalanceModal: React.FC<TargetBalanceModalProps> = ({
                               {nonZeroAmounts.map((a, i) => (
                                 <tr
                                   key={i}
-                                  className="border-t border-gray-100"
+                                  className={`border-t border-gray-100 ${i % 2 === 0 ? "bg-gray-50" : "bg-white"}`}
                                 >
                                   <td className="py-1 font-mono">
                                     S/.{" "}
