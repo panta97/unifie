@@ -1,12 +1,9 @@
 from xmlrpc import client as xmlrpclib
 from datetime import datetime, timedelta
-import re
-
 from django.conf import settings
 from django.http import JsonResponse
 from .rpc import get_model
 from functools import reduce
-
 
 def get_product_product(request, pp_id):
     proxy = xmlrpclib.ServerProxy("{}/xmlrpc/2/object".format(settings.ODOO_URL))
@@ -391,43 +388,6 @@ def get_purchase_order_sheet(request, po_id):
             }
         )
 
-    def get_sort_key(line):
-        name = line["name"]
-        code = line["default_code"]
-        
-        if not code:
-            match_code = re.search(r'\[(.*?)\]', name)
-            code = match_code.group(1) if match_code else ""
-            
-        clean_name = re.sub(r'\[.*?\]\s*', '', name)
-        clean_name = re.sub(r'\s*\(.*?\)$', '', clean_name)
-        
-        variant_keys = []
-        match_variants = re.search(r'\((.*?)\)$', name)
-        if match_variants:
-            attrs = [a.strip() for a in match_variants.group(1).split(',')]
-            size_map = {
-                'XS': 1, 'S': 2, 'M': 3, 'L': 4, 'XL': 5, 'XXL': 6, 'XXXL': 7,
-                '28': 28, '30': 30, '32': 32, '34': 34, '36': 36, '38': 38, '40': 40
-            }
-            for attr in attrs:
-                upper_attr = attr.upper()
-                if upper_attr in size_map:
-                    variant_keys.append((0, size_map[upper_attr], upper_attr))
-                else:
-                    try:
-                        num_match = re.search(r'(\d+)', attr)
-                        if num_match:
-                            variant_keys.append((1, int(num_match.group(1)), upper_attr))
-                        else:
-                            variant_keys.append((2, upper_attr, upper_attr))
-                    except:
-                        variant_keys.append((2, upper_attr, upper_attr))
-        
-        return (code, clean_name, variant_keys, name)
-
-    order_lines.sort(key=get_sort_key)
-
 
     date_obj = datetime.strptime(
         order[0]["date_order"], "%Y-%m-%d %H:%M:%S"
@@ -446,7 +406,6 @@ def get_purchase_order_sheet(request, po_id):
     }
 
     return JsonResponse(data)
-
 
 def get_stock_picking(request, sp_id):
     proxy = xmlrpclib.ServerProxy("{}/xmlrpc/2/object".format(settings.ODOO_URL))

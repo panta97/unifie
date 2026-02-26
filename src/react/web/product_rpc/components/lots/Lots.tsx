@@ -7,6 +7,7 @@ import {
   PickingMove,
 } from "../../services/lotsApi";
 import { Svg } from "../shared/Svg";
+import toast from "react-hot-toast";
 
 export const Lots: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -20,7 +21,6 @@ export const Lots: React.FC = () => {
   const [lotsConfigs, setLotsConfigs] = useState<{
     [pickingId: number]: LotsConfig;
   }>({});
-  const [generating, setGenerating] = useState(false);
   interface QueuedPicking {
     id: number;
     name: string;
@@ -120,9 +120,33 @@ export const Lots: React.FC = () => {
     field: string,
     value: any,
   ) => {
+    if (field === "expiration_date" && value) {
+      const selectedDate = new Date(value.replace(" ", "T") + "Z");
+      const today = new Date();
+      const nextYear = new Date();
+      nextYear.setFullYear(today.getFullYear() + 1);
+
+      if (selectedDate > nextYear) {
+        toast.error(
+          "La fecha de vencimiento no puede ser mayor a 1 año desde hoy",
+          {
+            duration: 3000,
+            position: "top-right",
+            style: {
+              background: "#fee2e2",
+              color: "#991b1b",
+              fontWeight: "bold",
+            },
+          },
+        );
+        return;
+      }
+    }
+
     setLotsConfigs((prev) => {
       const newPickingConfig = { ...prev[pickingId] };
       const newProductConfig = [...newPickingConfig[productId]];
+
       newProductConfig[index] = { ...newProductConfig[index], [field]: value };
       newPickingConfig[productId] = newProductConfig;
       return { ...prev, [pickingId]: newPickingConfig };
