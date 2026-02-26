@@ -271,25 +271,25 @@ export const Lots: React.FC = () => {
   const formatDateForInput = (dateString: string) => {
     if (!dateString) return "";
 
-    const utcString = dateString.replace(" ", "T") + "Z";
-    const date = new Date(utcString);
+    const isoString = dateString.includes(" ")
+      ? dateString.replace(" ", "T") + "Z"
+      : dateString;
+    const date = new Date(isoString);
 
     if (isNaN(date.getTime())) return "";
 
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, "0");
     const day = String(date.getDate()).padStart(2, "0");
-    const hours = String(date.getHours()).padStart(2, "0");
-    const minutes = String(date.getMinutes()).padStart(2, "0");
-    const seconds = String(date.getSeconds()).padStart(2, "0");
 
-    return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
+    return `${year}-${month}-${day}`;
   };
 
   const formatDateForState = (dateString: string) => {
     if (!dateString) return "";
 
-    const date = new Date(dateString);
+    const localDateTime = dateString + "T23:59:59";
+    const date = new Date(localDateTime);
     if (isNaN(date.getTime())) return "";
 
     const year = date.getUTCFullYear();
@@ -389,8 +389,11 @@ export const Lots: React.FC = () => {
                     <th className="text-left border-r last:border-r-0 font-normal p-1 w-1/12">
                       Tracking
                     </th>
-                    <th className="text-left border-r last:border-r-0 font-normal p-1 w-4/12">
+                    <th className="text-left border-r last:border-r-0 font-normal p-1 w-1/12">
                       Lotes
+                    </th>
+                    <th className="text-left border-r last:border-r-0 font-normal p-1 w-4/12">
+                      Fecha de vencimiento
                     </th>
                   </tr>
                 </thead>
@@ -420,7 +423,7 @@ export const Lots: React.FC = () => {
                           {move.tracking.toUpperCase()}
                         </span>
                       </td>
-                      <td className="text-left border-r last:border-r-0 font-normal p-1">
+                      <td className="text-left border-r font-normal p-1">
                         {move.tracking === "none" ? (
                           <span className="text-gray-400">
                             No requiere lotes
@@ -431,7 +434,7 @@ export const Lots: React.FC = () => {
                               (lot, idx) => (
                                 <div
                                   key={idx}
-                                  className="flex gap-1.5 items-center"
+                                  className="flex gap-1.5 items-center h-8"
                                 >
                                   <input
                                     type="text"
@@ -463,11 +466,31 @@ export const Lots: React.FC = () => {
                                       )
                                     }
                                   />
+                                </div>
+                              ),
+                            )}
+                            <button
+                              onClick={() =>
+                                addLotRow(picking.id, move.product_id)
+                              }
+                              className="text-blue-600 hover:underline font-medium text-left"
+                            >
+                              + Añadir otro lote
+                            </button>
+                          </div>
+                        )}
+                      </td>
+                      <td className="text-left border-r last:border-r-0 font-normal p-1">
+                        {move.tracking !== "none" && (
+                          <div className="flex flex-col gap-1.5">
+                            {lotsConfigs[picking.id]?.[move.product_id]?.map(
+                              (lot, idx) => (
+                                <div
+                                  key={idx}
+                                  className="flex gap-1.5 items-center h-8"
+                                >
                                   <input
-                                    type="datetime-local"
-                                    step="1"
-                                    width="200px"
-                                    placeholder="Vencimiento (Opcional)"
+                                    type="date"
                                     className="px-1 py-0.5 border border-gray-200 rounded w-auto"
                                     value={formatDateForInput(
                                       lot.expiration_date || "",
@@ -500,14 +523,7 @@ export const Lots: React.FC = () => {
                                 </div>
                               ),
                             )}
-                            <button
-                              onClick={() =>
-                                addLotRow(picking.id, move.product_id)
-                              }
-                              className="text-blue-600 hover:underline font-medium text-left"
-                            >
-                              + Añadir otro lote
-                            </button>
+                            <div className="h-4" />
                           </div>
                         )}
                       </td>
