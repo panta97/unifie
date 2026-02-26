@@ -5,6 +5,7 @@ import {
   NavLink,
   Routes,
 } from "react-router-dom";
+import { Toaster } from "react-hot-toast";
 
 const Home = React.lazy(() => import("../home/Home"));
 const ProductProduct = React.lazy(
@@ -34,6 +35,7 @@ export const Navbar: React.FC = () => {
 
   return (
     <Router>
+      <Toaster />
       <div>
         <nav className="text-gray-800 border-gray-200 border-b">
           <ul className="flex px-3">
