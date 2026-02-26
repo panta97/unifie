@@ -21,8 +21,8 @@ const ProductProduct = () => {
   const downloadCatalogs = useCallback(async () => {
     const areCatalogsEmpty =
       Object.values(catalogs).reduce(
-        (prev, curr) => (prev += curr.length),
-        0
+        (prev, curr) => (prev += Array.isArray(curr) ? curr.length : 0),
+        0,
       ) === 0;
     if (!areCatalogsEmpty) return;
     const resultMost = await getCatalogs();
