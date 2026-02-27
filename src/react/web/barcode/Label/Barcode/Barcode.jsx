@@ -8,6 +8,7 @@ function Barcode({
   type,
   id,
 }) {
+
   if (type === 1) {
     return (
       <div className="type-1">

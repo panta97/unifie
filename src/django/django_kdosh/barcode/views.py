@@ -20,8 +20,13 @@ def get_product_product(request, pp_id):
         "product_template_attribute_value_ids",
         "product_tmpl_id",
     ]
+    pp_fields.append("tracking")
     # GET PRODUCTS WITH FILTERED PRODUCT IDS
     products = get_model(proxy, pp_table, pp_filter, pp_fields)
+    
+    if not products:
+        return JsonResponse({"statusCode": 404, "body": "product not found"})
+        
     tmpl_id = products[0]["product_tmpl_id"][0]
 
     ptav_table = "product.template.attribute.value"
@@ -62,23 +67,51 @@ def get_product_product(request, pp_id):
     # CREATE LIST LABEL DICT
     labels = []
 
+    product = products[0]
     attribute = list(
         filter(
-            lambda e: e["id"] in products[0]["product_attribute_value_ids"],
+            lambda e: e["id"] in product["product_attribute_value_ids"],
             attribute_values,
         )
     )
-    labels.append(
-        {
-            "quantity": 1,  # DEFAULT QTY
-            "code": products[0]["barcode"],
-            "desc": products[0]["name"],
-            "mCode": products[0]["default_code"],
-            "cats": products[0]["categ_id"][1],
-            "price": products[0]["lst_price"],
-            "attr": list(map(lambda e: e["display_name"], attribute)),
-        }
-    )
+    
+    lots_found = False
+    if product.get("tracking") == 'lot':
+        try:
+            lot_table = "stock.lot"
+            lot_filter = [[["product_id", "=", product["id"]]]]
+            lot_fields = ["name"]
+            lots = get_model(proxy, lot_table, lot_filter, lot_fields)
+            
+            if lots:
+                lots_found = True
+                for lot in lots:
+                    labels.append(
+                        {
+                            "quantity": 1,
+                            "code": f"{product['barcode']}/{lot['name']}",
+                            "desc": product["name"],
+                            "mCode": product["default_code"],
+                            "cats": product["categ_id"][1],
+                            "price": product["lst_price"],
+                            "attr": list(map(lambda e: e["display_name"], attribute)),
+                        }
+                    )
+        except Exception as e:
+            print(f"Error fetching lots for product: {e}")
+
+    if not lots_found:
+        labels.append(
+            {
+                "quantity": 1,  # DEFAULT QTY
+                "code": product["barcode"],
+                "desc": product["name"],
+                "mCode": product["default_code"],
+                "cats": product["categ_id"][1],
+                "price": product["lst_price"],
+                "attr": list(map(lambda e: e["display_name"], attribute)),
+            }
+        )
 
     data = {
         "statusCode": 200,
@@ -162,7 +195,7 @@ def get_product_template(request, pt_id):
             try:
                 lot_table = "stock.lot"
                 lot_filter = [[["product_id", "=", product["id"]]]]
-                lot_fields = ["lot_name"]
+                lot_fields = ["name"]
                 lots = get_model(proxy, lot_table, lot_filter, lot_fields)
                 
                 if lots:
@@ -171,7 +204,7 @@ def get_product_template(request, pt_id):
                         labels.append(
                             {
                                 "quantity": 1,
-                                "code": lot["lot_name"],
+                                "code": f"{product['barcode']}/{lot['name']}",
                                 "desc": product["name"],
                                 "mCode": product["default_code"],
                                 "cats": product["categ_id"][1],
@@ -251,12 +284,51 @@ def get_purchase_order(request, po_id):
         tmpl_ids.add(product["product_tmpl_id"][0])
     tmpl_ids = list(tmpl_ids)
 
+    # pp = product.product
+    pp_fields.append("tracking")
+    products = get_model(proxy, pp_table, pp_filter, pp_fields)
+
     ptav_table = "product.template.attribute.value"
     ptav_filter = [[["product_tmpl_id", "in", tmpl_ids]]]
     ptav_fields = ["product_attribute_value_id"]
     product_template_attribute_value_list = get_model(
         proxy, ptav_table, ptav_filter, ptav_fields
     )
+
+    # Fetch lot info from Pickings related to this PO
+    # We need stock.move.line records linked to the move_ids of the pickings of this PO
+    try:
+        picking_fields = ["move_ids_without_package"]
+        pickings = proxy.execute_kw(
+            settings.ODOO_DB, int(settings.ODOO_UID), settings.ODOO_PWD,
+            'stock.picking', 'search_read',
+            [[('purchase_id', '=', po_id), ('state', '!=', 'cancel')]],
+            {'fields': picking_fields}
+        )
+        
+        all_move_ids = []
+        for pick in pickings:
+            all_move_ids.extend(pick['move_ids_without_package'])
+            
+        move_lines_map = {} # product_id -> [lots]
+        if all_move_ids:
+            all_move_lines = proxy.execute_kw(
+                settings.ODOO_DB, int(settings.ODOO_UID), settings.ODOO_PWD,
+                "stock.move.line", "search_read",
+                [[("move_id", "in", all_move_ids), "|", ("lot_id", "!=", False), ("lot_name", "!=", False)]],
+                {"fields": ["product_id", "lot_id", "lot_name"]},
+            )
+            for ml in all_move_lines:
+                p_id = ml["product_id"][0]
+                if p_id not in move_lines_map:
+                    move_lines_map[p_id] = []
+                lot_name = ml.get("lot_name") or (ml["lot_id"][1] if ml.get("lot_id") else "")
+                move_lines_map[p_id].append({
+                    "lot_name": lot_name,
+                })
+    except Exception as e:
+        print(f"Error fetching PO lots: {e}")
+        move_lines_map = {}
 
     # FOR v15 WE NOW HAVE AN INTERMEDIARY MODEL 'product.template.attribute.value'
     for pp_item in products:
@@ -304,17 +376,35 @@ def get_purchase_order(request, po_id):
                 attribute_values,
             )
         )
-        labels.append(
-            {
-                "quantity": order_line[i]["product_qty"],
-                "code": product["barcode"],
-                "desc": product["name"],
-                "mCode": product["default_code"],
-                "cats": product["categ_id"][1],
-                "price": product["lst_price"],
-                "attr": list(map(lambda e: e["display_name"], attribute)),
-            }
-        )
+
+        lots_found = False
+        if product.get("tracking") == 'lot' and product["id"] in move_lines_map:
+            for lot_info in move_lines_map[product["id"]]:
+                lots_found = True
+                labels.append(
+                    {
+                        "quantity": order_line[i]["product_qty"],
+                        "code": f"{product['barcode']}/{lot_info['lot_name']}",
+                        "desc": product["name"],
+                        "mCode": product["default_code"],
+                        "cats": product["categ_id"][1],
+                        "price": product["lst_price"],
+                        "attr": list(map(lambda e: e["display_name"], attribute)),
+                    }
+                )
+
+        if not lots_found:
+            labels.append(
+                {
+                    "quantity": order_line[i]["product_qty"],
+                    "code": product["barcode"],
+                    "desc": product["name"],
+                    "mCode": product["default_code"],
+                    "cats": product["categ_id"][1],
+                    "price": product["lst_price"],
+                    "attr": list(map(lambda e: e["display_name"], attribute)),
+                }
+            )
 
     data = {
         "statusCode": 200,
