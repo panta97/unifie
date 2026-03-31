@@ -561,25 +561,38 @@ def invoice_refund(invoice_details, accion):
     reason_text = "DEVOLUCIÓN"
     ref_text = f"Reversión de: {invoice_number}, {reason_text}"
 
+    try:
+        move_fields = proxy.execute_kw(
+            settings.ODOO_DB, uid, rpc.get_user_password(uid),
+            'account.move', 'fields_get', [['pe_credit_note_type'], ['id']], {}
+        )
+    except Exception as e:
+        print(f"Advertencia: No se pudo verificar la existencia del campo pe_credit_note_type: {e}")
+        move_fields = {}
+    
+    refund_vals = {
+        "move_type": "out_refund",
+        "invoice_date": today,
+        "reversed_entry_id": _invoice_id,
+        "partner_id": partner_id,
+        "invoice_line_ids": credit_note_lines,
+        "ref": ref_text,
+        "journal_id": journal_id,
+        "l10n_latam_document_type_id": l10n_latam_document_type_id,
+        "company_id": company_id,
+        "l10n_pe_edi_refund_reason": "07",
+        "l10n_pe_edi_cancel_reason": "Devolucion por item",
+    }
+
+    if 'pe_credit_note_type' in move_fields:
+        refund_vals["pe_credit_note_type"] = "07"
+
     json_model = json.dumps(
         {
             "jsonrpc": "2.0",
             "method": "call",
             "params": {
-                "args": [
-                    {
-                        "move_type": "out_refund",
-                        "invoice_date": today,
-                        "reversed_entry_id": _invoice_id,
-                        "partner_id": partner_id,
-                        "invoice_line_ids": credit_note_lines,
-                        "ref": ref_text,
-                        "journal_id": journal_id,
-                        "l10n_latam_document_type_id": l10n_latam_document_type_id,
-                        "company_id": company_id,
-                        "l10n_pe_edi_refund_reason": "01",
-                    }
-                ],
+                "args": [refund_vals],
                 "model": "account.move",
                 "method": "create",
                 "kwargs": {
