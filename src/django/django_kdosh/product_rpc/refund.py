@@ -564,10 +564,10 @@ def invoice_refund(invoice_details, accion):
     try:
         move_fields = proxy.execute_kw(
             settings.ODOO_DB, uid, rpc.get_user_password(uid),
-            'account.move', 'fields_get', [['pe_credit_note_type'], ['id']], {}
+            'account.move', 'fields_get', [['pe_credit_note_type', 'pe_sunat_status', 'id']], {}
         )
     except Exception as e:
-        print(f"Advertencia: No se pudo verificar la existencia del campo pe_credit_note_type: {e}")
+        print(f"Advertencia: No se pudo verificar la existencia de campos técnicos: {e}")
         move_fields = {}
     
     refund_vals = {
@@ -586,6 +586,9 @@ def invoice_refund(invoice_details, accion):
 
     if 'pe_credit_note_type' in move_fields:
         refund_vals["pe_credit_note_type"] = "07"
+    
+    if 'pe_sunat_status' in move_fields:
+        refund_vals["pe_sunat_status"] = "to_send"
 
     json_model = json.dumps(
         {
