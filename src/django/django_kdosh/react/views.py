@@ -66,6 +66,11 @@ def generator_qr_code_view(request):
 
 
 @login_required
+def generator_codynom_view(request):
+    return render_react_app(request, "generator_codynom", "Generador CodyNom")
+
+
+@login_required
 def reports_credit_note_view(request):
     return render_react_app(request, "reports_credit_note", "Reportes Nota de Crédito")
 

@@ -19,7 +19,7 @@ from .reports.reports import (
 )
 from .parser import transform_order_json, order_client_result
 from .purchase_order import search_product_by_name, get_order_item, create_order
-from .product import create_products_v2, get_weight_list
+from .product import create_products_v2, get_weight_list, search_product_by_barcode
 from .catalogs.cats import (
     update_product_catalogs,
     get_product_catalogs,
@@ -77,6 +77,15 @@ def search_product(request):
     except Exception as e:
         response = JsonResponse({"result": "ERROR", "message": str(e)}, status=400)
     return response
+
+
+def search_product_by_barcode_view(request):
+    try:
+        barcode = request.GET.get("barcode")
+        products = search_product_by_barcode(barcode)
+        return JsonResponse({"result": "SUCCESS", "products": products}, status=200)
+    except Exception as e:
+        return JsonResponse({"result": "ERROR", "message": str(e)}, status=400)
 
 
 def get_purchase_order_product(request):
