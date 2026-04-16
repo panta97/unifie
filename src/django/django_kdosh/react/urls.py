@@ -18,6 +18,7 @@ from .views import (
     pos_orders_api,
     miscellaneous_view,
     pos_close_control_view_v2,
+    generator_codynom_view,
 )
 
 urlpatterns = [
@@ -56,6 +57,7 @@ urlpatterns = [
         name="pos_close_control_admin",
     ),
     path("apps/generator-qr-code", generator_qr_code_view, name="generator_qr_code"),
+    path("apps/generator-codynom", generator_codynom_view, name="generator_codynom"),
     path(
         "apps/reports-credit-note", reports_credit_note_view, name="reports_credit_note"
     ),

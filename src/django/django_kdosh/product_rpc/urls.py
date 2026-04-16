@@ -23,6 +23,7 @@ from .views import (
     purchase_order_dispatcher,
     get_pending_pickings_view,
     generate_lots_view,
+    search_product_by_barcode_view,
 )
 
 
@@ -30,6 +31,7 @@ urlpatterns = [
     path("catalogs/<int:type>", get_catalogs, name="get_catalogs"),
     path("update/cats/<int:type>", update_catalogs, name="update_catalogs"),
     path("product_product", save_product, name="save_product"),
+    path("product/search_barcode", search_product_by_barcode_view, name="search_product_by_barcode"),
     path("purchase_order/product", search_product, name="search_product"),
     path(
         "purchase_order/order_item",
