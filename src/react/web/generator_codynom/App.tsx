@@ -17,10 +17,12 @@ import {
   Refresh as RefreshIcon,
   CheckCircle as CheckCircleIcon,
   Error as ErrorIcon,
-  ContentCopy as CopyIcon
+  ContentCopy as CopyIcon,
+  CameraAlt as CameraIcon
 } from "@mui/icons-material";
 import { QRCodeCanvas } from "qrcode.react";
 import toast, { Toaster } from "react-hot-toast";
+import { Html5Qrcode } from "html5-qrcode";
 
 interface Product {
   barcode: string | false;
@@ -32,13 +34,73 @@ const App: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [product, setProduct] = useState<Product | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [scannerActive, setScannerActive] = useState(false);
+  const scannerRef = useRef<Html5Qrcode | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (inputRef.current) {
       inputRef.current.focus();
     }
+    
+    startScanner();
+    
+    return () => {
+      stopScanner();
+    };
   }, []);
+
+  const stopScanner = async () => {
+    if (scannerRef.current && scannerRef.current.isScanning) {
+      try {
+        await scannerRef.current.stop();
+        scannerRef.current.clear();
+      } catch (err) {
+        console.error("Error stopping scanner:", err);
+      }
+    }
+    setScannerActive(false);
+  };
+
+  const startScanner = async () => {
+    setProduct(null);
+    setError(null);
+    setScannerActive(true);
+    
+    setTimeout(async () => {
+      try {
+        const scanner = new Html5Qrcode("scanner-container");
+        scannerRef.current = scanner;
+        
+        const config = {
+          fps: 10,
+          qrbox: { width: 250, height: 250 }
+        };
+
+        await scanner.start(
+          { facingMode: "environment" },
+          config,
+          (decodedText) => {
+            handleSearch(decodedText);
+            stopScanner();
+          },
+          undefined
+        );
+      } catch (err) {
+        console.error("Scanner error:", err);
+        setError("No se pudo acceder a la cámara.");
+        setScannerActive(false);
+      }
+    }, 100);
+  };
+
+  const toggleScanner = () => {
+    if (scannerActive) {
+      stopScanner();
+    } else {
+      startScanner();
+    }
+  };
 
   const handleSearch = async (code: string) => {
     if (!code) return;
@@ -131,6 +193,29 @@ const App: React.FC = () => {
             </IconButton>
           </Box>
 
+          {scannerActive && (
+            <Fade in={true}>
+              <Box className="mb-6 flex justify-center">
+                <Box className="overflow-hidden rounded-[32px] border-4 border-white shadow-2xl bg-black relative w-full sm:w-[85%]" sx={{ aspectRatio: "1/1" }}>
+                  <Box id="scanner-container" sx={{ width: "100%", height: "100%" }} />
+                  <Box className="absolute top-4 right-4 z-10">
+                    <IconButton 
+                      onClick={stopScanner}
+                      sx={{ bgcolor: "rgba(0,0,0,0.5)", color: "white", "&:hover": { bgcolor: "rgba(0,0,0,0.7)" } }}
+                    >
+                      <RefreshIcon />
+                    </IconButton>
+                  </Box>
+                  <Box className="absolute bottom-4 left-0 right-0 text-center z-10">
+                    <Typography variant="caption" sx={{ color: "white", bgcolor: "rgba(0,0,0,0.5)", px: 2, py: 0.5, borderRadius: "10px" }}>
+                      Centra el código
+                    </Typography>
+                  </Box>
+                </Box>
+              </Box>
+            </Fade>
+          )}
+
           <Paper 
             elevation={0}
             sx={{ 
@@ -154,7 +239,21 @@ const App: React.FC = () => {
               disabled={loading}
               InputProps={{
                 startAdornment: <SearchIcon sx={{ color: "#a0aec0", mr: 1.5, ml: 1 }} />,
-                endAdornment: loading && <CircularProgress size={20} thickness={5} />,
+                endAdornment: (
+                  <Box className="flex items-center gap-1">
+                    {loading && <CircularProgress size={20} thickness={5} sx={{ mr: 1 }} />}
+                    <IconButton 
+                      onClick={toggleScanner}
+                      disabled={loading}
+                      sx={{ 
+                        color: scannerActive ? "#4e73df" : "#a0aec0",
+                        bgcolor: scannerActive ? "rgba(78, 115, 223, 0.1)" : "transparent"
+                      }}
+                    >
+                      <CameraIcon />
+                    </IconButton>
+                  </Box>
+                ),
                 sx: { 
                   borderRadius: "20px",
                   "& fieldset": { border: "none" },
