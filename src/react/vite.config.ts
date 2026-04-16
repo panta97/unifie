@@ -31,6 +31,7 @@ export default defineConfig({
         prices_list: "web/prices_list/index.tsx",
         pos_close_control_v2: "web/pos_close_control_v2/index.tsx",
         misscellaneous: "web/miscellaneous/index.tsx",
+        generator_codynom: "web/generator_codynom/index.tsx",
         default: "web/default/main.tsx",
       },
     },

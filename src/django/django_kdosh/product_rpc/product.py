@@ -331,13 +331,13 @@ def create_export_xml(created_product_ids, uid, proxy):
     for product_id in created_product_ids:
         timestamp = int(time.time())
         unique_xml_id_template = f"product_template_{product_id}_{timestamp}"
-        
+
         # Registrar en ir.model.data
         rpc.create_model("ir.model.data", {
-            "name": unique_xml_id_template,
-            "module": "kdosh_module",
-            "model": "product.template",
-            "res_id": product_id,
+                "name": unique_xml_id_template,
+                "module": "kdosh_module",
+                "model": "product.template",
+                "res_id": product_id,
             "noupdate": False
         }, uid, proxy=proxy)
 
@@ -365,10 +365,10 @@ def create_export_xml(created_product_ids, uid, proxy):
             unique_xml_id_product = f"product_product_{variant_id}_{timestamp_variant}"
 
             rpc.create_model("ir.model.data", {
-                "name": unique_xml_id_product,
-                "module": "kdosh_module",
-                "model": "product.product",
-                "res_id": variant_id,
+                    "name": unique_xml_id_product,
+                    "module": "kdosh_module",
+                    "model": "product.product",
+                    "res_id": variant_id,
                 "noupdate": False
             }, uid, proxy=proxy)
 
@@ -388,3 +388,11 @@ def create_export_xml(created_product_ids, uid, proxy):
         print(f"Error al escribir el archivo XML: {e}")
 
     return xml_str
+
+
+def search_product_by_barcode(barcode):
+    proxy = rpc.get_proxy()
+    fields = ["barcode", "name"]
+    domain = [["barcode", "=", barcode]]
+    product = rpc.get_model("product.product", [domain], fields, proxy=proxy)
+    return product
