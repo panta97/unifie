@@ -65,7 +65,6 @@ def generator_qr_code_view(request):
     return render_react_app(request, "generator_qr_code", "Generador QR")
 
 
-@login_required
 def generator_codynom_view(request):
     return render_react_app(request, "generator_codynom", "Generador CodyNom")
 
