@@ -17,6 +17,12 @@ export default defineConfig({
     // outDir: '../django/django_kdosh/static',
     emptyOutDir: true,
     rollupOptions: {
+      onwarn(warning, warn) {
+        if (warning.code === "MODULE_LEVEL_DIRECTIVE" && warning.message.indexOf("use client") !== -1) {
+          return;
+        }
+        warn(warning);
+      },
       input: {
         sales: "web/k_sales/index.tsx",
         abtao_goals: "web/k_abtao_goals/index.tsx",

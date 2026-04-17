@@ -137,6 +137,7 @@ const App: React.FC = () => {
     setBarcode("");
     setProduct(null);
     setError(null);
+    startScanner();
     if (inputRef.current) inputRef.current.focus();
   };
 
