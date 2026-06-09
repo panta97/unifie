@@ -52,6 +52,7 @@ def get_connstr(odoo_version):
 
 
 def select_df(sql, odoo_version):
+    conn = None
     try:
         connstr = get_connstr(odoo_version)
         conn = psycopg2.connect(connstr)
@@ -59,11 +60,14 @@ def select_df(sql, odoo_version):
         return df
     except (Exception, psycopg2.Error) as error:
         print("Failed to get dataframe", error)
+        raise Exception(f"Error de conexión a la base de datos: {error}")
     finally:
-        conn.close()
+        if conn is not None:
+            conn.close()
 
 
 def select(sql, odoo_version, params=None):
+    conn = None
     try:
         connstr = get_connstr(odoo_version)
         conn = psycopg2.connect(connstr)
@@ -81,5 +85,7 @@ def select(sql, odoo_version, params=None):
         return results
     except (Exception, psycopg2.Error) as error:
         print("Failed to get dict list", error)
+        raise Exception(f"Error de conexión a la base de datos: {error}")
     finally:
-        conn.close()
+        if conn is not None:
+            conn.close()

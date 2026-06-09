@@ -1,4 +1,24 @@
 /**
+ * Parse a backend datetime string as UTC.
+ *
+ * The backend sends datetimes in UTC. Odoo values arrive as
+ * "YYYY-MM-DD HH:MM:SS" with no timezone marker, which browsers
+ * otherwise parse as *local* time (showing the raw UTC numbers).
+ * This normalizes the string so it is always interpreted as UTC;
+ * the returned Date's local getters (getHours, getDay, ...) then
+ * yield values in the browser's timezone.
+ */
+export const parseBackendDate = (dateString: string): Date => {
+    let s = dateString.trim();
+    const hasTimezone = /[zZ]$|[+-]\d{2}:?\d{2}$/.test(s);
+    if (!hasTimezone) {
+        // Normalize "YYYY-MM-DD HH:MM:SS" -> "YYYY-MM-DDTHH:MM:SSZ"
+        s = s.replace(" ", "T") + "Z";
+    }
+    return new Date(s);
+};
+
+/**
  * Convert cents (integer) to decimal for display
  * Example: 1050 -> 10.50
  */
@@ -29,7 +49,7 @@ export const formatCurrency = (cents: number): string => {
  */
 export const formatDate = (dateString: string): string => {
     if (!dateString) return "-";
-    const date = new Date(dateString);
+    const date = parseBackendDate(dateString);
     const day = String(date.getDate()).padStart(2, "0");
     const month = String(date.getMonth() + 1).padStart(2, "0");
     const year = date.getFullYear();
@@ -66,7 +86,7 @@ export const getDifferenceLabel = (difference: number): string => {
  */
 export const formatDateForPrint = (dateString: string): string => {
     if (!dateString) return "-";
-    const date = new Date(dateString);
+    const date = parseBackendDate(dateString);
     const days = ["domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado"];
     const months = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
 
