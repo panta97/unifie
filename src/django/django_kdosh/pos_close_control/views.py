@@ -245,13 +245,13 @@ def pos_persist(request):
 def employee(request, type):
     if type == Employee.CASHIER:
         cashiers = Employee.objects.filter(type=Employee.CASHIER, is_used=True).values(
-            "id", "first_name", "last_name"
+            "id", "first_name", "last_name", "store"
         )
         cashiers = list(cashiers)
         return JsonResponse(cashiers, safe=False)
     elif type == Employee.MANAGER:
         managers = Employee.objects.filter(type=Employee.MANAGER, is_used=True).values(
-            "id", "first_name", "last_name"
+            "id", "first_name", "last_name", "store"
         )
         managers = list(managers)
         return JsonResponse(managers, safe=False)
@@ -415,6 +415,7 @@ class PosCloseControlV2View(OTPSessionMixin, View):
                         "card_amounts": saved_data.get("cardAmounts", {}),
                         "pos_cash": saved_session.pos_cash,
                         "pos_card": saved_session.pos_card,
+                        "balance_start_next_day": saved_session.balance_start_next_day,
                         "status": saved_session.status,
                     }
                     if saved_session.cashier:
@@ -715,6 +716,11 @@ class PosCloseControlV2View(OTPSessionMixin, View):
                         saved_session.end_state_note = data["observations"]
                         existing_data["observations"] = data["observations"]
 
+                    # Update next-day starting balance if provided
+                    if "balanceStartNextDay" in data:
+                        saved_session.balance_start_next_day = data["balanceStartNextDay"]
+                        existing_data["balanceStartNextDay"] = data["balanceStartNextDay"]
+
                     saved_session.json = json.dumps(existing_data)
 
                     # Recalculate totals
@@ -837,7 +843,9 @@ class PosCloseControlV2View(OTPSessionMixin, View):
                     balance_start=int(
                         round(pos_session[0]["cash_register_balance_start"] * 100)
                     ),
-                    balance_start_next_day=30000,  # Default S/. 300.00 in cents
+                    balance_start_next_day=data.get(
+                        "balanceStartNextDay", 30000
+                    ),  # Default S/. 300.00 in cents
                     session_name=pos_session[0]["display_name"],
                     start_at=pos_session[0]["start_at"],
                     end_state="ST",  # Placeholder

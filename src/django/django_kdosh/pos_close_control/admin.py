@@ -7,7 +7,8 @@ from .models import Employee, PosSession, PosSessionV2, PosSessionV2Snapshot, OT
 
 @admin.register(Employee)
 class EmployeeAdmin(admin.ModelAdmin):
-    list_display = ("first_name", "last_name", "type", "is_used", "has_totp")
+    list_display = ("first_name", "last_name", "type", "store", "is_used", "has_totp")
+    list_filter = ("type", "store", "is_used")
     readonly_fields = ("totp_qr_code",)
 
     def has_totp(self, obj):
@@ -41,7 +42,7 @@ class EmployeeAdmin(admin.ModelAdmin):
 
     def get_fieldsets(self, request, obj=None):
         base_fieldsets = [
-            (None, {"fields": ("first_name", "last_name", "type", "is_used")}),
+            (None, {"fields": ("first_name", "last_name", "type", "store", "is_used")}),
         ]
         if obj and obj.type == Employee.MANAGER:
             base_fieldsets.append(

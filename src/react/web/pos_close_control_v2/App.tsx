@@ -14,7 +14,7 @@ import {
   fetchSessionSnapshots,
   validateSession,
 } from "./utils/api";
-import { FIXED_BALANCE_START } from "./types";
+import { FIXED_BALANCE_START, DEFAULT_STORE } from "./types";
 import type {
   CashDenominations,
   CardAmounts,
@@ -54,7 +54,7 @@ function App() {
     posCash: 0,
     posCard: 0,
     profitTotal: 0,
-    balanceStartNextDay: 0,
+    balanceStartNextDay: FIXED_BALANCE_START,
   });
 
   // Cash denominations state (quantities)
@@ -89,6 +89,7 @@ function App() {
   const [managers, setManagers] = useState<Employee[]>([]);
   const [selectedCashier, setSelectedCashier] = useState<Employee | null>(null);
   const [selectedManager, setSelectedManager] = useState<Employee | null>(null);
+  const [selectedStore, setSelectedStore] = useState<string>(DEFAULT_STORE);
 
   // UI states
   const [loading, setLoading] = useState(false);
@@ -189,7 +190,8 @@ function App() {
         cashDenominations,
         cardAmounts,
         selectedCashier?.id ?? null,
-        observations
+        observations,
+        summary.balanceStartNextDay
       );
 
       // If this was the first autosave, mark session as existing
@@ -201,7 +203,7 @@ function App() {
       // Don't show error to user, just log it
       // The manual save will still work
     }
-  }, [summary.sessionId, cashDenominations, cardAmounts, selectedCashier, observations, isExistingSession]);
+  }, [summary.sessionId, summary.balanceStartNextDay, cashDenominations, cardAmounts, selectedCashier, observations, isExistingSession]);
 
   const { status: autosaveStatus, triggerAutosave } = useAutosave({
     onSave: handleAutosave,
@@ -214,7 +216,7 @@ function App() {
       triggerAutosave();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cashDenominations, cardAmounts, selectedCashier, observations, summary.sessionId]);
+  }, [cashDenominations, cardAmounts, selectedCashier, observations, summary.balanceStartNextDay, summary.sessionId]);
 
   // Calculate total cash from denominations (in cents)
   const calculateTotalCash = () => {
@@ -244,7 +246,13 @@ function App() {
   const posCard = calculateTotalCard();
 
   // Calculate profit total
-  const profitTotal = posCash + posCard - summary.odooCash - summary.odooCard;
+  // Inicio (próx. día) counts as part of the cash in the drawer (Efectivo Caja)
+  const profitTotal =
+    posCash +
+    summary.balanceStartNextDay +
+    posCard -
+    summary.odooCash -
+    summary.odooCard;
 
   // Handlers
   const handleFetchSession = async () => {
@@ -312,7 +320,11 @@ function App() {
         const savedCashier = cashiers.find(
           (c) => c.id === data.savedSession?.cashier?.id
         );
-        if (savedCashier) setSelectedCashier(savedCashier);
+        if (savedCashier) {
+          setSelectedCashier(savedCashier);
+          // Sync the store filter to the saved cashier's store so they remain visible
+          setSelectedStore(savedCashier.store ?? DEFAULT_STORE);
+        }
       } else {
         // Reset to default state for new sessions
         setIsExistingSession(false);
@@ -363,9 +375,22 @@ function App() {
     }));
   };
 
+  const handleBalanceStartNextDayChange = (amount: number) => {
+    setSummary((prev) => ({
+      ...prev,
+      balanceStartNextDay: Math.max(0, amount),
+    }));
+  };
+
   const handleCashierChange = (cashierId: number) => {
     const cashier = cashiers.find((c) => c.id === cashierId);
     setSelectedCashier(cashier || null);
+  };
+
+  const handleStoreChange = (store: string) => {
+    setSelectedStore(store);
+    // Clear the selected cashier if they don't belong to the newly selected store
+    setSelectedCashier((prev) => (prev && prev.store !== store ? null : prev));
   };
 
   const handleSave = async () => {
@@ -384,8 +409,9 @@ function App() {
     }
 
     // Calculate end state
+    // Inicio (próx. día) counts as part of the cash in the drawer (Efectivo Caja)
     const odooTotal = summary.odooCash + summary.odooCard;
-    const cajaTotal = posCash + posCard;
+    const cajaTotal = posCash + summary.balanceStartNextDay + posCard;
     const difference = cajaTotal - odooTotal;
 
     let endState: EndState;
@@ -416,7 +442,6 @@ function App() {
         posCash,
         posCard,
         profitTotal,
-        balanceStartNextDay: FIXED_BALANCE_START,
       },
       cashDenominations,
       cardAmounts,
@@ -527,8 +552,10 @@ function App() {
         <LeftSection
           denominations={cashDenominations}
           cardAmounts={cardAmounts}
+          balanceStartNextDay={summary.balanceStartNextDay}
           onDenominationChange={handleDenominationChange}
           onCardAmountChange={handleCardAmountChange}
+          onBalanceStartNextDayChange={handleBalanceStartNextDayChange}
           disabled={summary.sessionId === 0}
         />
 
@@ -539,9 +566,12 @@ function App() {
           posCash={posCash}
           posCard={posCard}
           balanceStart={summary.balanceStart}
+          balanceStartNextDay={summary.balanceStartNextDay}
           isSessionClosed={summary.isSessionClosed}
           isExistingSession={isExistingSession}
           selectedManager={selectedManager}
+          selectedStore={selectedStore}
+          onStoreChange={handleStoreChange}
           cashiers={cashiers}
           selectedCashier={selectedCashier}
           onCashierChange={handleCashierChange}

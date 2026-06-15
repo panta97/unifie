@@ -6,6 +6,8 @@ from miscellaneous.constants import (
     POS_STATUS_CHOICES,
     STABLE,
     DRAFT,
+    STORE_CHOICES,
+    STORE_ABTAO,
 )
 
 
@@ -20,6 +22,9 @@ class Employee(models.Model):
         (MANAGER, "MN"),
     )
     type = models.CharField(max_length=2, choices=TYPE_CHOICES, default=CASHIER)
+    store = models.CharField(
+        max_length=15, choices=STORE_CHOICES, default=STORE_ABTAO
+    )
     is_used = models.BooleanField(default=True)
     totp_secret = models.CharField(max_length=32, blank=True, default="")
 

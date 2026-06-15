@@ -5,11 +5,13 @@ import type { CashDenominations, CardAmounts } from "../types";
 interface LeftSectionProps {
   denominations: CashDenominations;
   cardAmounts: CardAmounts;
+  balanceStartNextDay: number; // in cents (next-day starting float)
   onDenominationChange: (
     denom: keyof CashDenominations,
     quantity: number,
   ) => void;
   onCardAmountChange: (field: keyof CardAmounts, amount: number) => void;
+  onBalanceStartNextDayChange: (amount: number) => void;
   disabled?: boolean;
 }
 
@@ -34,8 +36,10 @@ const denominationValues: Array<{
 export const LeftSection: React.FC<LeftSectionProps> = ({
   denominations,
   cardAmounts,
+  balanceStartNextDay,
   onDenominationChange,
   onCardAmountChange,
+  onBalanceStartNextDayChange,
   disabled = false,
 }) => {
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
@@ -57,6 +61,9 @@ export const LeftSection: React.FC<LeftSectionProps> = ({
   const totalCash = denominationValues.reduce((sum, { key, value }) => {
     return sum + denominations[key] * value * 100;
   }, 0);
+
+  // Total cash in the drawer including the next-day starting float (Inicio)
+  const totalCashWithInicio = totalCash + balanceStartNextDay;
 
   // Calculate total card (in cents)
   const totalCard =
@@ -119,13 +126,40 @@ export const LeftSection: React.FC<LeftSectionProps> = ({
                 </tr>
               );
             })}
-            <tr className="bg-gray-50">
+            <tr className="bg-gray-50 border-t border-gray-200">
+              <td className="text-right px-2.5 py-1.5 border-b-0 align-middle">
+                <strong className="text-slate-800 uppercase text-[11px] tracking-wide">
+                  Inicio (próx. día)
+                </strong>
+              </td>
+              <td className="px-2.5 py-1.5 text-left border-b-0">
+                <input
+                  ref={(el) => {
+                    inputRefs.current[11] = el;
+                  }}
+                  type="number"
+                  min="0"
+                  value={balanceStartNextDay / 100}
+                  onChange={(e) =>
+                    onBalanceStartNextDayChange(
+                      Math.round(parseFloat(e.target.value || "0") * 100),
+                    )
+                  }
+                  onKeyDown={(e) => handleKeyDown(11, e)}
+                  onFocus={(e) => e.target.select()}
+                  className="w-full px-2.5 py-1.5 border border-gray-200 rounded text-sm transition-all duration-200 text-right font-mono focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 disabled:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-60"
+                  disabled={disabled}
+                />
+              </td>
+              <td className="border-b-0"></td>
+            </tr>
+            <tr className="bg-gray-50 border-t border-gray-200">
               <td colSpan={2} className="text-right px-2.5 py-1.5 border-b-0">
                 <strong className="text-slate-800">TOTAL</strong>
               </td>
               <td className="text-right font-mono text-sm px-2.5 py-1.5 border-b-0">
                 <strong className="text-slate-800">
-                  {formatCurrency(totalCash)}
+                  {formatCurrency(totalCashWithInicio)}
                 </strong>
               </td>
             </tr>
@@ -147,7 +181,7 @@ export const LeftSection: React.FC<LeftSectionProps> = ({
               <td className="w-1/2 px-2.5 py-1.5 text-left border-b border-gray-100">
                 <input
                   ref={(el) => {
-                    inputRefs.current[11] = el;
+                    inputRefs.current[12] = el;
                   }}
                   type="number"
                   value={cardAmounts.pos1 / 100}
@@ -157,7 +191,7 @@ export const LeftSection: React.FC<LeftSectionProps> = ({
                       Math.round(parseFloat(e.target.value || "0") * 100),
                     )
                   }
-                  onKeyDown={(e) => handleKeyDown(11, e)}
+                  onKeyDown={(e) => handleKeyDown(12, e)}
                   onFocus={(e) => e.target.select()}
                   className="w-full px-2.5 py-1.5 border border-gray-200 rounded text-sm transition-all duration-200 text-right font-mono focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 disabled:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-60"
                   disabled={disabled}
@@ -171,7 +205,7 @@ export const LeftSection: React.FC<LeftSectionProps> = ({
               <td className="px-2.5 py-1.5 text-left border-b border-gray-100">
                 <input
                   ref={(el) => {
-                    inputRefs.current[12] = el;
+                    inputRefs.current[13] = el;
                   }}
                   type="number"
                   value={cardAmounts.pos2 / 100}
@@ -181,7 +215,7 @@ export const LeftSection: React.FC<LeftSectionProps> = ({
                       Math.round(parseFloat(e.target.value || "0") * 100),
                     )
                   }
-                  onKeyDown={(e) => handleKeyDown(12, e)}
+                  onKeyDown={(e) => handleKeyDown(13, e)}
                   onFocus={(e) => e.target.select()}
                   className="w-full px-2.5 py-1.5 border border-gray-200 rounded text-sm transition-all duration-200 text-right font-mono focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 disabled:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-60"
                   disabled={disabled}
@@ -195,7 +229,7 @@ export const LeftSection: React.FC<LeftSectionProps> = ({
               <td className="px-2.5 py-1.5 text-left border-b border-gray-100">
                 <input
                   ref={(el) => {
-                    inputRefs.current[13] = el;
+                    inputRefs.current[14] = el;
                   }}
                   type="number"
                   value={cardAmounts.miscellaneous / 100}
@@ -205,7 +239,7 @@ export const LeftSection: React.FC<LeftSectionProps> = ({
                       Math.round(parseFloat(e.target.value || "0") * 100),
                     )
                   }
-                  onKeyDown={(e) => handleKeyDown(13, e)}
+                  onKeyDown={(e) => handleKeyDown(14, e)}
                   onFocus={(e) => e.target.select()}
                   className="w-full px-2.5 py-1.5 border border-gray-200 rounded text-sm transition-all duration-200 text-right font-mono focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 disabled:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-60"
                   disabled={disabled}

@@ -24,7 +24,18 @@ export interface Employee {
   id: number;
   first_name: string;
   last_name: string;
+  store?: string; // one of STORE values; absent for OTP-authenticated managers
 }
+
+// Store options (values must match backend STORE_CHOICES exactly).
+// Note: "san martin" is intentionally hidden from the UI here (FE-only); it
+// still exists in the backend STORE_CHOICES and on any existing records.
+export const DEFAULT_STORE = "abtao";
+
+export const STORES: { value: string; label: string }[] = [
+  { value: "abtao", label: "Abtao" },
+  { value: "tingo maria", label: "Tingo María" },
+];
 
 export interface Summary {
   sessionId: number;
