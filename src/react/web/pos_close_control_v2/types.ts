@@ -34,7 +34,7 @@ export const DEFAULT_STORE = "abtao";
 
 export const STORES: { value: string; label: string }[] = [
   { value: "abtao", label: "Abtao" },
-  { value: "tingo maria", label: "Tingo María" },
+  { value: "tingo", label: "Tingo María" },
 ];
 
 export interface Summary {
