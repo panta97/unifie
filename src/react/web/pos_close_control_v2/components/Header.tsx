@@ -21,6 +21,108 @@ const getEndStateBadge = (
   return { label: "Estable", className: "bg-green-100 text-green-700" };
 };
 
+// A single row in the "Historial de Versiones" dropdown. `isCurrent` renders
+// the live (not-yet-snapshotted) session state at the top, marked "Actual".
+const SnapshotRow: React.FC<{ snapshot: Snapshot; isCurrent?: boolean }> = ({
+  snapshot,
+  isCurrent = false,
+}) => {
+  // Caja vs Odoo delta — includes the next-day starting float,
+  // matching the app's closing difference calc.
+  const delta =
+    snapshot.pos_cash +
+    snapshot.balance_start_next_day +
+    snapshot.pos_card -
+    snapshot.odoo_cash -
+    snapshot.odoo_card;
+  // Color the Caja vs Odoo delta by sign (green/orange/red).
+  const deltaClass =
+    delta === 0
+      ? "bg-green-100 text-green-700"
+      : delta > 0
+        ? "bg-orange-100 text-orange-700"
+        : "bg-red-100 text-red-700";
+  // Recorded closing result — only meaningful once CLOSED
+  const diff =
+    snapshot.status === "CLOSED" ? getEndStateBadge(snapshot.end_state) : null;
+
+  return (
+    <div
+      className={`p-2 rounded text-xs border-b border-gray-100 last:border-b-0 ${
+        isCurrent ? "bg-blue-50 border border-blue-200" : "hover:bg-gray-50"
+      }`}
+    >
+      <div className="flex justify-between items-start">
+        <span className="font-semibold text-blue-600 flex items-center gap-1">
+          {!isCurrent && `Versión ${snapshot.version}`}
+          {isCurrent && (
+            <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-blue-100 text-blue-700">
+              Actual
+            </span>
+          )}
+        </span>
+        <span className="text-gray-500">
+          {isCurrent
+            ? "En vivo"
+            : parseBackendDate(snapshot.snapshot_created_at).toLocaleString(
+                "es-PE",
+                {
+                  month: "short",
+                  day: "numeric",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                  second: "2-digit",
+                },
+              )}
+        </span>
+      </div>
+
+      {/* Recorded closing result (Cerrado only) */}
+      {/* {diff && (
+        <div className="mt-1">
+          <span
+            className={`inline-block px-1.5 py-0.5 rounded text-xs font-semibold ${diff.className}`}
+          >
+            {diff.label}: {formatCurrency(snapshot.end_state_amount)}
+          </span>
+        </div>
+      )} */}
+
+      <div className="mt-1 text-gray-600 space-y-0.5">
+        <div>Cajero: {snapshot.cashier || "N/A"}</div>
+        <div>Supervisor: {snapshot.manager || "N/A"}</div>
+        <div className="text-gray-500">
+          Caja: Efvo {formatCurrency(snapshot.pos_cash)} · Tarj{" "}
+          {formatCurrency(snapshot.pos_card)}
+        </div>
+        <div className="text-gray-500">
+          Odoo: Efvo {formatCurrency(snapshot.odoo_cash)} · Tarj{" "}
+          {formatCurrency(snapshot.odoo_card)}
+        </div>
+        <div className="mt-0.5">
+          Caja vs Odoo:{" "}
+          <span
+            className={`inline-block px-1.5 py-0.5 rounded text-xs font-semibold ${deltaClass}`}
+          >
+            {getDifferenceLabel(delta)} {formatCurrency(Math.abs(delta))}
+          </span>
+        </div>
+        <div className="mt-0.5">
+          <span
+            className={`inline-block px-1.5 py-0.5 rounded text-xs font-medium ${
+              snapshot.status === "CLOSED"
+                ? "bg-green-100 text-green-700"
+                : "bg-yellow-100 text-yellow-700"
+            }`}
+          >
+            {snapshot.status === "CLOSED" ? "Cerrado" : "Borrador"}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 interface HeaderProps {
   sessionId: string;
   sessionName: string;
@@ -33,6 +135,7 @@ interface HeaderProps {
   autosaveStatus?: "idle" | "saving" | "saved" | "error";
   snapshotCount: number;
   snapshots: Snapshot[];
+  currentVersion?: Snapshot | null;
   onSessionIdChange: (id: string) => void;
   onFetchSession: () => void;
   onLock: () => void;
@@ -50,6 +153,7 @@ export const Header: React.FC<HeaderProps> = ({
   autosaveStatus = "idle",
   snapshotCount,
   snapshots,
+  currentVersion = null,
   onSessionIdChange,
   onFetchSession,
   onLock,
@@ -193,96 +297,12 @@ export const Header: React.FC<HeaderProps> = ({
                   </h4>
                 </div>
                 <div className="p-1">
-                  {snapshots.map((snapshot) => {
-                    // Caja vs Odoo delta — includes the next-day starting float,
-                    // matching the app's closing difference calc.
-                    const delta =
-                      snapshot.pos_cash +
-                      snapshot.balance_start_next_day +
-                      snapshot.pos_card -
-                      snapshot.odoo_cash -
-                      snapshot.odoo_card;
-                    // Color the Caja vs Odoo delta by sign (green/blue/red).
-                    const deltaClass =
-                      delta === 0
-                        ? "bg-green-100 text-green-700"
-                        : delta > 0
-                          ? "bg-orange-100 text-orange-700"
-                          : "bg-red-100 text-red-700";
-                    // Recorded closing result — only meaningful once CLOSED
-                    const diff =
-                      snapshot.status === "CLOSED"
-                        ? getEndStateBadge(snapshot.end_state)
-                        : null;
-                    return (
-                      <div
-                        key={snapshot.id}
-                        className="p-2 hover:bg-gray-50 rounded text-xs border-b border-gray-100 last:border-b-0"
-                      >
-                        <div className="flex justify-between items-start">
-                          <span className="font-semibold text-blue-600">
-                            Versión {snapshot.version}
-                          </span>
-                          <span className="text-gray-500">
-                            {parseBackendDate(
-                              snapshot.snapshot_created_at,
-                            ).toLocaleString("es-PE", {
-                              month: "short",
-                              day: "numeric",
-                              hour: "2-digit",
-                              minute: "2-digit",
-                              second: "2-digit",
-                            })}
-                          </span>
-                        </div>
-
-                        {/* Recorded closing result (Cerrado only) */}
-                        {/* {diff && (
-                          <div className="mt-1">
-                            <span
-                              className={`inline-block px-1.5 py-0.5 rounded text-xs font-semibold ${diff.className}`}
-                            >
-                              {diff.label}: {formatCurrency(snapshot.end_state_amount)}
-                            </span>
-                          </div>
-                        )} */}
-
-                        <div className="mt-1 text-gray-600 space-y-0.5">
-                          <div>Cajero: {snapshot.cashier || "N/A"}</div>
-                          <div>Supervisor: {snapshot.manager || "N/A"}</div>
-                          <div className="text-gray-500">
-                            Caja: Efvo {formatCurrency(snapshot.pos_cash)} · Tarj{" "}
-                            {formatCurrency(snapshot.pos_card)}
-                          </div>
-                          <div className="text-gray-500">
-                            Odoo: Efvo {formatCurrency(snapshot.odoo_cash)} · Tarj{" "}
-                            {formatCurrency(snapshot.odoo_card)}
-                          </div>
-                          <div className="mt-0.5">
-                            Caja vs Odoo:{" "}
-                            <span
-                              className={`inline-block px-1.5 py-0.5 rounded text-xs font-semibold ${deltaClass}`}
-                            >
-                              {getDifferenceLabel(delta)} {formatCurrency(Math.abs(delta))}
-                            </span>
-                          </div>
-                          <div className="mt-0.5">
-                            <span
-                              className={`inline-block px-1.5 py-0.5 rounded text-xs font-medium ${
-                                snapshot.status === "CLOSED"
-                                  ? "bg-green-100 text-green-700"
-                                  : "bg-yellow-100 text-yellow-700"
-                              }`}
-                            >
-                              {snapshot.status === "CLOSED"
-                                ? "Cerrado"
-                                : "Borrador"}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
+                  {currentVersion && (
+                    <SnapshotRow snapshot={currentVersion} isCurrent />
+                  )}
+                  {snapshots.map((snapshot) => (
+                    <SnapshotRow key={snapshot.id} snapshot={snapshot} />
+                  ))}
                 </div>
               </div>
             )}

@@ -269,6 +269,33 @@ function App() {
     summary.odooCash -
     summary.odooCard;
 
+  // Live "current version" shown at the top of the version history — the
+  // in-progress state that hasn't been snapshotted yet.
+  const currentVersion: Snapshot | null =
+    summary.sessionId !== 0
+      ? {
+          id: -1,
+          version: snapshotCount + 1,
+          snapshot_created_at: "",
+          pos_name: summary.posName,
+          status: summary.isSessionClosed ? "CLOSED" : "DRAFT",
+          pos_cash: posCash,
+          pos_card: posCard,
+          odoo_cash: summary.odooCash,
+          odoo_card: summary.odooCard,
+          balance_start_next_day: summary.balanceStartNextDay,
+          end_state:
+            profitTotal < 0 ? "MS" : profitTotal > 0 ? "EX" : "ST",
+          end_state_amount: Math.abs(profitTotal),
+          cashier: selectedCashier
+            ? `${selectedCashier.first_name} ${selectedCashier.last_name}`
+            : null,
+          manager: selectedManager
+            ? `${selectedManager.first_name} ${selectedManager.last_name}`
+            : null,
+        }
+      : null;
+
   // Handlers
   const handleFetchSession = async () => {
     if (!sessionId) {
@@ -560,6 +587,7 @@ function App() {
           autosaveStatus={autosaveStatus}
           snapshotCount={snapshotCount}
           snapshots={snapshots}
+          currentVersion={currentVersion}
           onSessionIdChange={setSessionId}
           onFetchSession={handleFetchSession}
           onLock={handleLock}
