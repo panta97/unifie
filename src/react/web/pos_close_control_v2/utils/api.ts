@@ -219,7 +219,12 @@ export async function autosavePosCloseControl(
   cashierId?: number | null,
   observations?: string,
   balanceStartNextDay?: number
-) {
+): Promise<{
+  id: number;
+  created: boolean;
+  snapshot_created?: boolean;
+  message: string;
+}> {
   const body: any = { cashDenominations, cardAmounts };
   if (cashierId != null) body.cashierId = cashierId;
   if (observations !== undefined) body.observations = observations;

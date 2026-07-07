@@ -198,6 +198,18 @@ function App() {
       if (!isExistingSession && result.created) {
         setIsExistingSession(true);
       }
+
+      // If a snapshot was created (autosave of an existing session),
+      // refresh the version history so the Header updates live.
+      if (result.snapshot_created) {
+        try {
+          const snapshotData = await fetchSessionSnapshots(summary.sessionId);
+          setSnapshots(snapshotData.snapshots);
+          setSnapshotCount(snapshotData.snapshot_count);
+        } catch (e) {
+          console.error("Failed to refresh snapshots after autosave:", e);
+        }
+      }
     } catch (err) {
       console.error("Autosave failed:", err);
       // Don't show error to user, just log it
@@ -542,6 +554,7 @@ function App() {
           stopAt={summary.stopAt}
           isSessionClosed={summary.isSessionClosed}
           loading={loading}
+          autosaveStatus={autosaveStatus}
           snapshotCount={snapshotCount}
           snapshots={snapshots}
           onSessionIdChange={setSessionId}
