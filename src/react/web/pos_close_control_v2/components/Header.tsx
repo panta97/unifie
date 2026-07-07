@@ -124,7 +124,7 @@ export const Header: React.FC<HeaderProps> = ({
                 />
               </svg>
               <span>
-                {snapshotCount} snapshot{snapshotCount !== 1 ? "s" : ""}
+                {snapshotCount} versi{snapshotCount !== 1 ? "o" : "ó"}n{snapshotCount !== 1 ? "es" : ""}
               </span>
             </button>
 
