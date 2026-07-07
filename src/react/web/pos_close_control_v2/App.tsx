@@ -191,7 +191,10 @@ function App() {
         cardAmounts,
         selectedCashier?.id ?? null,
         observations,
-        summary.balanceStartNextDay
+        summary.balanceStartNextDay,
+        summary.odooCash,
+        summary.odooCard,
+        selectedManager?.id ?? null
       );
 
       // If this was the first autosave, mark session as existing
@@ -215,7 +218,7 @@ function App() {
       // Don't show error to user, just log it
       // The manual save will still work
     }
-  }, [summary.sessionId, summary.balanceStartNextDay, cashDenominations, cardAmounts, selectedCashier, observations, isExistingSession]);
+  }, [summary.sessionId, summary.balanceStartNextDay, summary.odooCash, summary.odooCard, cashDenominations, cardAmounts, selectedCashier, selectedManager, observations, isExistingSession]);
 
   const { status: autosaveStatus, triggerAutosave } = useAutosave({
     onSave: handleAutosave,

@@ -720,6 +720,17 @@ class PosCloseControlV2View(OTPSessionMixin, View):
                                 saved_session.cashier = None
                             existing_data["cashierId"] = cashier_id
 
+                        # Update manager if provided
+                        if "managerId" in data:
+                            manager_id = data["managerId"]
+                            if manager_id:
+                                manager = Employee.objects.filter(id=manager_id, is_used=True).first()
+                                if manager:
+                                    saved_session.manager = manager
+                            else:
+                                saved_session.manager = None
+                            existing_data["managerId"] = manager_id
+
                         # Update observations if provided
                         if "observations" in data:
                             saved_session.end_state_note = data["observations"]
@@ -729,6 +740,13 @@ class PosCloseControlV2View(OTPSessionMixin, View):
                         if "balanceStartNextDay" in data:
                             saved_session.balance_start_next_day = data["balanceStartNextDay"]
                             existing_data["balanceStartNextDay"] = data["balanceStartNextDay"]
+
+                        # Update Odoo expected totals if provided (browser sends the
+                        # values loaded on fetch) so snapshots/profit are accurate.
+                        if "odooCash" in data:
+                            saved_session.odoo_cash = data["odooCash"]
+                        if "odooCard" in data:
+                            saved_session.odoo_card = data["odooCard"]
 
                         saved_session.json = json.dumps(existing_data)
 
@@ -830,26 +848,38 @@ class PosCloseControlV2View(OTPSessionMixin, View):
                 if data.get("cashierId"):
                     cashier_obj = Employee.objects.filter(id=data["cashierId"], is_used=True).first()
 
+                # Resolve manager if provided
+                manager_obj = None
+                if data.get("managerId"):
+                    manager_obj = Employee.objects.filter(id=data["managerId"], is_used=True).first()
+
                 # Resolve observations if provided
                 end_state_note = data.get("observations", "")
 
-                # Store cashierId and observations in json_data
+                # Store cashierId, managerId and observations in json_data
                 if "cashierId" in data:
                     json_data["cashierId"] = data["cashierId"]
+                if "managerId" in data:
+                    json_data["managerId"] = data["managerId"]
                 if "observations" in data:
                     json_data["observations"] = data["observations"]
+
+                # Odoo expected totals sent by the browser (loaded on fetch)
+                odoo_cash = data.get("odooCash", 0)
+                odoo_card = data.get("odooCard", 0)
 
                 # Create session with placeholder values
                 pos_session_v2 = PosSessionV2.objects.create(
                     pos_name=pos_session[0]["config_id"][1].split()[0],
                     cashier=cashier_obj,
+                    manager=manager_obj,
                     odoo_session_id=session_id,
                     odoo_config_id=pos_session[0]["config_id"][0],
-                    odoo_cash=0,  # Will be updated on fetch
-                    odoo_card=0,  # Will be updated on fetch
+                    odoo_cash=odoo_cash,
+                    odoo_card=odoo_card,
                     pos_cash=cash_total,
                     pos_card=card_total,
-                    profit_total=0,  # Placeholder
+                    profit_total=cash_total + card_total - odoo_cash - odoo_card,
                     balance_start=int(
                         round(pos_session[0]["cash_register_balance_start"] * 100)
                     ),

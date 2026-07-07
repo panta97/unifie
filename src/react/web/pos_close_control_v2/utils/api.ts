@@ -218,7 +218,10 @@ export async function autosavePosCloseControl(
   cardAmounts: any,
   cashierId?: number | null,
   observations?: string,
-  balanceStartNextDay?: number
+  balanceStartNextDay?: number,
+  odooCash?: number,
+  odooCard?: number,
+  managerId?: number | null
 ): Promise<{
   id: number;
   created: boolean;
@@ -229,6 +232,9 @@ export async function autosavePosCloseControl(
   if (cashierId != null) body.cashierId = cashierId;
   if (observations !== undefined) body.observations = observations;
   if (balanceStartNextDay != null) body.balanceStartNextDay = balanceStartNextDay;
+  if (odooCash != null) body.odooCash = odooCash;
+  if (odooCard != null) body.odooCard = odooCard;
+  if (managerId != null) body.managerId = managerId;
 
   const response = await fetch(`/api/pos-close-control/v2/${sessionId}`, {
     method: "PATCH",

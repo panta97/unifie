@@ -1,6 +1,25 @@
 import React, { useState, useRef, useEffect } from "react";
-import { formatDate } from "../utils/formatters";
+import {
+  formatDate,
+  formatCurrency,
+  getDifferenceLabel,
+  parseBackendDate,
+} from "../utils/formatters";
 import type { Snapshot } from "../types";
+
+// Map a stored end_state code (EX/ST/MS or full word) to a Spanish label + color.
+const getEndStateBadge = (
+  endState: string,
+): { label: string; className: string } => {
+  const s = (endState || "").toUpperCase();
+  if (s === "MS" || s === "MISSING") {
+    return { label: "Faltante", className: "bg-red-100 text-red-700" };
+  }
+  if (s === "EX" || s === "EXTRA") {
+    return { label: "Extra", className: "bg-orange-100 text-orange-700" };
+  }
+  return { label: "Estable", className: "bg-green-100 text-green-700" };
+};
 
 interface HeaderProps {
   sessionId: string;
@@ -174,45 +193,96 @@ export const Header: React.FC<HeaderProps> = ({
                   </h4>
                 </div>
                 <div className="p-1">
-                  {snapshots.map((snapshot) => (
-                    <div
-                      key={snapshot.id}
-                      className="p-2 hover:bg-gray-50 rounded text-xs border-b border-gray-100 last:border-b-0"
-                    >
-                      <div className="flex justify-between items-start">
-                        <span className="font-semibold text-blue-600">
-                          Versión {snapshot.version}
-                        </span>
-                        <span className="text-gray-500">
-                          {new Date(
-                            snapshot.snapshot_created_at,
-                          ).toLocaleDateString("es-PE", {
-                            month: "short",
-                            day: "numeric",
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
-                        </span>
-                      </div>
-                      <div className="mt-1 text-gray-600">
-                        <div>Cajero: {snapshot.cashier || "N/A"}</div>
-                        <div>Supervisor: {snapshot.manager || "N/A"}</div>
-                        <div className="mt-0.5">
-                          <span
-                            className={`inline-block px-1.5 py-0.5 rounded text-xs font-medium ${
-                              snapshot.status === "CLOSED"
-                                ? "bg-green-100 text-green-700"
-                                : "bg-yellow-100 text-yellow-700"
-                            }`}
-                          >
-                            {snapshot.status === "CLOSED"
-                              ? "Cerrado"
-                              : "Borrador"}
+                  {snapshots.map((snapshot) => {
+                    // Caja vs Odoo delta — includes the next-day starting float,
+                    // matching the app's closing difference calc.
+                    const delta =
+                      snapshot.pos_cash +
+                      snapshot.balance_start_next_day +
+                      snapshot.pos_card -
+                      snapshot.odoo_cash -
+                      snapshot.odoo_card;
+                    // Color the Caja vs Odoo delta by sign (green/blue/red).
+                    const deltaClass =
+                      delta === 0
+                        ? "bg-green-100 text-green-700"
+                        : delta > 0
+                          ? "bg-orange-100 text-orange-700"
+                          : "bg-red-100 text-red-700";
+                    // Recorded closing result — only meaningful once CLOSED
+                    const diff =
+                      snapshot.status === "CLOSED"
+                        ? getEndStateBadge(snapshot.end_state)
+                        : null;
+                    return (
+                      <div
+                        key={snapshot.id}
+                        className="p-2 hover:bg-gray-50 rounded text-xs border-b border-gray-100 last:border-b-0"
+                      >
+                        <div className="flex justify-between items-start">
+                          <span className="font-semibold text-blue-600">
+                            Versión {snapshot.version}
+                          </span>
+                          <span className="text-gray-500">
+                            {parseBackendDate(
+                              snapshot.snapshot_created_at,
+                            ).toLocaleString("es-PE", {
+                              month: "short",
+                              day: "numeric",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                              second: "2-digit",
+                            })}
                           </span>
                         </div>
+
+                        {/* Recorded closing result (Cerrado only) */}
+                        {/* {diff && (
+                          <div className="mt-1">
+                            <span
+                              className={`inline-block px-1.5 py-0.5 rounded text-xs font-semibold ${diff.className}`}
+                            >
+                              {diff.label}: {formatCurrency(snapshot.end_state_amount)}
+                            </span>
+                          </div>
+                        )} */}
+
+                        <div className="mt-1 text-gray-600 space-y-0.5">
+                          <div>Cajero: {snapshot.cashier || "N/A"}</div>
+                          <div>Supervisor: {snapshot.manager || "N/A"}</div>
+                          <div className="text-gray-500">
+                            Caja: Efvo {formatCurrency(snapshot.pos_cash)} · Tarj{" "}
+                            {formatCurrency(snapshot.pos_card)}
+                          </div>
+                          <div className="text-gray-500">
+                            Odoo: Efvo {formatCurrency(snapshot.odoo_cash)} · Tarj{" "}
+                            {formatCurrency(snapshot.odoo_card)}
+                          </div>
+                          <div className="mt-0.5">
+                            Caja vs Odoo:{" "}
+                            <span
+                              className={`inline-block px-1.5 py-0.5 rounded text-xs font-semibold ${deltaClass}`}
+                            >
+                              {getDifferenceLabel(delta)} {formatCurrency(Math.abs(delta))}
+                            </span>
+                          </div>
+                          <div className="mt-0.5">
+                            <span
+                              className={`inline-block px-1.5 py-0.5 rounded text-xs font-medium ${
+                                snapshot.status === "CLOSED"
+                                  ? "bg-green-100 text-green-700"
+                                  : "bg-yellow-100 text-yellow-700"
+                              }`}
+                            >
+                              {snapshot.status === "CLOSED"
+                                ? "Cerrado"
+                                : "Borrador"}
+                            </span>
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             )}

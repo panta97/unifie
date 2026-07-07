@@ -80,6 +80,13 @@ export interface Snapshot {
   snapshot_created_at: string;
   pos_name: string;
   status: SessionStatus;
+  pos_cash: number; // counted cash, in cents
+  pos_card: number; // counted card, in cents
+  odoo_cash: number; // expected cash from Odoo, in cents
+  odoo_card: number; // expected card from Odoo, in cents
+  balance_start_next_day: number; // next-day starting float, in cents
+  end_state: string; // end-state code (EX/ST/MS or full form)
+  end_state_amount: number; // recorded difference amount, in cents
   cashier: string | null;
   manager: string | null;
 }
