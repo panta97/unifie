@@ -319,6 +319,20 @@ class PosCloseControlV2View(OTPSessionMixin, View):
             proxy = get_proxy()
             pos_session = get_model(ps_table, ps_filter, ps_fields, proxy=proxy)
 
+            # POS ORDER - the employees that rang up this session's orders.
+            # Usually one, but a session can be handed over between cashiers.
+            po_table = "pos.order"
+            po_filter = [[["session_id", "=", session_id]]]
+            po_fields = ["employee_id"]
+            pos_orders = get_model(po_table, po_filter, po_fields, proxy=proxy)
+
+            cashier_names = []
+            for order in pos_orders:
+                # employee_id is False on orders with no employee set
+                employee = order["employee_id"]
+                if employee and employee[1] not in cashier_names:
+                    cashier_names.append(employee[1])
+
             # ACCOUNT BANK STATEMENT
             abs_table = "account.bank.statement.line"
             abs_filter = [[["pos_session_id", "=", session_id]]]
@@ -407,6 +421,7 @@ class PosCloseControlV2View(OTPSessionMixin, View):
                 "session_id": pos_session[0]["id"],
                 "config_id": pos_session[0]["config_id"][0],
                 "config_display_name": pos_session[0]["config_id"][1],
+                "cashier_names": cashier_names,
                 "session_name": pos_session[0]["display_name"],
                 "balance_start": balance_start_int,
                 "start_at": start_at,

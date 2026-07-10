@@ -127,6 +127,7 @@ interface HeaderProps {
   sessionId: string;
   sessionName: string;
   configDisplayName: string;
+  cashierNames: string[];
   posName: string;
   startAt: string;
   stopAt: string;
@@ -145,6 +146,7 @@ export const Header: React.FC<HeaderProps> = ({
   sessionId,
   sessionName,
   configDisplayName,
+  cashierNames = [],
   posName,
   startAt,
   stopAt,
@@ -160,6 +162,12 @@ export const Header: React.FC<HeaderProps> = ({
 }) => {
   const [showSnapshots, setShowSnapshots] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // "SESIÓN ABTAO B005 - CAJA CABALLERO - Cajero 1, Cajero 2", falling back to
+  // "Sin cajeros" when the session's orders have no employee set.
+  const configLine = configDisplayName
+    ? `${configDisplayName} - ${cashierNames.length ? cashierNames.join(", ") : "Sin cajeros"}`
+    : "";
 
   // Click-outside detection to close dropdown
   useEffect(() => {
@@ -190,6 +198,9 @@ export const Header: React.FC<HeaderProps> = ({
             type="text"
             value={sessionId}
             onChange={(e) => onSessionIdChange(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !loading) onFetchSession();
+            }}
             placeholder="Enter ID"
             className="text-sm px-2 py-1 rounded border border-gray-300 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 w-full"
             disabled={loading}
@@ -232,7 +243,7 @@ export const Header: React.FC<HeaderProps> = ({
         <div className="text-base font-semibold mb-0.5">
           Sesión: {sessionName || "-"}
         </div>
-        <div className="text-xs text-slate-500">{configDisplayName || "-"}</div>
+        <div className="text-xs text-slate-500">{configLine || "-"}</div>
         {/* Autosave status indicator */}
         {/* {autosaveStatus !== "idle" && (
           <div

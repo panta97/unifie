@@ -41,6 +41,7 @@ export interface Summary {
   sessionId: number;
   configId: number;
   configDisplayName: string;
+  cashierNames: string[];
   sessionName: string;
   posName: string;
   startAt: string;

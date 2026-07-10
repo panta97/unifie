@@ -42,6 +42,7 @@ function App() {
     sessionId: 0,
     configId: 0,
     configDisplayName: "",
+    cashierNames: [],
     sessionName: "",
     posName: "",
     startAt: "",
@@ -579,6 +580,7 @@ function App() {
           sessionId={sessionId}
           sessionName={summary.sessionName}
           configDisplayName={summary.configDisplayName}
+          cashierNames={summary.cashierNames}
           posName={summary.posName}
           startAt={summary.startAt}
           stopAt={summary.stopAt}

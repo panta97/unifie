@@ -87,6 +87,7 @@ interface SessionDataResponse {
     session_id: number;
     config_id: number;
     config_display_name: string;
+    cashier_names: string[]; // employees on this session's pos orders
     session_name: string;
     balance_start: number; // in cents
     start_at: string;
@@ -134,6 +135,7 @@ export async function fetchSessionData(sessionId: number) {
     sessionId: data.body.session_id,
     configId: data.body.config_id,
     configDisplayName: data.body.config_display_name,
+    cashierNames: data.body.cashier_names ?? [],
     sessionName: data.body.session_name,
     posName: data.body.pos_name,
     startAt: data.body.start_at,
