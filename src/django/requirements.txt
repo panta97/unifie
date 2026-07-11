@@ -23,3 +23,8 @@ typing_extensions==4.12.2
 tzdata==2025.1
 urllib3==2.3.0
 virtualenv==20.29.2
+pyotp==2.10.0
+python-dotenv==1.2.2
+gunicorn==23.0.0
+XlsxWriter==3.2.0
+qrcode[pil]==8.0
