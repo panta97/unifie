@@ -24,12 +24,24 @@ export interface Employee {
   id: number;
   first_name: string;
   last_name: string;
+  store?: string; // one of STORE values; absent for OTP-authenticated managers
 }
+
+// Store options (values must match backend STORE_CHOICES exactly).
+// Note: "san martin" is intentionally hidden from the UI here (FE-only); it
+// still exists in the backend STORE_CHOICES and on any existing records.
+export const DEFAULT_STORE = "abtao";
+
+export const STORES: { value: string; label: string }[] = [
+  { value: "abtao", label: "Abtao" },
+  { value: "tingo", label: "Tingo María" },
+];
 
 export interface Summary {
   sessionId: number;
   configId: number;
   configDisplayName: string;
+  cashierNames: string[];
   sessionName: string;
   posName: string;
   startAt: string;
@@ -69,6 +81,13 @@ export interface Snapshot {
   snapshot_created_at: string;
   pos_name: string;
   status: SessionStatus;
+  pos_cash: number; // counted cash, in cents
+  pos_card: number; // counted card, in cents
+  odoo_cash: number; // expected cash from Odoo, in cents
+  odoo_card: number; // expected card from Odoo, in cents
+  balance_start_next_day: number; // next-day starting float, in cents
+  end_state: string; // end-state code (EX/ST/MS or full form)
+  end_state_amount: number; // recorded difference amount, in cents
   cashier: string | null;
   manager: string | null;
 }

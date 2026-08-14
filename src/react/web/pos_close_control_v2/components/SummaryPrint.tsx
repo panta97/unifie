@@ -55,11 +55,11 @@ export const SummaryPrint: React.FC<SummaryPrintProps> = ({
                     <p className="font-bold mt-2">VENTA EN EFECTIVO</p>
                     <p>{formatCurrency(summary.odooCash)}</p>
                     <p className="font-bold mt-2">TOTAL EFECTIVO CAJA</p>
-                    <p>{formatCurrency(posCash)}</p>
+                    <p>{formatCurrency(posCash + balanceStart)}</p>
                     <p className="font-bold mt-2">TOTAL TARJETA CAJA</p>
                     <p>{formatCurrency(posCard)}</p>
                     <p className="font-bold mt-2">TOTAL EFECTIVO SOBRE</p>
-                    <p>{formatCurrency(posCash - balanceStart)}</p>
+                    <p>{formatCurrency(posCash)}</p>
                     <p className="font-bold mt-2">NOTA DE CREDITO</p>
                     <p>{formatCurrency(summary.odooCreditNote)}</p>
                     <p className="h-6 border-b border-black mt-3"></p>

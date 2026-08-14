@@ -1,18 +1,142 @@
 import React, { useState, useRef, useEffect } from "react";
-import { formatDate } from "../utils/formatters";
+import {
+  formatDate,
+  formatCurrency,
+  getDifferenceLabel,
+  parseBackendDate,
+} from "../utils/formatters";
 import type { Snapshot } from "../types";
+
+// Map a stored end_state code (EX/ST/MS or full word) to a Spanish label + color.
+const getEndStateBadge = (
+  endState: string,
+): { label: string; className: string } => {
+  const s = (endState || "").toUpperCase();
+  if (s === "MS" || s === "MISSING") {
+    return { label: "Faltante", className: "bg-red-100 text-red-700" };
+  }
+  if (s === "EX" || s === "EXTRA") {
+    return { label: "Extra", className: "bg-orange-100 text-orange-700" };
+  }
+  return { label: "Estable", className: "bg-green-100 text-green-700" };
+};
+
+// A single row in the "Historial de Versiones" dropdown. `isCurrent` renders
+// the live (not-yet-snapshotted) session state at the top, marked "Actual".
+const SnapshotRow: React.FC<{ snapshot: Snapshot; isCurrent?: boolean }> = ({
+  snapshot,
+  isCurrent = false,
+}) => {
+  // Caja vs Odoo delta — includes the next-day starting float,
+  // matching the app's closing difference calc.
+  const delta =
+    snapshot.pos_cash +
+    snapshot.balance_start_next_day +
+    snapshot.pos_card -
+    snapshot.odoo_cash -
+    snapshot.odoo_card;
+  // Color the Caja vs Odoo delta by sign (green/orange/red).
+  const deltaClass =
+    delta === 0
+      ? "bg-green-100 text-green-700"
+      : delta > 0
+        ? "bg-orange-100 text-orange-700"
+        : "bg-red-100 text-red-700";
+  // Recorded closing result — only meaningful once CLOSED
+  const diff =
+    snapshot.status === "CLOSED" ? getEndStateBadge(snapshot.end_state) : null;
+
+  return (
+    <div
+      className={`p-2 rounded text-xs border-b border-gray-100 last:border-b-0 ${
+        isCurrent ? "bg-blue-50 border border-blue-200" : "hover:bg-gray-50"
+      }`}
+    >
+      <div className="flex justify-between items-start">
+        <span className="font-semibold text-blue-600 flex items-center gap-1">
+          {!isCurrent && `Versión ${snapshot.version}`}
+          {isCurrent && (
+            <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-blue-100 text-blue-700">
+              Actual
+            </span>
+          )}
+        </span>
+        <span className="text-gray-500">
+          {isCurrent
+            ? "En vivo"
+            : parseBackendDate(snapshot.snapshot_created_at).toLocaleString(
+                "es-PE",
+                {
+                  month: "short",
+                  day: "numeric",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                  second: "2-digit",
+                },
+              )}
+        </span>
+      </div>
+
+      {/* Recorded closing result (Cerrado only) */}
+      {/* {diff && (
+        <div className="mt-1">
+          <span
+            className={`inline-block px-1.5 py-0.5 rounded text-xs font-semibold ${diff.className}`}
+          >
+            {diff.label}: {formatCurrency(snapshot.end_state_amount)}
+          </span>
+        </div>
+      )} */}
+
+      <div className="mt-1 text-gray-600 space-y-0.5">
+        <div>Cajero: {snapshot.cashier || "N/A"}</div>
+        <div>Supervisor: {snapshot.manager || "N/A"}</div>
+        <div className="text-gray-500">
+          Caja: Efvo {formatCurrency(snapshot.pos_cash)} · Tarj{" "}
+          {formatCurrency(snapshot.pos_card)}
+        </div>
+        <div className="text-gray-500">
+          Odoo: Efvo {formatCurrency(snapshot.odoo_cash)} · Tarj{" "}
+          {formatCurrency(snapshot.odoo_card)}
+        </div>
+        <div className="mt-0.5">
+          Caja vs Odoo:{" "}
+          <span
+            className={`inline-block px-1.5 py-0.5 rounded text-xs font-semibold ${deltaClass}`}
+          >
+            {getDifferenceLabel(delta)} {formatCurrency(Math.abs(delta))}
+          </span>
+        </div>
+        <div className="mt-0.5">
+          <span
+            className={`inline-block px-1.5 py-0.5 rounded text-xs font-medium ${
+              snapshot.status === "CLOSED"
+                ? "bg-green-100 text-green-700"
+                : "bg-yellow-100 text-yellow-700"
+            }`}
+          >
+            {snapshot.status === "CLOSED" ? "Cerrado" : "Borrador"}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 interface HeaderProps {
   sessionId: string;
   sessionName: string;
   configDisplayName: string;
+  cashierNames: string[];
   posName: string;
   startAt: string;
   stopAt: string;
   isSessionClosed: boolean;
   loading?: boolean;
+  autosaveStatus?: "idle" | "saving" | "saved" | "error";
   snapshotCount: number;
   snapshots: Snapshot[];
+  currentVersion?: Snapshot | null;
   onSessionIdChange: (id: string) => void;
   onFetchSession: () => void;
   onLock: () => void;
@@ -22,19 +146,28 @@ export const Header: React.FC<HeaderProps> = ({
   sessionId,
   sessionName,
   configDisplayName,
+  cashierNames = [],
   posName,
   startAt,
   stopAt,
   isSessionClosed,
   loading = false,
+  autosaveStatus = "idle",
   snapshotCount,
   snapshots,
+  currentVersion = null,
   onSessionIdChange,
   onFetchSession,
   onLock,
 }) => {
   const [showSnapshots, setShowSnapshots] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // "SESIÓN ABTAO B005 - CAJA CABALLERO - Cajero 1, Cajero 2", falling back to
+  // "Sin cajeros" when the session's orders have no employee set.
+  const configLine = configDisplayName
+    ? `${configDisplayName} - ${cashierNames.length ? cashierNames.join(", ") : "Sin cajeros"}`
+    : "";
 
   // Click-outside detection to close dropdown
   useEffect(() => {
@@ -65,6 +198,9 @@ export const Header: React.FC<HeaderProps> = ({
             type="text"
             value={sessionId}
             onChange={(e) => onSessionIdChange(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !loading) onFetchSession();
+            }}
             placeholder="Enter ID"
             className="text-sm px-2 py-1 rounded border border-gray-300 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 w-full"
             disabled={loading}
@@ -107,7 +243,42 @@ export const Header: React.FC<HeaderProps> = ({
         <div className="text-base font-semibold mb-0.5">
           Sesión: {sessionName || "-"}
         </div>
-        <div className="text-xs text-slate-500">{configDisplayName || "-"}</div>
+        <div className="text-xs text-slate-500">{configLine || "-"}</div>
+        {/* Autosave status indicator */}
+        {/* {autosaveStatus !== "idle" && (
+          <div
+            className={`mt-1 text-xs flex items-center gap-1 ${
+              autosaveStatus === "error" ? "text-red-600" : "text-slate-500"
+            }`}
+          >
+            {autosaveStatus === "saving" && (
+              <>
+                <svg
+                  className="w-3 h-3 animate-spin"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  />
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                  />
+                </svg>
+                <span>Guardando…</span>
+              </>
+            )}
+            {autosaveStatus === "saved" && <span>✓ Guardado</span>}
+            {autosaveStatus === "error" && <span>Error al guardar</span>}
+          </div>
+        )} */}
         {/* Version History Display */}
         {snapshotCount > 0 && (
           <div className="mt-2 relative" ref={dropdownRef}>
@@ -124,7 +295,7 @@ export const Header: React.FC<HeaderProps> = ({
                 />
               </svg>
               <span>
-                {snapshotCount} snapshot{snapshotCount !== 1 ? "s" : ""}
+                {snapshotCount} versi{snapshotCount !== 1 ? "o" : "ó"}n{snapshotCount !== 1 ? "es" : ""}
               </span>
             </button>
 
@@ -137,44 +308,11 @@ export const Header: React.FC<HeaderProps> = ({
                   </h4>
                 </div>
                 <div className="p-1">
+                  {currentVersion && (
+                    <SnapshotRow snapshot={currentVersion} isCurrent />
+                  )}
                   {snapshots.map((snapshot) => (
-                    <div
-                      key={snapshot.id}
-                      className="p-2 hover:bg-gray-50 rounded text-xs border-b border-gray-100 last:border-b-0"
-                    >
-                      <div className="flex justify-between items-start">
-                        <span className="font-semibold text-blue-600">
-                          Versión {snapshot.version}
-                        </span>
-                        <span className="text-gray-500">
-                          {new Date(
-                            snapshot.snapshot_created_at,
-                          ).toLocaleDateString("es-PE", {
-                            month: "short",
-                            day: "numeric",
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
-                        </span>
-                      </div>
-                      <div className="mt-1 text-gray-600">
-                        <div>Cajero: {snapshot.cashier || "N/A"}</div>
-                        <div>Supervisor: {snapshot.manager || "N/A"}</div>
-                        <div className="mt-0.5">
-                          <span
-                            className={`inline-block px-1.5 py-0.5 rounded text-xs font-medium ${
-                              snapshot.status === "CLOSED"
-                                ? "bg-green-100 text-green-700"
-                                : "bg-yellow-100 text-yellow-700"
-                            }`}
-                          >
-                            {snapshot.status === "CLOSED"
-                              ? "Cerrado"
-                              : "Borrador"}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
+                    <SnapshotRow key={snapshot.id} snapshot={snapshot} />
                   ))}
                 </div>
               </div>
