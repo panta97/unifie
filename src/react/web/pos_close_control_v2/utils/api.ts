@@ -5,6 +5,7 @@ import type {
   OTPVerifyResponse,
   OTPValidateResponse,
 } from "../types";
+import { FIXED_BALANCE_START } from "../types";
 
 const OTP_TOKEN_KEY = "otp_token";
 
@@ -86,6 +87,7 @@ interface SessionDataResponse {
     session_id: number;
     config_id: number;
     config_display_name: string;
+    cashier_names: string[]; // employees on this session's pos orders
     session_name: string;
     balance_start: number; // in cents
     start_at: string;
@@ -105,6 +107,7 @@ interface SessionDataResponse {
       card_amounts: any;
       pos_cash: number;
       pos_card: number;
+      balance_start_next_day?: number; // in cents (next-day starting float)
       status?: string; // Session status (DRAFT/CLOSED)
     };
   };
@@ -132,6 +135,7 @@ export async function fetchSessionData(sessionId: number) {
     sessionId: data.body.session_id,
     configId: data.body.config_id,
     configDisplayName: data.body.config_display_name,
+    cashierNames: data.body.cashier_names ?? [],
     sessionName: data.body.session_name,
     posName: data.body.pos_name,
     startAt: data.body.start_at,
@@ -144,7 +148,8 @@ export async function fetchSessionData(sessionId: number) {
     posCash: 0, // Will be calculated from denominations
     posCard: 0, // Will be calculated from card amounts
     profitTotal: 0,
-    balanceStartNextDay: 0,
+    balanceStartNextDay:
+      data.body.saved_session?.balance_start_next_day ?? FIXED_BALANCE_START,
     savedSession: data.body.saved_session, // Include saved session if exists
     snapshotCount: data.body.snapshot_count || 0, // Include snapshot count
   };
@@ -214,11 +219,24 @@ export async function autosavePosCloseControl(
   cashDenominations: any,
   cardAmounts: any,
   cashierId?: number | null,
-  observations?: string
-) {
+  observations?: string,
+  balanceStartNextDay?: number,
+  odooCash?: number,
+  odooCard?: number,
+  managerId?: number | null
+): Promise<{
+  id: number;
+  created: boolean;
+  snapshot_created?: boolean;
+  message: string;
+}> {
   const body: any = { cashDenominations, cardAmounts };
   if (cashierId != null) body.cashierId = cashierId;
   if (observations !== undefined) body.observations = observations;
+  if (balanceStartNextDay != null) body.balanceStartNextDay = balanceStartNextDay;
+  if (odooCash != null) body.odooCash = odooCash;
+  if (odooCard != null) body.odooCard = odooCard;
+  if (managerId != null) body.managerId = managerId;
 
   const response = await fetch(`/api/pos-close-control/v2/${sessionId}`, {
     method: "PATCH",

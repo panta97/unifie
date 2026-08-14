@@ -3,6 +3,7 @@ from .rpc import get_proxy, get_model, get_closing_control_data
 import logging
 from datetime import datetime
 from django.conf import settings
+from django.db import transaction
 from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_exempt
@@ -16,6 +17,33 @@ from miscellaneous.constants import (
 )
 
 logger = logging.getLogger(__name__)
+
+
+def create_session_snapshot(saved_session):
+    """Create a PosSessionV2Snapshot copying the CURRENT (pre-update) state of saved_session."""
+    return PosSessionV2Snapshot.objects.create(
+        original_session_id=saved_session.odoo_session_id,
+        pos_name=saved_session.pos_name,
+        cashier=saved_session.cashier,
+        manager=saved_session.manager,
+        odoo_session_id=saved_session.odoo_session_id,
+        odoo_config_id=saved_session.odoo_config_id,
+        odoo_cash=saved_session.odoo_cash,
+        odoo_card=saved_session.odoo_card,
+        pos_cash=saved_session.pos_cash,
+        pos_card=saved_session.pos_card,
+        profit_total=saved_session.profit_total,
+        balance_start=saved_session.balance_start,
+        balance_start_next_day=saved_session.balance_start_next_day,
+        session_name=saved_session.session_name,
+        start_at=saved_session.start_at,
+        stop_at=saved_session.stop_at,
+        end_state=saved_session.end_state,
+        end_state_note=saved_session.end_state_note,
+        end_state_amount=saved_session.end_state_amount,
+        json=saved_session.json,
+        status=saved_session.status,
+    )
 
 
 def get_discounts(session_id):
@@ -245,13 +273,13 @@ def pos_persist(request):
 def employee(request, type):
     if type == Employee.CASHIER:
         cashiers = Employee.objects.filter(type=Employee.CASHIER, is_used=True).values(
-            "id", "first_name", "last_name"
+            "id", "first_name", "last_name", "store"
         )
         cashiers = list(cashiers)
         return JsonResponse(cashiers, safe=False)
     elif type == Employee.MANAGER:
         managers = Employee.objects.filter(type=Employee.MANAGER, is_used=True).values(
-            "id", "first_name", "last_name"
+            "id", "first_name", "last_name", "store"
         )
         managers = list(managers)
         return JsonResponse(managers, safe=False)
@@ -290,6 +318,20 @@ class PosCloseControlV2View(OTPSessionMixin, View):
             ]
             proxy = get_proxy()
             pos_session = get_model(ps_table, ps_filter, ps_fields, proxy=proxy)
+
+            # POS ORDER - the employees that rang up this session's orders.
+            # Usually one, but a session can be handed over between cashiers.
+            po_table = "pos.order"
+            po_filter = [[["session_id", "=", session_id]]]
+            po_fields = ["employee_id"]
+            pos_orders = get_model(po_table, po_filter, po_fields, proxy=proxy)
+
+            cashier_names = []
+            for order in pos_orders:
+                # employee_id is False on orders with no employee set
+                employee = order["employee_id"]
+                if employee and employee[1] not in cashier_names:
+                    cashier_names.append(employee[1])
 
             # ACCOUNT BANK STATEMENT
             abs_table = "account.bank.statement.line"
@@ -379,6 +421,7 @@ class PosCloseControlV2View(OTPSessionMixin, View):
                 "session_id": pos_session[0]["id"],
                 "config_id": pos_session[0]["config_id"][0],
                 "config_display_name": pos_session[0]["config_id"][1],
+                "cashier_names": cashier_names,
                 "session_name": pos_session[0]["display_name"],
                 "balance_start": balance_start_int,
                 "start_at": start_at,
@@ -415,6 +458,7 @@ class PosCloseControlV2View(OTPSessionMixin, View):
                         "card_amounts": saved_data.get("cardAmounts", {}),
                         "pos_cash": saved_session.pos_cash,
                         "pos_card": saved_session.pos_card,
+                        "balance_start_next_day": saved_session.balance_start_next_day,
                         "status": saved_session.status,
                     }
                     if saved_session.cashier:
@@ -556,38 +600,6 @@ class PosCloseControlV2View(OTPSessionMixin, View):
                     {"error": "Sesión no encontrada para actualizar"}, status=404
                 )
 
-            # Check if session is CLOSED - if so, create snapshot
-            snapshot_created = False
-            if saved_session.status == CLOSED:
-                logger.info(f"🔒 Session {session_id} is CLOSED, creating snapshot...")
-
-                # Create snapshot with current session data
-                PosSessionV2Snapshot.objects.create(
-                    original_session_id=saved_session.odoo_session_id,
-                    pos_name=saved_session.pos_name,
-                    cashier=saved_session.cashier,
-                    manager=saved_session.manager,
-                    odoo_session_id=saved_session.odoo_session_id,
-                    odoo_config_id=saved_session.odoo_config_id,
-                    odoo_cash=saved_session.odoo_cash,
-                    odoo_card=saved_session.odoo_card,
-                    pos_cash=saved_session.pos_cash,
-                    pos_card=saved_session.pos_card,
-                    profit_total=saved_session.profit_total,
-                    balance_start=saved_session.balance_start,
-                    balance_start_next_day=saved_session.balance_start_next_day,
-                    session_name=saved_session.session_name,
-                    start_at=saved_session.start_at,
-                    stop_at=saved_session.stop_at,
-                    end_state=saved_session.end_state,
-                    end_state_note=saved_session.end_state_note,
-                    end_state_amount=saved_session.end_state_amount,
-                    json=saved_session.json,
-                    status=saved_session.status,
-                )
-                snapshot_created = True
-                logger.info(f"📸 Snapshot created for session {session_id}")
-
             cashier_id = data["cashier"]["id"]
             manager_id = data["manager"]["id"]
 
@@ -615,35 +627,42 @@ class PosCloseControlV2View(OTPSessionMixin, View):
             new_stop_at = data["summary"]["stopAt"]
             new_status = CLOSED if new_stop_at else DRAFT
 
-            # Update the session
-            saved_session.pos_name = data["posName"]
-            saved_session.cashier = cashier
-            saved_session.manager = manager
-            saved_session.odoo_config_id = data["summary"]["configId"]
-            saved_session.odoo_cash = data["summary"]["odooCash"]
-            saved_session.odoo_card = data["summary"]["odooCard"]
-            saved_session.pos_cash = data["summary"]["posCash"]
-            saved_session.pos_card = data["summary"]["posCard"]
-            saved_session.profit_total = data["summary"]["profitTotal"]
-            saved_session.balance_start = data["summary"]["balanceStart"]
-            saved_session.balance_start_next_day = data["summary"][
-                "balanceStartNextDay"
-            ]
-            saved_session.session_name = data["summary"]["sessionName"]
-            saved_session.start_at = data["summary"]["startAt"]
+            with transaction.atomic():
+                # Snapshot the current (pre-update) state before overwriting the row.
+                # Any update of an existing session is versioned.
+                create_session_snapshot(saved_session)
+                snapshot_created = True
+                logger.info(f"📸 Snapshot created for session {session_id}")
 
-            # Keep the original stop_at or use new value
-            # Per user requirement: keep original stop_at value
-            if new_stop_at:
-                saved_session.stop_at = new_stop_at
-            # If new stop_at is None, keep the existing value (don't override)
+                # Update the session
+                saved_session.pos_name = data["posName"]
+                saved_session.cashier = cashier
+                saved_session.manager = manager
+                saved_session.odoo_config_id = data["summary"]["configId"]
+                saved_session.odoo_cash = data["summary"]["odooCash"]
+                saved_session.odoo_card = data["summary"]["odooCard"]
+                saved_session.pos_cash = data["summary"]["posCash"]
+                saved_session.pos_card = data["summary"]["posCard"]
+                saved_session.profit_total = data["summary"]["profitTotal"]
+                saved_session.balance_start = data["summary"]["balanceStart"]
+                saved_session.balance_start_next_day = data["summary"][
+                    "balanceStartNextDay"
+                ]
+                saved_session.session_name = data["summary"]["sessionName"]
+                saved_session.start_at = data["summary"]["startAt"]
 
-            saved_session.end_state = end_state
-            saved_session.end_state_amount = data["endState"]["amount"]
-            saved_session.end_state_note = data["endState"]["note"]
-            saved_session.json = json.dumps(data)
-            saved_session.status = new_status
-            saved_session.save()
+                # Keep the original stop_at or use new value
+                # Per user requirement: keep original stop_at value
+                if new_stop_at:
+                    saved_session.stop_at = new_stop_at
+                # If new stop_at is None, keep the existing value (don't override)
+
+                saved_session.end_state = end_state
+                saved_session.end_state_amount = data["endState"]["amount"]
+                saved_session.end_state_note = data["endState"]["note"]
+                saved_session.json = json.dumps(data)
+                saved_session.status = new_status
+                saved_session.save()
 
             logger.info(
                 f"✅ Sesión V2 actualizada: {saved_session.id} "
@@ -693,63 +712,92 @@ class PosCloseControlV2View(OTPSessionMixin, View):
             if saved_session:
                 # Update existing session - only update JSON field with new amounts
                 try:
-                    existing_data = json.loads(saved_session.json)
-                    existing_data["cashDenominations"] = data.get(
-                        "cashDenominations", {}
-                    )
-                    existing_data["cardAmounts"] = data.get("cardAmounts", {})
+                    with transaction.atomic():
+                        # Snapshot the current (pre-update) state before overwriting.
+                        # Every autosave of an existing session is versioned.
+                        create_session_snapshot(saved_session)
+                        logger.info(f"📸 Snapshot created for session {session_id} (autosave)")
 
-                    # Update cashier if provided
-                    if "cashierId" in data:
-                        cashier_id = data["cashierId"]
-                        if cashier_id:
-                            cashier = Employee.objects.filter(id=cashier_id, is_used=True).first()
-                            if cashier:
-                                saved_session.cashier = cashier
-                        else:
-                            saved_session.cashier = None
-                        existing_data["cashierId"] = cashier_id
+                        existing_data = json.loads(saved_session.json)
+                        existing_data["cashDenominations"] = data.get(
+                            "cashDenominations", {}
+                        )
+                        existing_data["cardAmounts"] = data.get("cardAmounts", {})
 
-                    # Update observations if provided
-                    if "observations" in data:
-                        saved_session.end_state_note = data["observations"]
-                        existing_data["observations"] = data["observations"]
+                        # Update cashier if provided
+                        if "cashierId" in data:
+                            cashier_id = data["cashierId"]
+                            if cashier_id:
+                                cashier = Employee.objects.filter(id=cashier_id, is_used=True).first()
+                                if cashier:
+                                    saved_session.cashier = cashier
+                            else:
+                                saved_session.cashier = None
+                            existing_data["cashierId"] = cashier_id
 
-                    saved_session.json = json.dumps(existing_data)
+                        # Update manager if provided
+                        if "managerId" in data:
+                            manager_id = data["managerId"]
+                            if manager_id:
+                                manager = Employee.objects.filter(id=manager_id, is_used=True).first()
+                                if manager:
+                                    saved_session.manager = manager
+                            else:
+                                saved_session.manager = None
+                            existing_data["managerId"] = manager_id
 
-                    # Recalculate totals
-                    denoms = data.get("cashDenominations", {})
-                    cash_total = (
-                        denoms.get("d0_10", 0) * 10
-                        + denoms.get("d0_20", 0) * 20
-                        + denoms.get("d0_50", 0) * 50
-                        + denoms.get("d1_00", 0) * 100
-                        + denoms.get("d2_00", 0) * 200
-                        + denoms.get("d5_00", 0) * 500
-                        + denoms.get("d10_00", 0) * 1000
-                        + denoms.get("d20_00", 0) * 2000
-                        + denoms.get("d50_00", 0) * 5000
-                        + denoms.get("d100_00", 0) * 10000
-                        + denoms.get("d200_00", 0) * 20000
-                    )
+                        # Update observations if provided
+                        if "observations" in data:
+                            saved_session.end_state_note = data["observations"]
+                            existing_data["observations"] = data["observations"]
 
-                    cards = data.get("cardAmounts", {})
-                    card_total = (
-                        cards.get("pos1", 0)
-                        + cards.get("pos2", 0)
-                        + cards.get("miscellaneous", 0)
-                    )
+                        # Update next-day starting balance if provided
+                        if "balanceStartNextDay" in data:
+                            saved_session.balance_start_next_day = data["balanceStartNextDay"]
+                            existing_data["balanceStartNextDay"] = data["balanceStartNextDay"]
 
-                    saved_session.pos_cash = cash_total
-                    saved_session.pos_card = card_total
-                    saved_session.profit_total = (
-                        cash_total
-                        + card_total
-                        - saved_session.odoo_cash
-                        - saved_session.odoo_card
-                    )
+                        # Update Odoo expected totals if provided (browser sends the
+                        # values loaded on fetch) so snapshots/profit are accurate.
+                        if "odooCash" in data:
+                            saved_session.odoo_cash = data["odooCash"]
+                        if "odooCard" in data:
+                            saved_session.odoo_card = data["odooCard"]
 
-                    saved_session.save()
+                        saved_session.json = json.dumps(existing_data)
+
+                        # Recalculate totals
+                        denoms = data.get("cashDenominations", {})
+                        cash_total = (
+                            denoms.get("d0_10", 0) * 10
+                            + denoms.get("d0_20", 0) * 20
+                            + denoms.get("d0_50", 0) * 50
+                            + denoms.get("d1_00", 0) * 100
+                            + denoms.get("d2_00", 0) * 200
+                            + denoms.get("d5_00", 0) * 500
+                            + denoms.get("d10_00", 0) * 1000
+                            + denoms.get("d20_00", 0) * 2000
+                            + denoms.get("d50_00", 0) * 5000
+                            + denoms.get("d100_00", 0) * 10000
+                            + denoms.get("d200_00", 0) * 20000
+                        )
+
+                        cards = data.get("cardAmounts", {})
+                        card_total = (
+                            cards.get("pos1", 0)
+                            + cards.get("pos2", 0)
+                            + cards.get("miscellaneous", 0)
+                        )
+
+                        saved_session.pos_cash = cash_total
+                        saved_session.pos_card = card_total
+                        saved_session.profit_total = (
+                            cash_total
+                            + card_total
+                            - saved_session.odoo_cash
+                            - saved_session.odoo_card
+                        )
+
+                        saved_session.save()
 
                     logger.info(
                         f"✅ Autosave: Sesión V2 actualizada: {saved_session.id}"
@@ -759,6 +807,7 @@ class PosCloseControlV2View(OTPSessionMixin, View):
                             "message": "Autosave successful (updated)",
                             "id": saved_session.id,
                             "created": False,
+                            "snapshot_created": True,
                         },
                         status=200,
                     )
@@ -814,30 +863,44 @@ class PosCloseControlV2View(OTPSessionMixin, View):
                 if data.get("cashierId"):
                     cashier_obj = Employee.objects.filter(id=data["cashierId"], is_used=True).first()
 
+                # Resolve manager if provided
+                manager_obj = None
+                if data.get("managerId"):
+                    manager_obj = Employee.objects.filter(id=data["managerId"], is_used=True).first()
+
                 # Resolve observations if provided
                 end_state_note = data.get("observations", "")
 
-                # Store cashierId and observations in json_data
+                # Store cashierId, managerId and observations in json_data
                 if "cashierId" in data:
                     json_data["cashierId"] = data["cashierId"]
+                if "managerId" in data:
+                    json_data["managerId"] = data["managerId"]
                 if "observations" in data:
                     json_data["observations"] = data["observations"]
+
+                # Odoo expected totals sent by the browser (loaded on fetch)
+                odoo_cash = data.get("odooCash", 0)
+                odoo_card = data.get("odooCard", 0)
 
                 # Create session with placeholder values
                 pos_session_v2 = PosSessionV2.objects.create(
                     pos_name=pos_session[0]["config_id"][1].split()[0],
                     cashier=cashier_obj,
+                    manager=manager_obj,
                     odoo_session_id=session_id,
                     odoo_config_id=pos_session[0]["config_id"][0],
-                    odoo_cash=0,  # Will be updated on fetch
-                    odoo_card=0,  # Will be updated on fetch
+                    odoo_cash=odoo_cash,
+                    odoo_card=odoo_card,
                     pos_cash=cash_total,
                     pos_card=card_total,
-                    profit_total=0,  # Placeholder
+                    profit_total=cash_total + card_total - odoo_cash - odoo_card,
                     balance_start=int(
                         round(pos_session[0]["cash_register_balance_start"] * 100)
                     ),
-                    balance_start_next_day=30000,  # Default S/. 300.00 in cents
+                    balance_start_next_day=data.get(
+                        "balanceStartNextDay", 30000
+                    ),  # Default S/. 300.00 in cents
                     session_name=pos_session[0]["display_name"],
                     start_at=pos_session[0]["start_at"],
                     end_state="ST",  # Placeholder

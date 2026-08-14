@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { formatCurrency } from "../utils/formatters";
 import type { Employee, CashDenominations } from "../types";
+import { STORES } from "../types";
 import { TargetBalanceModal } from "./TargetBalanceModal";
 
 interface RightSectionProps {
@@ -10,9 +11,12 @@ interface RightSectionProps {
   posCash: number;
   posCard: number;
   balanceStart: number;
+  balanceStartNextDay: number;
   isSessionClosed: boolean;
   isExistingSession: boolean;
   selectedManager: Employee | null;
+  selectedStore: string;
+  onStoreChange: (store: string) => void;
   cashiers: Employee[];
   selectedCashier: Employee | null;
   onCashierChange: (cashierId: number) => void;
@@ -31,9 +35,12 @@ export const RightSection: React.FC<RightSectionProps> = ({
   posCash,
   posCard,
   balanceStart,
+  balanceStartNextDay,
   isSessionClosed,
   isExistingSession,
   selectedManager,
+  selectedStore,
+  onStoreChange,
   cashiers,
   selectedCashier,
   onCashierChange,
@@ -47,9 +54,14 @@ export const RightSection: React.FC<RightSectionProps> = ({
   // Modal state
   const [showModal, setShowModal] = useState(false);
   const [showTargetBalanceModal, setShowTargetBalanceModal] = useState(false);
+
+  // Only show cashiers that belong to the selected store
+  const filteredCashiers = cashiers.filter((c) => c.store === selectedStore);
   // Calculate totals
+  // Inicio (próx. día) is counted as part of the cash in the drawer (Efectivo Caja)
   const odooTotal = odooCash + odooCard;
-  const cajaTotal = posCash + posCard;
+  const cajaEfectivo = posCash + balanceStartNextDay;
+  const cajaTotal = cajaEfectivo + posCard;
   const difference = cajaTotal - odooTotal;
 
   // Determine status
@@ -84,7 +96,8 @@ export const RightSection: React.FC<RightSectionProps> = ({
   // Calculate segment widths within each bar
   const odooEfectivoPercent = odooTotal > 0 ? (odooCash / odooTotal) * 100 : 0;
   const odooTarjetaPercent = odooTotal > 0 ? (odooCard / odooTotal) * 100 : 0;
-  const cajaEfectivoPercent = cajaTotal > 0 ? (posCash / cajaTotal) * 100 : 0;
+  const cajaEfectivoPercent =
+    cajaTotal > 0 ? (cajaEfectivo / cajaTotal) * 100 : 0;
   const cajaTarjetaPercent = cajaTotal > 0 ? (posCard / cajaTotal) * 100 : 0;
 
   const textColor =
@@ -203,14 +216,14 @@ export const RightSection: React.FC<RightSectionProps> = ({
                 className="flex rounded-md overflow-hidden shadow-sm min-h-[40px] items-center transition-all duration-300"
                 style={{ width: `${cajaWidth}%` }}
               >
-                {posCash > 0 && (
+                {cajaEfectivo > 0 && (
                   <div
                     className="flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-semibold text-white min-w-[80px] whitespace-nowrap transition-all duration-300 bg-gradient-to-br from-emerald-500 to-emerald-600"
                     style={{ width: `${cajaEfectivoPercent}%` }}
                   >
                     <span className="text-base leading-none">💵</span>
                     <span className="font-mono text-[11px]">
-                      {formatCurrency(posCash)}
+                      {formatCurrency(cajaEfectivo)}
                     </span>
                   </div>
                 )}
@@ -284,7 +297,7 @@ export const RightSection: React.FC<RightSectionProps> = ({
               <tr className="hover:bg-gray-50">
                 <td className="w-1/2 px-2.5 py-2 border-b border-gray-100 font-medium text-slate-700">
                   <div className="flex items-center gap-2">
-                    <span>Inicio:</span>
+                    <span>Inicio (hoy):</span>
                     <button
                       onClick={() => setShowTargetBalanceModal(true)}
                       className="text-[10px] px-1.5 py-0.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded border border-slate-300 transition-colors"
@@ -313,6 +326,25 @@ export const RightSection: React.FC<RightSectionProps> = ({
           </div>
         </div>
 
+        {/* Store Dropdown */}
+        <div className="mt-4">
+          <label className="block mb-1.5 font-medium text-sm text-slate-600">
+            Tienda:
+          </label>
+          <select
+            value={selectedStore}
+            onChange={(e) => onStoreChange(e.target.value)}
+            className="w-full text-sm px-2.5 py-1.5 border border-gray-200 rounded transition-all duration-200 cursor-pointer bg-white focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 disabled:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-60"
+            disabled={disabled}
+          >
+            {STORES.map((store) => (
+              <option key={store.value} value={store.value}>
+                {store.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
         {/* Cajero Dropdown */}
         <div className="mt-4">
           <label className="block mb-1.5 font-medium text-sm text-slate-600">
@@ -329,9 +361,9 @@ export const RightSection: React.FC<RightSectionProps> = ({
             disabled={disabled}
           >
             <option value="">Seleccionar Cajero</option>
-            {cashiers.map((cashier) => (
+            {filteredCashiers.map((cashier) => (
               <option key={cashier.id} value={cashier.id}>
-                {cashier.first_name} {cashier.last_name.charAt(0)}.
+                {cashier.first_name} {cashier.last_name}
               </option>
             ))}
           </select>
@@ -383,7 +415,7 @@ export const RightSection: React.FC<RightSectionProps> = ({
           isOpen={showTargetBalanceModal}
           onClose={() => setShowTargetBalanceModal(false)}
           cashDenominations={cashDenominations}
-          balanceStart={balanceStart}
+          balanceStart={balanceStartNextDay}
         />
 
         {/* Modal */}
