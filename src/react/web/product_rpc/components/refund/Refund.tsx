@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Wrapper } from "../shared/Wrapper";
 import { InvoiceSearch } from "./InvoiceSearch";
-import { InvoiceTicketPrint } from "./InvoiceTicketPrint";
+import { CreditNoteTicketPrint } from "./CreditNoteTicketPrint";
 import { RefundLine } from "./RefundLine";
 
 const Refund = () => {
@@ -15,7 +15,7 @@ const Refund = () => {
           <RefundLine isPaying={isPaying} />
         </div>
       </div>
-      <InvoiceTicketPrint />
+      <CreditNoteTicketPrint />
     </Wrapper>
   );
 };

@@ -24,6 +24,9 @@ export interface Line {
   price_unit_refund: number;
   price_subtotal_refund: number;
   is_editing_refund: boolean;
+  qty_refunded?: number;
+  qty_available?: number;
+  is_refunded?: boolean;
 }
 
 export interface RefundResult {

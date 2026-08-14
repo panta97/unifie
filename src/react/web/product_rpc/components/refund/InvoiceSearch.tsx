@@ -74,10 +74,10 @@ export const InvoiceSearch: React.FC<InvoiceSearchProps> = ({ isPaying, setIsPay
         dispatch(replaceInvoice({ invoice: json.invoice_details }));
         setInvoiceNumber("");
       } else {
-        alert("Esta boleta/factura ya tiene una nota de crédito. " + json.message);
+        alert(json.message || "Factura no encontrada");
       }
     } catch (error) {
-      alert(error);
+      alert("Error al buscar factura: " + error);
     } finally {
       dispatch(updateInvoiceStatus({ invoiceStatus: FetchStatus.IDLE }));
     }
