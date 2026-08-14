@@ -24,12 +24,9 @@ typing_extensions==4.12.2
 tzdata==2025.1
 urllib3==2.3.0
 virtualenv==20.29.2
-<<<<<<< HEAD:src/django/django_kdosh/requirements.txt
 XlsxWriter==3.2.9
-=======
 pyotp==2.10.0
 python-dotenv==1.2.2
 gunicorn==23.0.0
 XlsxWriter==3.2.0
 qrcode[pil]==8.0
->>>>>>> 98eddf2a53fe0289fd10b5671aaa7a6256452ce0:src/django/requirements.txt
