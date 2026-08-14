@@ -1,8 +1,7 @@
 import React from "react";
 import { Wrapper } from "../shared/Wrapper";
 import { InvoiceSearch } from "./InvoiceSearch";
-// import { InvoiceTicketPrint } from "./InvoiceTicketPrint";
-// import { RefundLine } from "./RefundLine";
+import { RefundLine } from "./RefundLine";
 
 const Credit = () => {
   return (
@@ -10,10 +9,9 @@ const Credit = () => {
       <div className="w-[620px] mx-auto">
         <div className="flex justify-between">
           <InvoiceSearch />
-          {/* <RefundLine />  */}
+          <RefundLine />
         </div>
       </div>
-      {/* <InvoiceTicketPrint /> */}
     </Wrapper>
   );
 };

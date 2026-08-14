@@ -70,7 +70,12 @@ export const invoiceItemSlice = createSlice({
       for (let i = 0; i < state.lines.length; i++) {
         if (state.lines[i].id === lineId) {
           const line = state.lines[i];
-          const newQtyRefund = clamp(line.qty_refund + qty, 0, line.quantity);
+          const maxAvailable =
+            line.qty_available !== undefined ? line.qty_available : line.quantity;
+          if (maxAvailable <= 0 && qty > 0) {
+            continue;
+          }
+          const newQtyRefund = clamp(line.qty_refund + qty, 0, maxAvailable);
           line.qty_refund = newQtyRefund;
           if (line.qty_refund === 0) {
             line.price_unit_refund = 0;
