@@ -18,6 +18,7 @@ import { getCurrencyFormat, getQtyFormat } from "./format";
 import { InvoiceSummaryTable } from "./InvoiceSummaryTable";
 import { linesSchema } from "./validation";
 import { CreditNoteTicketPrint } from "./CreditNoteTicketPrint";
+import { ConfirmModal } from "../shared/ConfirmModal";
 
 // Input controlado localmente: mantiene estado local para que el usuario pueda
 // borrar y reescribir. Despacha al store en cada cambio (con debounce implícito
@@ -72,6 +73,7 @@ const SubtotalInput = ({
 
 export const RefundLine = () => {
   const [creditNoteCreated, setCreditNoteCreated] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
   const refundStatus = useAppSelector(selectFormRefundStatus);
   const invoiceDetails = useAppSelector(selectInvoiceItem);
   const tableSectionRef = useRef<HTMLTableSectionElement>(null);
@@ -85,32 +87,17 @@ export const RefundLine = () => {
     dispatch(updateRefundEditing({ lineId, isEditing }));
   };
 
-
   const handleRemoveProduct = (lineId: number) => {
     dispatch(updateRefundManual({ lineId, priceSubtotalRefund: 0, remove: true }));
   };
 
-  const handleCreateRefund = async () => {
+  const executeCreateRefund = async () => {
     const selectedLines = invoiceDetails.lines.filter(
       (line) => line.qty_refund > 0
     );
 
-    if (selectedLines.length === 0) {
-      alert("Debe seleccionar al menos un producto");
-      return;
-    }
-
-    if (invoiceDetails.has_refund) {
-      const isConfirmed = window.confirm(
-        "Esta factura ya tiene nota(s) de crédito,\n ¿está seguro que quiere crear uno nuevo?"
-      );
-      if (!isConfirmed) return;
-    }
-
     try {
-      await linesSchema.validate(
-        invoiceDetails.lines.filter((line) => line.qty_refund > 0)
-      );
+      await linesSchema.validate(selectedLines);
       dispatch(updateRefundStatus({ refundStatus: FetchStatus.LOADING }));
       const params = {
         method: "POST",
@@ -146,6 +133,24 @@ export const RefundLine = () => {
     } finally {
       dispatch(updateRefundStatus({ refundStatus: FetchStatus.IDLE }));
     }
+  };
+
+  const handleCreateRefund = () => {
+    const selectedLines = invoiceDetails.lines.filter(
+      (line) => line.qty_refund > 0
+    );
+
+    if (selectedLines.length === 0) {
+      alert("Debe seleccionar al menos un producto");
+      return;
+    }
+
+    if (invoiceDetails.has_refund || invoiceDetails.refund_invoices.length > 0) {
+      setShowConfirmModal(true);
+      return;
+    }
+
+    executeCreateRefund();
   };
 
   const handlePrint = () => {
@@ -268,6 +273,20 @@ export const RefundLine = () => {
         </div>
         <CreditNoteTicketPrint />
       </div>
+      <ConfirmModal
+        isOpen={showConfirmModal}
+        invoiceNumber={invoiceDetails.number}
+        existingCount={invoiceDetails.refund_invoices.length}
+        totalAmount={invoiceDetails.lines
+          .filter((line) => line.qty_refund > 0)
+          .reduce((curr, line) => curr + line.price_subtotal_refund, 0)}
+        currency={invoiceDetails.currency || "S/"}
+        onConfirm={() => {
+          setShowConfirmModal(false);
+          executeCreateRefund();
+        }}
+        onCancel={() => setShowConfirmModal(false)}
+      />
       <Loader fetchStatus={refundStatus} portal={true} />
     </div>
   );
