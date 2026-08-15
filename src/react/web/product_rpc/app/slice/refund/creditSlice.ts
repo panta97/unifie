@@ -25,6 +25,7 @@ const initialState: CreditDetails = {
   lines: [],
   refund_invoices: [],
   stock_moves: [],
+  selectedRefundForPrint: null,
 };
 
 export const invoiceItemSlice = createSlice({
@@ -51,6 +52,7 @@ export const invoiceItemSlice = createSlice({
       state.lines = invoice.lines;
       state.refund_invoices = invoice.refund_invoices;
       state.stock_moves = invoice.stock_moves;
+      state.selectedRefundForPrint = null;
     },
     updateRefund: (
       state,
@@ -169,6 +171,13 @@ export const invoiceItemSlice = createSlice({
       state.has_refund = true;
       state.refund_invoices.push(refund_invoice);
       state.stock_moves.push(stock_move);
+      state.selectedRefundForPrint = refund_invoice;
+    },
+    setSelectedRefundForPrint: (
+      state,
+      { payload }: PayloadAction<InvoiceSummary | null>
+    ) => {
+      state.selectedRefundForPrint = payload;
     },
     updateRefundEditing: (
       state,
@@ -192,8 +201,11 @@ export const {
   updateRefundResult,
   updateRefundEditing,
   replaceInvoice,
+  setSelectedRefundForPrint,
 } = invoiceItemSlice.actions;
 
 export const selectInvoiceItem = (state: RootState) => state.refund.invoice;
+export const selectSelectedRefundForPrint = (state: RootState) =>
+  state.refund.invoice.selectedRefundForPrint;
 
 export default invoiceItemSlice.reducer;

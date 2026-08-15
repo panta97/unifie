@@ -34,11 +34,25 @@ export interface RefundResult {
   stock_move: string;
 }
 
+export interface RefundLineSummary {
+  id: number;
+  product_id: number;
+  name: string;
+  quantity: number;
+  discount: number;
+  price_unit: number;
+  price_subtotal: number;
+}
+
 export interface InvoiceSummary {
   id: number;
   number: string;
   create_date: string;
   odoo_link: string;
+  amount_untaxed?: number;
+  amount_total?: number;
+  journal?: string;
+  lines?: RefundLineSummary[];
 }
 
 export interface InvoiceDetails {
@@ -47,6 +61,7 @@ export interface InvoiceDetails {
   has_refund: boolean;
   refund_invoices: InvoiceSummary[];
   stock_moves: InvoiceSummary[];
+  selectedRefundForPrint?: InvoiceSummary | null;
 
   journal: string;
   number: string;
@@ -68,6 +83,7 @@ export interface CreditDetails {
   has_refund: boolean;
   refund_invoices: InvoiceSummary[];
   stock_moves: InvoiceSummary[];
+  selectedRefundForPrint?: InvoiceSummary | null;
 
   journal: string;
   number: string;

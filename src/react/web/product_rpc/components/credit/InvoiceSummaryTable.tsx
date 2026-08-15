@@ -1,6 +1,8 @@
 import React, { useEffect } from "react";
 import { Printer } from "lucide-react";
 import { InvoiceSummary } from "../../types/refund";
+import { useAppDispatch } from "../../app/hooks";
+import { setSelectedRefundForPrint } from "../../app/slice/refund/creditSlice";
 
 export interface InvoiceSummaryTableProps {
   title: string;
@@ -39,13 +41,17 @@ export const InvoiceSummaryTable = ({
   invoiceSummaries,
   showPrint = false,
 }: InvoiceSummaryTableProps) => {
+  const dispatch = useAppDispatch();
   const validInvoices = invoiceSummaries.filter(
     (refundInvoice) => refundInvoice !== undefined
   );
 
-  useEffect(() => {
-    // console.log("InvoiceSummaryTable recibe:", { title, validInvoices });
-  }, [title, validInvoices]);
+  const handlePrint = (refund_invoice: InvoiceSummary) => {
+    dispatch(setSelectedRefundForPrint(refund_invoice));
+    setTimeout(() => {
+      window.print();
+    }, 50);
+  };
 
   if (validInvoices.length === 0) {
     return null;
@@ -97,7 +103,7 @@ export const InvoiceSummaryTable = ({
                 <td className="border border-gray-300 px-2 py-0.5 text-center">
                   <button
                     title="Imprimir nota de crédito"
-                    onClick={() => window.print()}
+                    onClick={() => handlePrint(refund_invoice)}
                     className="inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 font-sans cursor-pointer hover:underline"
                   >
                     <Printer size={13} />
