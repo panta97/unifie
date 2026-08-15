@@ -2,75 +2,137 @@ import React from "react";
 import { createPortal } from "react-dom";
 import QRCode from "react-qr-code";
 import { useAppSelector } from "../../app/hooks";
-import { selectInvoiceItem } from "../../app/slice/refund/creditSlice";
+import {
+  selectInvoiceItem,
+  selectSelectedRefundForPrint,
+} from "../../app/slice/refund/creditSlice";
 import {
   getCurrencyFormat,
   getQtyFormat,
 } from "./format";
 import kdoshLogo from "./kdosh_logo.png";
 
+interface PrintLineItem {
+  id: number;
+  name: string;
+  quantity: number;
+  discount: number;
+  price_unit: number;
+  price_subtotal: number;
+}
+
 export const CreditNoteTicketPrint = () => {
   const invoiceDetails = useAppSelector(selectInvoiceItem);
+  const selectedRefund = useAppSelector(selectSelectedRefundForPrint);
 
-  // La última nota de crédito creada
-  const lastRefund =
-    invoiceDetails.refund_invoices.length > 0
+  // La nota de crédito seleccionada para imprimir, o por defecto la última creada/existente
+  const targetRefund =
+    selectedRefund ??
+    (invoiceDetails.refund_invoices.length > 0
       ? invoiceDetails.refund_invoices[invoiceDetails.refund_invoices.length - 1]
-      : null;
+      : null);
 
-  // Productos que se devolvieron: si hay selección activa, tomar qty_refund > 0;
-  // si no (se está reimprimiendo una existente), tomar las líneas ya devueltas (qty_refunded > 0 o is_refunded)
-  const activeRefundLines = invoiceDetails.lines.filter((line) => line.qty_refund > 0);
-  const refundLines =
-    activeRefundLines.length > 0
-      ? activeRefundLines
-      : invoiceDetails.lines.filter(
-          (line) =>
-            (line.qty_refunded !== undefined && line.qty_refunded > 0) ||
-            line.is_refunded
-        );
+  // Determinar líneas de la nota de crédito
+  let refundLines: PrintLineItem[] = [];
+  if (targetRefund?.lines && targetRefund.lines.length > 0) {
+    refundLines = targetRefund.lines.map((l) => ({
+      id: l.id,
+      name: l.name,
+      quantity: l.quantity,
+      discount: l.discount ?? 0,
+      price_unit: l.price_unit,
+      price_subtotal: l.price_subtotal,
+    }));
+  } else if (invoiceDetails.lines.some((line) => line.qty_refund > 0)) {
+    refundLines = invoiceDetails.lines
+      .filter((line) => line.qty_refund > 0)
+      .map((line) => ({
+        id: line.id,
+        name: line.name,
+        quantity: line.qty_refund,
+        discount: line.discount ?? 0,
+        price_unit:
+          line.price_unit_refund > 0 ? line.price_unit_refund : line.price_unit,
+        price_subtotal:
+          line.price_subtotal_refund > 0
+            ? line.price_subtotal_refund
+            : line.qty_refund *
+              (line.price_unit_refund > 0
+                ? line.price_unit_refund
+                : line.price_unit),
+      }));
+  } else if (
+    invoiceDetails.lines.some(
+      (line) =>
+        (line.qty_refunded !== undefined && line.qty_refunded > 0) ||
+        line.is_refunded
+    )
+  ) {
+    refundLines = invoiceDetails.lines
+      .filter(
+        (line) =>
+          (line.qty_refunded !== undefined && line.qty_refunded > 0) ||
+          line.is_refunded
+      )
+      .map((line) => {
+        const qty =
+          line.qty_refunded !== undefined && line.qty_refunded > 0
+            ? line.qty_refunded
+            : line.quantity;
+        return {
+          id: line.id,
+          name: line.name,
+          quantity: qty,
+          discount: line.discount ?? 0,
+          price_unit: line.price_unit,
+          price_subtotal:
+            line.price_subtotal > 0
+              ? line.price_subtotal
+              : qty * line.price_unit,
+        };
+      });
+  }
 
-  const getLineQty = (line: typeof invoiceDetails.lines[0]) =>
-    line.qty_refund > 0
-      ? line.qty_refund
-      : line.qty_refunded && line.qty_refunded > 0
-      ? line.qty_refunded
-      : line.quantity;
+  const totalRefund =
+    targetRefund?.amount_total !== undefined && targetRefund.amount_total > 0
+      ? targetRefund.amount_total
+      : refundLines.reduce((curr, line) => curr + line.price_subtotal, 0);
 
-  const getLinePriceUnit = (line: typeof invoiceDetails.lines[0]) =>
-    line.price_unit_refund > 0 ? line.price_unit_refund : line.price_unit;
+  const subtotalRefund =
+    targetRefund?.amount_untaxed !== undefined && targetRefund.amount_untaxed > 0
+      ? targetRefund.amount_untaxed
+      : totalRefund;
 
-  const getLineSubtotal = (line: typeof invoiceDetails.lines[0]) =>
-    line.price_subtotal_refund > 0
-      ? line.price_subtotal_refund
-      : getLineQty(line) * getLinePriceUnit(line);
-
-  const totalRefund = refundLines.reduce(
-    (curr, line) => curr + getLineSubtotal(line),
-    0
-  );
-
-  // Determinar tipo de comprobante para el QR
+  // Determinar tipo de comprobante para el QR (07 = Nota de Crédito)
   const ruc = 20542409534;
-  const journalSunatType = invoiceDetails.journal_sunat_type;
-  const refundNumber = lastRefund?.number ?? "";
-  const parts = refundNumber.split("-");
+  const journalSunatType = "07";
+  const refundNumber = targetRefund?.number ?? "";
+  const cleanNumber = refundNumber.replace(/\s+/g, "");
+  const parts = cleanNumber.split("-");
   const serie = parts[0] ?? "";
   const numPart = parts[1] ?? "";
-  const dateStr = lastRefund?.create_date?.split(" ")?.[0] ?? invoiceDetails.date_invoice;
+  const dateStr =
+    targetRefund?.create_date?.split(" ")?.[0] ?? invoiceDetails.date_invoice;
   const partnerDoc = invoiceDetails.partner.doc_number;
-  const qrValue = `${ruc}|${journalSunatType}|${serie}|${numPart}|0.0|0.0|${totalRefund.toFixed(2)}|${dateStr}|1|${partnerDoc}`;
+  const qrValue = `${ruc}|${journalSunatType}|${serie}|${numPart}|0.0|0.0|${totalRefund.toFixed(
+    2
+  )}|${dateStr}|1|${partnerDoc}`;
 
   // Determinar etiqueta del comprobante
   const getJournalLabel = () => {
-    if (!invoiceDetails.journal) return "Nota de Crédito Electrónica";
-    const j = invoiceDetails.journal.toLowerCase();
-    if (j.includes("factura")) return "Nota de Crédito Factura Electrónica";
-    if (j.includes("boleta")) return "Nota de Crédito Boleta Electrónica";
+    if (targetRefund?.journal) return targetRefund.journal;
+    const num = targetRefund?.number?.toUpperCase() ?? "";
+    if (num.startsWith("B")) return "Nota de Crédito Boleta Electrónica";
+    if (num.startsWith("F")) return "Nota de Crédito Factura Electrónica";
+    if (invoiceDetails.journal) {
+      const j = invoiceDetails.journal.toLowerCase();
+      if (j.includes("factura")) return "Nota de Crédito Factura Electrónica";
+      if (j.includes("boleta")) return "Nota de Crédito Boleta Electrónica";
+    }
     return "Nota de Crédito Electrónica";
   };
 
-  if (!lastRefund || invoiceDetails.id === 0) return null;
+  if (!targetRefund || invoiceDetails.id === 0) return null;
 
   return createPortal(
     <div className="font-invoice text-[13px] text-black">
@@ -96,10 +158,10 @@ export const CreditNoteTicketPrint = () => {
         {/* Tipo comprobante y número de nota de crédito */}
         <div className="w-full text-center leading-4">{getJournalLabel()}</div>
         <div className="w-full text-center leading-4 font-semibold">
-          {lastRefund.number}
+          {targetRefund.number}
         </div>
         <div className="w-full text-center leading-4">
-          Fecha: {lastRefund.create_date}
+          Fecha: {targetRefund.create_date}
         </div>
         <br />
 
@@ -126,13 +188,13 @@ export const CreditNoteTicketPrint = () => {
                   )}
                 </td>
                 <td className="p-0 text-center">
-                  {getQtyFormat(getLineQty(line))}
+                  {getQtyFormat(line.quantity)}
                 </td>
                 <td className="p-0 text-right">
-                  {getCurrencyFormat(getLinePriceUnit(line))}
+                  {getCurrencyFormat(line.price_unit)}
                 </td>
                 <td className="p-0 text-right">
-                  {getCurrencyFormat(getLineSubtotal(line))}
+                  {getCurrencyFormat(line.price_subtotal)}
                 </td>
               </tr>
             ))}
@@ -151,7 +213,7 @@ export const CreditNoteTicketPrint = () => {
             <tr>
               <td></td>
               <td>Subtotal:</td>
-              <td className="text-right">{getCurrencyFormat(totalRefund)}</td>
+              <td className="text-right">{getCurrencyFormat(subtotalRefund)}</td>
             </tr>
             <tr>
               <td></td>
@@ -204,7 +266,9 @@ export const CreditNoteTicketPrint = () => {
           </span>
           <span>
             Número de doc.:{" "}
-            <span className="font-semibold">{invoiceDetails.partner.doc_number}</span>
+            <span className="font-semibold">
+              {invoiceDetails.partner.doc_number}
+            </span>
           </span>
           <br />
           <br />

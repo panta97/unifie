@@ -412,11 +412,14 @@ def get_credit_note(credit_note_number, company_ids=None, uid=2):
 
     credit_note_result["lines"] = []
     for line in credit_note_lines:
-        match = re.search("(\\[.*\\]\\s)?(.*)", line["name"])
-        if not match:
-            raise Exception(f"could not find regex pattern for: {line['name']}")
+        match = re.search(r"(\[.*\]\s)?(.*)", line.get("name") or "")
+        clean_name = match.group(2) if match else line.get("name")
         
-        prod_id = line["product_id"][0]
+        prod_id = (
+            line["product_id"][0]
+            if isinstance(line.get("product_id"), (list, tuple))
+            else line.get("product_id")
+        )
         qty_refunded = refunded_by_product.get(prod_id, 0)
         qty_available = max(0, line["quantity"] - qty_refunded)
         is_refunded = qty_available <= 0
@@ -424,18 +427,18 @@ def get_credit_note(credit_note_number, company_ids=None, uid=2):
         credit_note_result["lines"].append(
             {
                 "id": line["id"],
-                "product_id": line["product_id"][0],
-                "name": match.group(2),
+                "product_id": prod_id,
+                "name": clean_name,
                 "quantity": line["quantity"],
-                "discount": line["discount"],
+                "discount": line.get("discount", 0) or 0,
                 "price_unit": line["price_unit"],
                 "price_subtotal": line["price_subtotal"],
                 "qty_refunded": qty_refunded,
                 "qty_available": qty_available,
                 "is_refunded": is_refunded,
-                "qty_refund": 0,
-                "price_unit_refund": 0,
-                "price_subtotal_refund": 0,
+                "qty_refund": line["quantity"],
+                "price_unit_refund": line["price_unit"],
+                "price_subtotal_refund": line["price_subtotal"],
                 "is_editing_refund": False,
             }
         )

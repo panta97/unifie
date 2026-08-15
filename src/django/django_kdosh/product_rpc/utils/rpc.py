@@ -112,6 +112,10 @@ def execute_json_model(dict_model, uid, proxy=None):
             dict_model["params"]["kwargs"],
         )
     elif "domain" in dict_model["params"].keys():
+        context = dict_model["params"].get(
+            "context", {"lang": "es_PE", "tz": "America/Lima", "uid": uid}
+        )
+        fields = dict_model["params"].get("fields", [])
         result_list = proxy.execute_kw(
             settings.ODOO_DB,
             uid,
@@ -120,8 +124,8 @@ def execute_json_model(dict_model, uid, proxy=None):
             "search_read",
             [dict_model["params"]["domain"]],
             {
-                "fields": dict_model["params"]["fields"],
-                "context": dict_model["params"]["context"]
+                "fields": fields,
+                "context": context,
             },
         )
     else:

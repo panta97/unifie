@@ -115,6 +115,7 @@ def get_invoice(invoice_number, company_ids=None, uid=2):
     invoice_result.update(
         {
             "name": invoice_details["name"],
+            "number": invoice_details["name"],
             "create_date": invoice_details["create_date"],
             "invoice_date": invoice_details["invoice_date"],
             "journal_id": invoice_details["journal_id"],
@@ -214,57 +215,123 @@ def get_invoice(invoice_number, company_ids=None, uid=2):
     invoice_lines = rpc.execute_json_model(dict_model, uid, proxy=proxy)
 
     # GET REFUND INVOICES
-    json_model = """{
+    domain_refunds = [
+        ["move_type", "=", "out_refund"],
+        ["reversed_entry_id", "=", invoice_id],
+    ]
+    refund_fields = [
+        "name",
+        "create_date",
+        "invoice_date",
+        "id",
+        "amount_untaxed",
+        "amount_total",
+        "journal_id",
+        "invoice_line_ids",
+    ]
+    json_model_refunds = {
         "jsonrpc": "2.0",
         "method": "call",
         "params": {
             "model": "account.move",
-            "domain": [
-                [
-                    "move_type",
-                    "=",
-                    "out_refund"
-                ],
-                [
-                    "reversed_entry_id",
-                    "=",
-                    "170683"
-                ]
-            ],
-            "fields": ["name", "create_date", "id"],
+            "domain": domain_refunds,
+            "fields": refund_fields,
             "limit": 80,
-            "sort": "",
-            "context": {
-                "lang": "es_PE",
-                "tz": "America/Lima",
-                "uid": 1,
-                "default_type": "out_invoice",
-                "type": "out_invoice",
-                "is_company": true,
-                "is_customer": true,
-                "flat_all": true,
-                "params": {
-                    "action": 388
-                }
-            }
+            "context": {"lang": "es_PE", "tz": "America/Lima", "uid": uid},
         },
-        "id": 208489698
+        "id": 208489698,
     }
-    """
-    dict_model = json.loads(json_model)
-    dict_model["params"]["domain"][1][2] = invoice_id
-    refund_invoices = rpc.execute_json_model(dict_model, uid, proxy=proxy)
+    refund_invoices = rpc.execute_json_model(json_model_refunds, uid, proxy=proxy)
 
-    if len(refund_invoices) > 0:
-        # invoice_result["has_refund"] = True
-        pass
+    all_refund_line_ids = []
     for refund in refund_invoices:
+        all_refund_line_ids.extend(refund.get("invoice_line_ids", []))
+
+    lines_by_refund = {}
+    refunded_by_product = {}
+    if all_refund_line_ids:
+        try:
+            line_fields = [
+                "id",
+                "move_id",
+                "name",
+                "product_id",
+                "quantity",
+                "price_unit",
+                "price_subtotal",
+                "discount",
+                "display_type",
+            ]
+            json_refund_lines = {
+                "jsonrpc": "2.0",
+                "method": "call",
+                "params": {
+                    "model": "account.move.line",
+                    "domain": [
+                        ["id", "in", all_refund_line_ids],
+                        ["display_type", "=", "product"],
+                    ],
+                    "fields": line_fields,
+                    "context": {"lang": "es_PE", "tz": "America/Lima", "uid": uid},
+                },
+                "id": 998812,
+            }
+            raw_refund_lines = rpc.execute_json_model(json_refund_lines, uid, proxy=proxy)
+            for l in raw_refund_lines:
+                move_id = (
+                    l["move_id"][0]
+                    if isinstance(l.get("move_id"), (list, tuple))
+                    else l.get("move_id")
+                )
+                prod_id = (
+                    l["product_id"][0]
+                    if isinstance(l.get("product_id"), (list, tuple))
+                    else l.get("product_id")
+                )
+                match = re.search(r"(\[.*\]\s)?(.*)", l.get("name") or "")
+                clean_name = match.group(2) if match else l.get("name")
+                line_data = {
+                    "id": l["id"],
+                    "product_id": prod_id,
+                    "name": clean_name,
+                    "quantity": l["quantity"],
+                    "discount": l.get("discount", 0) or 0,
+                    "price_unit": l["price_unit"],
+                    "price_subtotal": l["price_subtotal"],
+                }
+                lines_by_refund.setdefault(move_id, []).append(line_data)
+                if prod_id:
+                    refunded_by_product[prod_id] = (
+                        refunded_by_product.get(prod_id, 0) + l.get("quantity", 0)
+                    )
+        except Exception as e:
+            print(f"Advertencia al consultar líneas previas de notas de crédito: {e}")
+
+    for refund in refund_invoices:
+        r_id = refund["id"]
         refund["create_date"] = utils.get_invoice_datetime_format(refund["create_date"])
         refund["odoo_link"] = (
-            f"{settings.ODOO_URL}/web#id={refund['id']}&cids=1-2-3&menu_id=117&action=244&model=account.move&view_type=form"
+            f"{settings.ODOO_URL}/web#id={r_id}&cids=1-2-3&menu_id=117&action=244&model=account.move&view_type=form"
         )
         if not refund.get("number"):
             refund["number"] = refund.get("name") or "BORRADOR"
+
+        journal_name = (
+            refund.get("journal_id", ["", ""])[1]
+            if isinstance(refund.get("journal_id"), (list, tuple))
+            else ""
+        )
+        if "Boleta" in journal_name or refund["number"].startswith("B"):
+            refund["journal"] = "Nota de Crédito Boleta Electrónica"
+        elif "Factura" in journal_name or refund["number"].startswith("F"):
+            refund["journal"] = "Nota de Crédito Factura Electrónica"
+        else:
+            refund["journal"] = journal_name or "Nota de Crédito Electrónica"
+
+        refund["lines"] = lines_by_refund.get(r_id, [])
+
+    if len(refund_invoices) > 0:
+        invoice_result["has_refund"] = True
     invoice_result["refund_invoices"] = refund_invoices
 
     # GET STOCK MOVES
@@ -370,45 +437,9 @@ def get_invoice(invoice_number, company_ids=None, uid=2):
             )
     invoice_result["stock_moves"] = stock_moves
 
-    # GET PREVIOUS REFUNDED QUANTITIES PER PRODUCT
-    refund_invoice_ids = [r["id"] for r in refund_invoices if r.get("id")]
-    refunded_by_product = {}
-    if refund_invoice_ids:
-        try:
-            json_refund_lines = json.dumps(
-                {
-                    "jsonrpc": "2.0",
-                    "method": "call",
-                    "params": {
-                        "model": "account.move.line",
-                        "domain": [
-                            ["move_id", "in", refund_invoice_ids],
-                            ["display_type", "=", "product"],
-                        ],
-                        "fields": ["product_id", "quantity"],
-                    },
-                    "id": 998812,
-                }
-            )
-            prev_lines = rpc.execute_json_model(
-                json.loads(json_refund_lines), uid, proxy=proxy
-            )
-            for pl in prev_lines:
-                pid = (
-                    pl["product_id"][0]
-                    if isinstance(pl.get("product_id"), (list, tuple))
-                    else pl.get("product_id")
-                )
-                if pid:
-                    refunded_by_product[pid] = (
-                        refunded_by_product.get(pid, 0) + pl.get("quantity", 0)
-                    )
-        except Exception as e:
-            print(f"Advertencia al consultar líneas previas de notas de crédito: {e}")
-
     invoice_result["lines"] = []
     for line in invoice_lines:
-        match = re.search("(\\[.*\\]\\s)?(.*)", line["name"])
+        match = re.search(r"(\[.*\]\s)?(.*)", line["name"])
         if not match:
             raise Exception(f"could not find regex pattern for: {line['name']}")
 
@@ -1218,6 +1249,20 @@ def invoice_refund(invoice_details, accion):
     )
     rpc.execute_json_model(json.loads(json_validate), uid, proxy=proxy)
 
+    refund_lines_result = [
+        {
+            "id": line["id"],
+            "product_id": line["product_id"],
+            "name": line["name"],
+            "quantity": line["qty_refund"],
+            "discount": line.get("discount", 0) or 0,
+            "price_unit": line.get("price_unit_refund") or line.get("price_unit"),
+            "price_subtotal": line.get("price_subtotal_refund") or line.get("price_subtotal"),
+        }
+        for line in invoice_details.get("lines", [])
+        if line.get("qty_refund", 0) > 0
+    ]
+
     return {
         "refund_invoice": {
             "id": refund_id,
@@ -1225,6 +1270,14 @@ def invoice_refund(invoice_details, accion):
             "create_date": utils.get_invoice_datetime_format(
                 refund_invoice_details["create_date"]
             ),
+            "amount_total": amount_total,
+            "amount_untaxed": refund_fields[0].get("amount_untaxed", amount_total) if refund_fields else amount_total,
+            "journal": (
+                "Nota de Crédito Boleta Electrónica"
+                if invoice_number.startswith("B")
+                else "Nota de Crédito Factura Electrónica"
+            ),
+            "lines": refund_lines_result,
             "odoo_link": f"{settings.ODOO_URL}/web#id={refund_id}&cids=1-2-3&menu_id=117&action=244&model=account.move&view_type=form",
         },
         "payment_wizard_id": wizard_id if wizard_id else None,
