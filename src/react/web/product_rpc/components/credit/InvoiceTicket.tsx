@@ -73,32 +73,62 @@ export const InvoiceTicket = () => {
                 </tr>
               </thead>
               <tbody>
-                {invoiceDetails.lines.map((line) => (
-                  <tr
-                    key={line.id}
-                    tabIndex={0}
-                    onKeyDown={(e) => {
-                      if (e.key === "Backspace") handleRefund(line.id, -1);
-                      else if (e.key === "Enter") handleRefund(line.id, 1);
-                    }}
-                  >
-                    <td className="p-0">
-                      {line.name}
-                      {line.discount !== 0 && (
-                        <div className="text-[12px] italic">{`Con un ${line.discount}% descuento`}</div>
-                      )}
-                    </td>
-                    <td className="p-0 text-center">
-                      {getQtyFormat(line.quantity)}
-                    </td>
-                    <td className="p-0 text-right">
-                      {getCurrencyFormat(line.price_unit)}
-                    </td>
-                    <td className="p-0 text-right">
-                      {getCurrencyFormat(line.price_subtotal)}
-                    </td>
-                  </tr>
-                ))}
+                {invoiceDetails.lines.map((line) => {
+                  const isFullyRefunded =
+                    line.is_refunded || (line.qty_available !== undefined && line.qty_available <= 0);
+
+                  return (
+                    <tr
+                      key={line.id}
+                      tabIndex={isFullyRefunded ? -1 : 0}
+                      onKeyDown={(e) => {
+                        if (isFullyRefunded) return;
+                        if (e.key === "Backspace") handleRefund(line.id, -1);
+                        else if (e.key === "Enter") handleRefund(line.id, 1);
+                      }}
+                      onClick={() => {
+                        if (!isFullyRefunded) handleRefund(line.id, 1);
+                      }}
+                      onDoubleClick={() => {
+                        if (!isFullyRefunded) handleRefund(line.id, -1);
+                      }}
+                      className={`${
+                        isFullyRefunded
+                          ? "opacity-50 line-through bg-gray-100 cursor-not-allowed text-gray-500"
+                          : line.qty_refund > 0
+                          ? "bg-[#F4BF50] hover:bg-[#F4BF50] cursor-pointer"
+                          : "hover:bg-gray-200 cursor-pointer"
+                      }`}
+                      title={isFullyRefunded ? "Producto ya devuelto en nota de crédito previa" : ""}
+                    >
+                      <td className="p-0">
+                        {line.name}
+                        {isFullyRefunded && (
+                          <span className="ml-1 text-[11px] font-semibold text-red-600 no-underline inline-block">
+                            (Devuelto)
+                          </span>
+                        )}
+                        {!isFullyRefunded && line.qty_refunded && line.qty_refunded > 0 ? (
+                          <span className="ml-1 text-[11px] text-blue-600">
+                            (Disp: {line.qty_available})
+                          </span>
+                        ) : null}
+                        {line.discount !== 0 && (
+                          <div className="text-[12px] italic">{`Con un ${line.discount}% descuento`}</div>
+                        )}
+                      </td>
+                      <td className="p-0 text-center">
+                        {getQtyFormat(line.quantity)}
+                      </td>
+                      <td className="p-0 text-right">
+                        {getCurrencyFormat(line.price_unit)}
+                      </td>
+                      <td className="p-0 text-right">
+                        {getCurrencyFormat(line.price_subtotal)}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
             <br />

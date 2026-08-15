@@ -374,11 +374,53 @@ def get_credit_note(credit_note_number, company_ids=None, uid=2):
             )
     credit_note_result["stock_moves"] = stock_moves
 
+    # GET PREVIOUS REFUNDED QUANTITIES PER PRODUCT
+    refund_invoice_ids = [r["id"] for r in refund_invoices if r.get("id")]
+    refunded_by_product = {}
+    if refund_invoice_ids:
+        try:
+            json_refund_lines = json.dumps(
+                {
+                    "jsonrpc": "2.0",
+                    "method": "call",
+                    "params": {
+                        "model": "account.move.line",
+                        "domain": [
+                            ["move_id", "in", refund_invoice_ids],
+                            ["display_type", "=", "product"],
+                        ],
+                        "fields": ["product_id", "quantity"],
+                    },
+                    "id": 998811,
+                }
+            )
+            prev_lines = rpc.execute_json_model(
+                json.loads(json_refund_lines), uid, proxy=proxy
+            )
+            for pl in prev_lines:
+                pid = (
+                    pl["product_id"][0]
+                    if isinstance(pl.get("product_id"), (list, tuple))
+                    else pl.get("product_id")
+                )
+                if pid:
+                    refunded_by_product[pid] = (
+                        refunded_by_product.get(pid, 0) + pl.get("quantity", 0)
+                    )
+        except Exception as e:
+            print(f"Advertencia al consultar líneas previas de notas de crédito: {e}")
+
     credit_note_result["lines"] = []
     for line in credit_note_lines:
         match = re.search("(\\[.*\\]\\s)?(.*)", line["name"])
         if not match:
             raise Exception(f"could not find regex pattern for: {line['name']}")
+        
+        prod_id = line["product_id"][0]
+        qty_refunded = refunded_by_product.get(prod_id, 0)
+        qty_available = max(0, line["quantity"] - qty_refunded)
+        is_refunded = qty_available <= 0
+
         credit_note_result["lines"].append(
             {
                 "id": line["id"],
@@ -388,6 +430,9 @@ def get_credit_note(credit_note_number, company_ids=None, uid=2):
                 "discount": line["discount"],
                 "price_unit": line["price_unit"],
                 "price_subtotal": line["price_subtotal"],
+                "qty_refunded": qty_refunded,
+                "qty_available": qty_available,
+                "is_refunded": is_refunded,
                 "qty_refund": 0,
                 "price_unit_refund": 0,
                 "price_subtotal_refund": 0,

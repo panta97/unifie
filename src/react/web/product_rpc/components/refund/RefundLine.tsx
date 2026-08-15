@@ -1,6 +1,6 @@
-import React, { useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useAppDispatch, useAppSelector } from "../../app/hooks";
-import { Trash2 } from "lucide-react";
+import { Trash2, Printer } from "lucide-react";
 import {
   selectFormRefundStatus,
   updateRefundStatus,
@@ -18,7 +18,54 @@ import { getCurrencyFormat, getQtyFormat } from "./format";
 import { InvoiceSummaryTable } from "./InvoiceSummaryTable";
 import { linesSchema } from "./validation";
 
-export const RefundLine = ({ isPaying }: { isPaying: boolean }) => { 
+// Input controlado localmente: mantiene estado local para permitir edición libre
+// y despacha al store tanto en onChange como en onBlur/Enter.
+const SubtotalInput = ({
+  lineId,
+  initialValue,
+  onCommit,
+}: {
+  lineId: number;
+  initialValue: number;
+  onCommit: (value: number) => void;
+}) => {
+  const [localValue, setLocalValue] = useState(String(initialValue));
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    setLocalValue(String(initialValue));
+  }, [lineId]);
+
+  const parseAndCommit = (raw: string) => {
+    const parsed = parseFloat(raw);
+    const finalVal = isNaN(parsed) || parsed < 0 ? 0 : parsed;
+    onCommit(finalVal);
+  };
+
+  return (
+    <input
+      ref={inputRef}
+      value={localValue}
+      autoFocus
+      className="border border-black w-[45px]"
+      type="number"
+      onChange={(e) => {
+        setLocalValue(e.target.value);
+        parseAndCommit(e.target.value);
+      }}
+      onBlur={() => parseAndCommit(localValue)}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") {
+          parseAndCommit(localValue);
+          inputRef.current?.blur();
+        }
+      }}
+    />
+  );
+};
+
+export const RefundLine = ({ isPaying }: { isPaying: boolean }) => {
+  const [creditNoteCreated, setCreditNoteCreated] = useState(false);
   const refundStatus = useAppSelector(selectFormRefundStatus);
   const invoiceDetails = useAppSelector(selectInvoiceItem);
   const tableSectionRef = useRef<HTMLTableSectionElement>(null);
@@ -30,15 +77,6 @@ export const RefundLine = ({ isPaying }: { isPaying: boolean }) => {
 
   const handleEditRefund = (lineId: number, isEditing: boolean) => {
     dispatch(updateRefundEditing({ lineId, isEditing }));
-  };
-
-  const handleUpdateRefundSubtotal = (
-    e: React.ChangeEvent<HTMLInputElement>,
-    lineId: number
-  ) => {
-    let priceSubtotalRefund = Math.max(0, e.target.valueAsNumber);
-    if (isNaN(priceSubtotalRefund)) priceSubtotalRefund = 0;
-    dispatch(updateRefundManual({ lineId, priceSubtotalRefund }));
   };
 
   const handleRemoveProduct = (lineId: number) => {
@@ -81,7 +119,6 @@ export const RefundLine = ({ isPaying }: { isPaying: boolean }) => {
           accion: isPaying ? "pagar" : "no_pagar",
         }),
       };
-      // console.log("Datos enviados en el body:", params.body);
       const response = await fetch(`/api/product-rpc/refund/create`, params);
       const json = await response.json();
       if (json.result === fetchResult.SUCCESS) {
@@ -91,6 +128,7 @@ export const RefundLine = ({ isPaying }: { isPaying: boolean }) => {
             stock_move: json.stock_move,
           })
         );
+        setCreditNoteCreated(true);
       } else {
         alert(json.message);
       }
@@ -102,6 +140,14 @@ export const RefundLine = ({ isPaying }: { isPaying: boolean }) => {
     }
   };
 
+  const handlePrint = () => {
+    window.print();
+  };
+
+  const hasSelectedLines = invoiceDetails.lines.some(
+    (line) => line.qty_refund > 0
+  );
+
   return (
     <div className="relative">
       <div className="absolute text-sm space-y-2 mt-[46px]">
@@ -109,6 +155,7 @@ export const RefundLine = ({ isPaying }: { isPaying: boolean }) => {
           <InvoiceSummaryTable
             title="Nota de Crédito"
             invoiceSummaries={invoiceDetails.refund_invoices}
+            showPrint={true}
           />
         )}
         {invoiceDetails.stock_moves.length > 0 && (
@@ -153,14 +200,17 @@ export const RefundLine = ({ isPaying }: { isPaying: boolean }) => {
                     </td>
                     <td className="p-0 text-right">
                       {line.is_editing_refund ? (
-                        <input
-                          value={line.price_subtotal_refund}
-                          onChange={(e) =>
-                            handleUpdateRefundSubtotal(e, line.id)
+                        <SubtotalInput
+                          lineId={line.id}
+                          initialValue={line.price_subtotal_refund}
+                          onCommit={(val) =>
+                            dispatch(
+                              updateRefundManual({
+                                lineId: line.id,
+                                priceSubtotalRefund: val,
+                              })
+                            )
                           }
-                          autoFocus
-                          className="border border-black w-[45px]"
-                          type="number"
                         />
                       ) : (
                         getCurrencyFormat(line.price_subtotal_refund)
@@ -172,7 +222,7 @@ export const RefundLine = ({ isPaying }: { isPaying: boolean }) => {
                           e.stopPropagation();
                           handleRemoveProduct(line.id);
                         }}
-                        className="text-black hover:text-black"
+                        className="text-black hover:text-black cursor-pointer"
                       >
                         <Trash2 size={16} />
                       </button>
@@ -193,10 +243,12 @@ export const RefundLine = ({ isPaying }: { isPaying: boolean }) => {
                 <td>Total:</td>
                 <td colSpan={2} className="text-right">
                   {getCurrencyFormat(
-                    invoiceDetails.lines.reduce(
-                      (curr, line) => curr + line.price_subtotal_refund,
-                      0
-                    )
+                    invoiceDetails.lines
+                      .filter((line) => line.qty_refund > 0)
+                      .reduce(
+                        (curr, line) => curr + line.price_subtotal_refund,
+                        0
+                      )
                   )}
                 </td>
               </tr>

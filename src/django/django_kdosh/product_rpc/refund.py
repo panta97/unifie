@@ -370,11 +370,53 @@ def get_invoice(invoice_number, company_ids=None, uid=2):
             )
     invoice_result["stock_moves"] = stock_moves
 
+    # GET PREVIOUS REFUNDED QUANTITIES PER PRODUCT
+    refund_invoice_ids = [r["id"] for r in refund_invoices if r.get("id")]
+    refunded_by_product = {}
+    if refund_invoice_ids:
+        try:
+            json_refund_lines = json.dumps(
+                {
+                    "jsonrpc": "2.0",
+                    "method": "call",
+                    "params": {
+                        "model": "account.move.line",
+                        "domain": [
+                            ["move_id", "in", refund_invoice_ids],
+                            ["display_type", "=", "product"],
+                        ],
+                        "fields": ["product_id", "quantity"],
+                    },
+                    "id": 998812,
+                }
+            )
+            prev_lines = rpc.execute_json_model(
+                json.loads(json_refund_lines), uid, proxy=proxy
+            )
+            for pl in prev_lines:
+                pid = (
+                    pl["product_id"][0]
+                    if isinstance(pl.get("product_id"), (list, tuple))
+                    else pl.get("product_id")
+                )
+                if pid:
+                    refunded_by_product[pid] = (
+                        refunded_by_product.get(pid, 0) + pl.get("quantity", 0)
+                    )
+        except Exception as e:
+            print(f"Advertencia al consultar líneas previas de notas de crédito: {e}")
+
     invoice_result["lines"] = []
     for line in invoice_lines:
         match = re.search("(\\[.*\\]\\s)?(.*)", line["name"])
         if not match:
             raise Exception(f"could not find regex pattern for: {line['name']}")
+
+        prod_id = line["product_id"][0]
+        qty_refunded = refunded_by_product.get(prod_id, 0)
+        qty_available = max(0, line["quantity"] - qty_refunded)
+        is_refunded = qty_available <= 0
+
         invoice_result["lines"].append(
             {
                 "id": line["id"],
@@ -384,6 +426,9 @@ def get_invoice(invoice_number, company_ids=None, uid=2):
                 "discount": line["discount"],
                 "price_unit": line["price_unit"],
                 "price_subtotal": line["price_subtotal"],
+                "qty_refunded": qty_refunded,
+                "qty_available": qty_available,
+                "is_refunded": is_refunded,
                 "qty_refund": 0,
                 "price_unit_refund": 0,
                 "price_subtotal_refund": 0,
@@ -531,6 +576,13 @@ def invoice_refund(invoice_details, accion):
         )
         return None
 
+    # Mapa de líneas del frontend con precios editados por el usuario
+    frontend_lines_map = {
+        line["id"]: line
+        for line in invoice_details.get("lines", [])
+        if line.get("qty_refund", 0) > 0
+    }
+
     credit_note_lines = []
     for line in lines_response:
         line_id = line.get("id")
@@ -540,7 +592,16 @@ def invoice_refund(invoice_details, accion):
         discount = line.get("discount", 0) or 0
         orig_qty = line.get("quantity", 1)
         subtotal = line.get("price_subtotal", 0)
-        if discount > 0 and orig_qty:
+
+        f_line = frontend_lines_map.get(line_id, {})
+        f_subtotal_refund = f_line.get("price_subtotal_refund")
+        f_unit_refund = f_line.get("price_unit_refund")
+
+        if f_subtotal_refund is not None and f_subtotal_refund > 0 and refund_qty > 0:
+            unit_price = round(f_subtotal_refund / refund_qty, 2)
+        elif f_unit_refund is not None and f_unit_refund > 0:
+            unit_price = round(f_unit_refund, 2)
+        elif discount > 0 and orig_qty:
             unit_price = round(subtotal / orig_qty, 2)
         else:
             unit_price = line.get("price_unit", 0)
@@ -1161,7 +1222,9 @@ def invoice_refund(invoice_details, accion):
         "refund_invoice": {
             "id": refund_id,
             "number": refund_invoice_details["name"],
-            "create_date": refund_invoice_details["create_date"],
+            "create_date": utils.get_invoice_datetime_format(
+                refund_invoice_details["create_date"]
+            ),
             "odoo_link": f"{settings.ODOO_URL}/web#id={refund_id}&cids=1-2-3&menu_id=117&action=244&model=account.move&view_type=form",
         },
         "payment_wizard_id": wizard_id if wizard_id else None,
