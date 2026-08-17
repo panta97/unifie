@@ -171,7 +171,7 @@ export const invoiceItemSlice = createSlice({
       state.has_refund = true;
       state.refund_invoices.push(refund_invoice);
       state.stock_moves.push(stock_move);
-      state.selectedRefundForPrint = refund_invoice;
+      state.selectedRefundForPrint = null;
     },
     setSelectedRefundForPrint: (
       state,
