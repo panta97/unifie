@@ -139,43 +139,37 @@ def get_pos_details(request, session_id):
     pp_fields = ["amount", "payment_method_id", "session_id"]
     pos_payments = get_model(pp_table, pp_filter, pp_fields, proxy=proxy)
 
+    pm_table = "pos.payment.method"
+    pm_filter = []
+    pm_fields = ["id", "name", "is_cash_count", "type"]
+    payment_methods = get_model(pm_table, pm_filter, pm_fields, proxy=proxy)
+    methods_dict = {m["id"]: m for m in payment_methods}
+
     card = 0
-    cash = cash_in_outs_total
+    cash_sales = 0
     credit_note = 0
-    # PAYMENT METHODS (16, 'Efectivo'), (8, 'YAPE'), (10, 'Nota de Credito')
+
     for payment in pos_payments:
         method_id = payment["payment_method_id"][0]
         amount = payment["amount"]
+        method_info = methods_dict.get(method_id, {})
+        m_name = method_info.get("name", "")
+        m_type = method_info.get("type", "")
+        m_is_cash = method_info.get("is_cash_count", False)
 
-        if method_id in {
-            1,
-            7,
-            9,
-            11,
-            12,
-            13,
-            14,
-            15,
-            16,
-            17,
-            18,
-            19,
-            20,
-            22,
-            23,
-            24,
-            25,
-            27,
-            28,
-        }:
-            cash += amount
-        elif method_id in {2, 4, 6, 31}:
-            card += amount
-        elif method_id in {10, 21, 26}:
+        if "Nota de Cr" in m_name or "crédito" in m_name.lower():
             credit_note += amount
+        elif (
+            m_is_cash
+            or m_type == "cash"
+            or method_id in {1, 7, 9, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 22, 23, 24, 25, 27, 28, 32, 33, 34, 35}
+        ):
+            cash_sales += amount
+        else:
+            card += amount
 
-    opening = pos_session[0]["cash_register_balance_end"] - cash
-    cash += opening
+    balance_start = pos_session[0].get("cash_register_balance_start") or 0.0
+    cash = balance_start + cash_sales + cash_in_outs_total
 
     # CHANGE TIMEZONE FORM UTC TO UTC-5
     start_at = pos_session[0]["start_at"]
@@ -368,43 +362,37 @@ class PosCloseControlV2View(OTPSessionMixin, View):
             pp_fields = ["amount", "payment_method_id", "session_id"]
             pos_payments = get_model(pp_table, pp_filter, pp_fields, proxy=proxy)
 
+            pm_table = "pos.payment.method"
+            pm_filter = []
+            pm_fields = ["id", "name", "is_cash_count", "type"]
+            payment_methods = get_model(pm_table, pm_filter, pm_fields, proxy=proxy)
+            methods_dict = {m["id"]: m for m in payment_methods}
+
             card = 0
-            cash = cash_in_outs_total
+            cash_sales = 0
             credit_note = 0
-            # PAYMENT METHODS
+
             for payment in pos_payments:
                 method_id = payment["payment_method_id"][0]
                 amount = payment["amount"]
+                method_info = methods_dict.get(method_id, {})
+                m_name = method_info.get("name", "")
+                m_type = method_info.get("type", "")
+                m_is_cash = method_info.get("is_cash_count", False)
 
-                if method_id in {
-                    1,
-                    7,
-                    9,
-                    11,
-                    12,
-                    13,
-                    14,
-                    15,
-                    16,
-                    17,
-                    18,
-                    19,
-                    20,
-                    22,
-                    23,
-                    24,
-                    25,
-                    27,
-                    28,
-                }:
-                    cash += amount
-                elif method_id in {2, 4, 6, 31}:
-                    card += amount
-                elif method_id in {10, 21, 26}:
+                if "Nota de Cr" in m_name or "crédito" in m_name.lower():
                     credit_note += amount
+                elif (
+                    m_is_cash
+                    or m_type == "cash"
+                    or method_id in {1, 7, 9, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 22, 23, 24, 25, 27, 28, 32, 33, 34, 35}
+                ):
+                    cash_sales += amount
+                else:
+                    card += amount
 
-            opening = pos_session[0]["cash_register_balance_end"] - cash
-            cash += opening
+            balance_start = pos_session[0].get("cash_register_balance_start") or 0.0
+            cash = balance_start + cash_sales + cash_in_outs_total
 
             # Convert to integers (multiply by 100)
             cash_int = int(round(cash * 100))
