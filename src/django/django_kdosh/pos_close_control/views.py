@@ -149,6 +149,7 @@ def get_pos_details(request, session_id):
 
         if method_id in {
             1,
+            7,
             9,
             11,
             12,
@@ -377,6 +378,7 @@ class PosCloseControlV2View(OTPSessionMixin, View):
 
                 if method_id in {
                     1,
+                    7,
                     9,
                     11,
                     12,
