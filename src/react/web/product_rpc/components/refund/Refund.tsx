@@ -1,11 +1,29 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Wrapper } from "../shared/Wrapper";
 import { InvoiceSearch } from "./InvoiceSearch";
+import { InvoiceTicketPrint } from "./InvoiceTicketPrint";
 import { CreditNoteTicketPrint } from "./CreditNoteTicketPrint";
 import { RefundLine } from "./RefundLine";
+import { useAppDispatch, useAppSelector } from "../../app/hooks";
+import {
+  selectSelectedRefundForPrint,
+  setSelectedRefundForPrint,
+} from "../../app/slice/refund/invoiceSlice";
 
 const Refund = () => {
   const [isPaying, setIsPaying] = useState(false);
+  const selectedRefundForPrint = useAppSelector(selectSelectedRefundForPrint);
+  const dispatch = useAppDispatch();
+
+  useEffect(() => {
+    const handleAfterPrint = () => {
+      dispatch(setSelectedRefundForPrint(null));
+    };
+    window.addEventListener("afterprint", handleAfterPrint);
+    return () => {
+      window.removeEventListener("afterprint", handleAfterPrint);
+    };
+  }, [dispatch]);
 
   return (
     <Wrapper>
@@ -15,7 +33,11 @@ const Refund = () => {
           <RefundLine isPaying={isPaying} />
         </div>
       </div>
-      <CreditNoteTicketPrint />
+      {selectedRefundForPrint ? (
+        <CreditNoteTicketPrint />
+      ) : (
+        <InvoiceTicketPrint />
+      )}
     </Wrapper>
   );
 };

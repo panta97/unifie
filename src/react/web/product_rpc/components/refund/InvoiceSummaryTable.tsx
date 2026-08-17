@@ -50,6 +50,9 @@ export const InvoiceSummaryTable = ({
     dispatch(setSelectedRefundForPrint(refund_invoice));
     setTimeout(() => {
       window.print();
+      setTimeout(() => {
+        dispatch(setSelectedRefundForPrint(null));
+      }, 500);
     }, 50);
   };
 
