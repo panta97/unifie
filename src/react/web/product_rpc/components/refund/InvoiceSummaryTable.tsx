@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Copy, Printer } from "lucide-react";
+import { Check, Copy, Printer } from "lucide-react";
 import { InvoiceSummary } from "../../types/refund";
 import { useAppDispatch } from "../../app/hooks";
 import { setSelectedRefundForPrint } from "../../app/slice/refund/invoiceSlice";
@@ -148,7 +148,11 @@ export const InvoiceSummaryTable = ({
                     onClick={() => handleCopy(refund_invoice)}
                     className="inline-flex items-center gap-1.5 rounded border border-green-600 px-2 py-1 text-sm text-green-700 hover:bg-green-50 hover:text-green-900 font-sans cursor-pointer"
                   >
-                    <Copy size={15} />
+                    {copiedId === refund_invoice.id ? (
+                      <Check size={15} />
+                    ) : (
+                      <Copy size={15} />
+                    )}
                     <span>{copiedId === refund_invoice.id ? "Copiado" : "Copiar"}</span>
                   </button>
                 </td>
