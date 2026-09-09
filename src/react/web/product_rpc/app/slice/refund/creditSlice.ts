@@ -23,6 +23,7 @@ const initialState: CreditDetails = {
     odoo_link: "",
   },
   lines: [],
+  adjustments: [],
   refund_invoices: [],
   stock_moves: [],
   selectedRefundForPrint: null,
@@ -50,6 +51,7 @@ export const invoiceItemSlice = createSlice({
       state.currency = invoice.currency;
       state.partner = invoice.partner;
       state.lines = invoice.lines;
+      state.adjustments = invoice.adjustments || [];
       state.refund_invoices = invoice.refund_invoices;
       state.stock_moves = invoice.stock_moves;
       state.selectedRefundForPrint = null;
