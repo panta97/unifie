@@ -1,5 +1,5 @@
-import React, { useEffect } from "react";
-import { Printer } from "lucide-react";
+import React, { useState } from "react";
+import { Copy, Printer } from "lucide-react";
 import { InvoiceSummary } from "../../types/refund";
 import { useAppDispatch } from "../../app/hooks";
 import { setSelectedRefundForPrint } from "../../app/slice/refund/invoiceSlice";
@@ -8,6 +8,7 @@ export interface InvoiceSummaryTableProps {
   title: string;
   invoiceSummaries: InvoiceSummary[];
   showPrint?: boolean;
+  showCopy?: boolean;
 }
 
 const formatDisplayDate = (dateStr: string) => {
@@ -40,8 +41,10 @@ export const InvoiceSummaryTable = ({
   title,
   invoiceSummaries,
   showPrint = false,
+  showCopy = false,
 }: InvoiceSummaryTableProps) => {
   const dispatch = useAppDispatch();
+  const [copiedId, setCopiedId] = useState<number | null>(null);
   const validInvoices = invoiceSummaries.filter(
     (invoice) => invoice !== undefined
   );
@@ -56,6 +59,25 @@ export const InvoiceSummaryTable = ({
     }, 50);
   };
 
+  const handleCopy = async (refundInvoice: InvoiceSummary) => {
+    try {
+      await navigator.clipboard.writeText(refundInvoice.number);
+      setCopiedId(refundInvoice.id);
+      setTimeout(() => setCopiedId(null), 1500);
+    } catch {
+      const input = document.createElement("textarea");
+      input.value = refundInvoice.number;
+      document.body.appendChild(input);
+      input.select();
+      document.execCommand("copy");
+      document.body.removeChild(input);
+      setCopiedId(refundInvoice.id);
+      setTimeout(() => setCopiedId(null), 1500);
+    }
+  };
+
+  const actionColumns = Number(showPrint) + Number(showCopy);
+
   if (validInvoices.length === 0) {
     return null;
   }
@@ -67,7 +89,7 @@ export const InvoiceSummaryTable = ({
           <tr>
             <th
               className="border border-gray-300 font-invoice text-left px-1"
-              colSpan={showPrint ? 3 : 2}
+              colSpan={2 + actionColumns}
             >
               {title}
             </th>
@@ -82,6 +104,11 @@ export const InvoiceSummaryTable = ({
             {showPrint && (
               <th className="border border-gray-300 text-center px-1 font-normal">
                 &nbsp;
+              </th>
+            )}
+            {showCopy && (
+              <th className="border border-gray-300 text-center px-1 font-normal">
+                Acción
               </th>
             )}
           </tr>
@@ -111,6 +138,18 @@ export const InvoiceSummaryTable = ({
                   >
                     <Printer size={13} />
                     <span>Imprimir</span>
+                  </button>
+                </td>
+              )}
+              {showCopy && (
+                <td className="border border-gray-300 px-2 py-1 text-center">
+                  <button
+                    title="Copiar número de nota de crédito"
+                    onClick={() => handleCopy(refund_invoice)}
+                    className="inline-flex items-center gap-1.5 rounded border border-green-600 px-2 py-1 text-sm text-green-700 hover:bg-green-50 hover:text-green-900 font-sans cursor-pointer"
+                  >
+                    <Copy size={15} />
+                    <span>{copiedId === refund_invoice.id ? "Copiado" : "Copiar"}</span>
                   </button>
                 </td>
               )}

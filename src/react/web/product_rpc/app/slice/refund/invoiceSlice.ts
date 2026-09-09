@@ -173,6 +173,25 @@ export const invoiceItemSlice = createSlice({
       state.has_refund = true;
       state.refund_invoices.push(refund_invoice);
       state.stock_moves.push(stock_move);
+      const refundedLines = refund_invoice.lines || [];
+
+      for (const line of state.lines) {
+        const refunded = refundedLines.find((item) => item.id === line.id);
+        if (!refunded) continue;
+
+        const qtyRefunded = Number(refunded.quantity || line.qty_refund || 0);
+        const currentAvailable =
+          line.qty_available !== undefined ? line.qty_available : line.quantity;
+        const nextAvailable = Math.max(0, currentAvailable - qtyRefunded);
+
+        line.qty_refunded = (line.qty_refunded || 0) + qtyRefunded;
+        line.qty_available = nextAvailable;
+        line.is_refunded = nextAvailable <= 0;
+        line.qty_refund = 0;
+        line.price_unit_refund = 0;
+        line.price_subtotal_refund = 0;
+        line.is_editing_refund = false;
+      }
       state.selectedRefundForPrint = null;
     },
     setSelectedRefundForPrint: (
