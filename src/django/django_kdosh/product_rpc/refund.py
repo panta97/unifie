@@ -5,13 +5,45 @@ from .utils import utils, rpc
 from django.conf import settings
 
 
-def _apply_global_discount(lines, amount_untaxed):
-    """Distribuye descuentos globales sobre las líneas de productos.
+def _is_points_discount_line(line):
+    """Determina si una línea corresponde a un canje / descuento por Puntos Kdosh."""
+    name = (line.get("name") or "").lower().strip()
+    prod = line.get("product_id")
+    prod_name = ""
+    prod_id = None
+    if isinstance(prod, (list, tuple)) and len(prod) > 1:
+        prod_id = prod[0]
+        prod_name = (str(prod[1]) if prod[1] is not None else "").lower().strip()
+    elif isinstance(prod, str):
+        prod_name = prod.lower().strip()
+    elif isinstance(prod, int):
+        prod_id = prod
+
+    # El descuento de puntos Kdosh (ID 13 de programa o IDs 16-36 de recompensas / productos de puntos)
+    if prod_id in (13, 16) or (prod_id is not None and 16 <= prod_id <= 36):
+        if "cupon" not in name and "cupón" not in name:
+            return True
+    if "puntos kdosh" in name or "puntos kdosh" in prod_name:
+        return True
+    if "puntos" in name and ("descuento" in name or "s/." in name or "s/" in name):
+        return True
+    if "descuento por puntos" in name or "descuento por puntos" in prod_name:
+        return True
+    if "por punto en" in name or "por punto en" in prod_name:
+        return True
+    if "por orden en su orden" in name or "por orden en su orden" in prod_name:
+        return True
+    return False
+
+
+def _apply_global_discount(lines, amount_untaxed=None):
+    """Distribuye descuentos globales (cupones de descuento) sobre las líneas de productos.
 
     Odoo puede guardar un cupón aplicado a toda la orden como una línea
     negativa, en vez de llenar ``discount`` en cada producto. En ese caso
     ``price_subtotal`` de la línea todavía puede representar el importe bruto.
-    El valor histórico de la devolución debe incluir también ese ajuste.
+    El valor histórico de la devolución debe incluir también ese ajuste de cupón.
+    Los descuentos por puntos Kdosh NO se descuentan de los productos.
     """
     product_lines = [
         line
@@ -19,16 +51,25 @@ def _apply_global_discount(lines, amount_untaxed):
         if line.get("product_id")
         and (line.get("display_type") or "product") == "product"
         and float(line.get("price_subtotal") or 0) > 0
+        and not _is_points_discount_line(line)
     ]
     if not product_lines:
         return lines
 
-    product_subtotal = sum(float(line.get("price_subtotal") or 0) for line in product_lines)
-    global_adjustment = float(amount_untaxed or 0) - product_subtotal
-    if global_adjustment >= -0.005:
+    # Solo sumamos las líneas negativas que NO corresponden a puntos Kdosh (es decir, cupones/promociones)
+    coupon_adjustment = sum(
+        float(line.get("price_subtotal") or 0)
+        for line in lines
+        if float(line.get("price_subtotal") or 0) < 0
+        and not _is_points_discount_line(line)
+    )
+
+    if coupon_adjustment >= -0.005:
         return lines
 
-    eligible = [line for line in product_lines if float(line.get("price_subtotal") or 0) > 0]
+    eligible = [
+        line for line in product_lines if float(line.get("price_subtotal") or 0) > 0
+    ]
     eligible_total = sum(float(line.get("price_subtotal") or 0) for line in eligible)
     if not eligible_total:
         return lines
@@ -37,9 +78,9 @@ def _apply_global_discount(lines, amount_untaxed):
     for index, line in enumerate(eligible):
         subtotal = float(line.get("price_subtotal") or 0)
         if index == len(eligible) - 1:
-            line_adjustment = global_adjustment - allocated
+            line_adjustment = coupon_adjustment - allocated
         else:
-            line_adjustment = round(global_adjustment * subtotal / eligible_total, 2)
+            line_adjustment = round(coupon_adjustment * subtotal / eligible_total, 2)
             allocated += line_adjustment
         line["price_subtotal"] = round(max(0, subtotal + line_adjustment), 2)
 
@@ -327,7 +368,9 @@ def get_invoice(invoice_number, company_ids=None, uid=2):
                 },
                 "id": 998812,
             }
-            raw_refund_lines = rpc.execute_json_model(json_refund_lines, uid, proxy=proxy)
+            raw_refund_lines = rpc.execute_json_model(
+                json_refund_lines, uid, proxy=proxy
+            )
             for l in raw_refund_lines:
                 move_id = (
                     l["move_id"][0]
@@ -352,9 +395,9 @@ def get_invoice(invoice_number, company_ids=None, uid=2):
                 }
                 lines_by_refund.setdefault(move_id, []).append(line_data)
                 if prod_id:
-                    refunded_by_product[prod_id] = (
-                        refunded_by_product.get(prod_id, 0) + l.get("quantity", 0)
-                    )
+                    refunded_by_product[prod_id] = refunded_by_product.get(
+                        prod_id, 0
+                    ) + l.get("quantity", 0)
         except Exception as e:
             print(f"Advertencia al consultar líneas previas de notas de crédito: {e}")
 
@@ -469,9 +512,9 @@ def get_invoice(invoice_number, company_ids=None, uid=2):
     stock_moves = []
     if invoice_stock_move:
         dict_model = json.loads(json_model)
-        dict_model["params"]["domain"][0][
-            2
-        ] = f"Retorno de {invoice_stock_move['name']}"
+        dict_model["params"]["domain"][0][2] = (
+            f"Retorno de {invoice_stock_move['name']}"
+        )
         invoice_refund_stock_moves = rpc.execute_json_model(
             dict_model, uid, proxy=proxy
         )
@@ -495,6 +538,7 @@ def get_invoice(invoice_number, company_ids=None, uid=2):
             not line.get("product_id")
             or (line.get("display_type") or "product") != "product"
             or float(line.get("price_subtotal") or 0) <= 0
+            or _is_points_discount_line(line)
         ):
             continue
         match = re.search(r"(\[.*\]\s)?(.*)", line["name"])
@@ -663,9 +707,7 @@ def invoice_refund(invoice_details, accion):
     # haya sido guardado en la columna ``discount`` del producto.
     json_model_all_lines = json.loads(json_model)
     json_model_all_lines["params"]["args"][0] = line_ids
-    all_lines_response = rpc.execute_json_model(
-        json_model_all_lines, uid, proxy=proxy
-    )
+    all_lines_response = rpc.execute_json_model(json_model_all_lines, uid, proxy=proxy)
     _apply_global_discount(all_lines_response, invoice_details.get("amount_untaxed"))
     selected_ids = set(selected_line_ids)
     lines_response = [
@@ -690,6 +732,7 @@ def invoice_refund(invoice_details, accion):
             not line.get("product_id")
             or (line.get("display_type") or "product") != "product"
             or float(line.get("price_subtotal") or 0) <= 0
+            or _is_points_discount_line(line)
         ):
             continue
         line_id = line.get("id")
@@ -731,13 +774,20 @@ def invoice_refund(invoice_details, accion):
 
     try:
         move_fields = proxy.execute_kw(
-            settings.ODOO_DB, uid, rpc.get_user_password(uid),
-            'account.move', 'fields_get', [['pe_credit_note_type', 'pe_sunat_status', 'id']], {}
+            settings.ODOO_DB,
+            uid,
+            rpc.get_user_password(uid),
+            "account.move",
+            "fields_get",
+            [["pe_credit_note_type", "pe_sunat_status", "id"]],
+            {},
         )
     except Exception as e:
-        print(f"Advertencia: No se pudo verificar la existencia de campos técnicos: {e}")
+        print(
+            f"Advertencia: No se pudo verificar la existencia de campos técnicos: {e}"
+        )
         move_fields = {}
-    
+
     refund_vals = {
         "move_type": "out_refund",
         "invoice_date": today,
@@ -752,10 +802,10 @@ def invoice_refund(invoice_details, accion):
         "l10n_pe_edi_cancel_reason": "Devolucion por item",
     }
 
-    if 'pe_credit_note_type' in move_fields:
+    if "pe_credit_note_type" in move_fields:
         refund_vals["pe_credit_note_type"] = "07"
-    
-    if 'pe_sunat_status' in move_fields:
+
+    if "pe_sunat_status" in move_fields:
         refund_vals["pe_sunat_status"] = "to_send"
 
     json_model = json.dumps(
@@ -945,9 +995,9 @@ def invoice_refund(invoice_details, accion):
     _result["refund_invoice"]["create_date"] = utils.get_invoice_datetime_format(
         refund_invoice_details["create_date"]
     )
-    _result["refund_invoice"][
-        "odoo_link"
-    ] = f"{settings.ODOO_URL}/web#id={refund_id}&cids=1-2-3&menu_id=117&action=244&model=account.move&view_type=form"
+    _result["refund_invoice"]["odoo_link"] = (
+        f"{settings.ODOO_URL}/web#id={refund_id}&cids=1-2-3&menu_id=117&action=244&model=account.move&view_type=form"
+    )
 
     # --- Paso 4: Preparar los datos para el wizard de pago ---
     json_model = json.dumps(
@@ -1341,10 +1391,15 @@ def invoice_refund(invoice_details, accion):
             "jsonrpc": "2.0",
             "method": "call",
             "params": {
-                "args": [[picking_id], ["name", "state", "location_id", "location_dest_id"]],
+                "args": [
+                    [picking_id],
+                    ["name", "state", "location_id", "location_dest_id"],
+                ],
                 "model": "stock.picking",
                 "method": "read",
-                "kwargs": {"context": {"lang": "es_PE", "tz": "America/Lima", "uid": uid}},
+                "kwargs": {
+                    "context": {"lang": "es_PE", "tz": "America/Lima", "uid": uid}
+                },
             },
             "id": 100007,
         }
@@ -1367,7 +1422,8 @@ def invoice_refund(invoice_details, accion):
             "quantity": line["qty_refund"],
             "discount": line.get("discount", 0) or 0,
             "price_unit": line.get("price_unit_refund") or line.get("price_unit"),
-            "price_subtotal": line.get("price_subtotal_refund") or line.get("price_subtotal"),
+            "price_subtotal": line.get("price_subtotal_refund")
+            or line.get("price_subtotal"),
         }
         for line in invoice_details.get("lines", [])
         if line.get("qty_refund", 0) > 0
@@ -1381,7 +1437,9 @@ def invoice_refund(invoice_details, accion):
                 refund_invoice_details["create_date"]
             ),
             "amount_total": amount_total,
-            "amount_untaxed": refund_fields[0].get("amount_untaxed", amount_total) if refund_fields else amount_total,
+            "amount_untaxed": refund_fields[0].get("amount_untaxed", amount_total)
+            if refund_fields
+            else amount_total,
             "journal": (
                 "Nota de Crédito Boleta Electrónica"
                 if invoice_number.startswith("B")

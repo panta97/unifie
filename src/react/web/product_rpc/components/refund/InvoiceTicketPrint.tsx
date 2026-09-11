@@ -95,6 +95,16 @@ export const InvoiceTicketPrint = () => {
                     </td>
                   </tr>
                 ))}
+                {invoiceDetails.adjustments?.map((adjustment, index) => (
+                  <tr key={`adjustment-${index}`}>
+                    <td className="p-0" colSpan={3}>
+                      {adjustment.name}
+                    </td>
+                    <td className="p-0 text-right">
+                      -{getCurrencyFormat(adjustment.amount)}
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </table>
             <br />
