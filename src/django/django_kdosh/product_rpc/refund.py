@@ -36,15 +36,21 @@ def _is_points_discount_line(line):
     return False
 
 
-def _apply_global_discount(lines, amount_untaxed=None):
-    """Distribuye descuentos globales (cupones de descuento) sobre las líneas de productos.
+def _apply_global_discount(lines, amount_untaxed=None, uid=2, proxy=None):
+    """Distribuye descuentos globales (cupones de descuento) sobre las líneas de productos elegibles.
 
-    Odoo puede guardar un cupón aplicado a toda la orden como una línea
-    negativa, en vez de llenar ``discount`` en cada producto. En ese caso
-    ``price_subtotal`` de la línea todavía puede representar el importe bruto.
-    El valor histórico de la devolución debe incluir también ese ajuste de cupón.
-    Los descuentos por puntos Kdosh NO se descuentan de los productos.
+    Odoo guarda un cupón aplicado como una línea negativa (con display_type='product' y price_subtotal < 0).
+    Esta función identifica de forma dinámica en Odoo (mediante loyalty.reward y product.product)
+    a qué productos o categorías específicas aplica el cupón:
+      - Si el cupón es para productos específicos (por ID, tag_id o categ_id), se descuenta únicamente a esos productos.
+      - Si el cupón es para el producto más barato ('cheapest'), se descuenta al producto de menor valor.
+      - Si el cupón es para toda la orden ('order') o global, se prorratea entre todos los productos de la venta.
+    
+    Los descuentos por Puntos Kdosh NO se descuentan del precio de los productos.
     """
+    if proxy is None:
+        proxy = rpc.get_proxy()
+
     product_lines = [
         line
         for line in lines
@@ -56,33 +62,182 @@ def _apply_global_discount(lines, amount_untaxed=None):
     if not product_lines:
         return lines
 
-    # Solo sumamos las líneas negativas que NO corresponden a puntos Kdosh (es decir, cupones/promociones)
-    coupon_adjustment = sum(
-        float(line.get("price_subtotal") or 0)
+    coupon_lines = [
+        line
         for line in lines
         if float(line.get("price_subtotal") or 0) < 0
         and not _is_points_discount_line(line)
-    )
-
-    if coupon_adjustment >= -0.005:
-        return lines
-
-    eligible = [
-        line for line in product_lines if float(line.get("price_subtotal") or 0) > 0
     ]
-    eligible_total = sum(float(line.get("price_subtotal") or 0) for line in eligible)
-    if not eligible_total:
+    if not coupon_lines:
         return lines
 
-    allocated = 0.0
-    for index, line in enumerate(eligible):
-        subtotal = float(line.get("price_subtotal") or 0)
-        if index == len(eligible) - 1:
-            line_adjustment = coupon_adjustment - allocated
-        else:
-            line_adjustment = round(coupon_adjustment * subtotal / eligible_total, 2)
-            allocated += line_adjustment
-        line["price_subtotal"] = round(max(0, subtotal + line_adjustment), 2)
+    # 1. Obtener IDs de productos de cupón
+    coupon_product_ids = []
+    for cl in coupon_lines:
+        prod = cl.get("product_id")
+        pid = prod[0] if isinstance(prod, (list, tuple)) else prod
+        if pid and pid not in coupon_product_ids:
+            coupon_product_ids.append(pid)
+
+    # 2. Consultar loyalty.reward en Odoo para conocer las reglas de descuento
+    rewards_by_prod_id = {}
+    if coupon_product_ids:
+        try:
+            domain = [["discount_line_product_id", "in", coupon_product_ids]]
+            fields = [
+                "id",
+                "discount_line_product_id",
+                "discount_applicability",
+                "discount_product_ids",
+                "discount_product_tag_id",
+                "discount_product_category_id",
+                "discount_mode",
+                "discount",
+            ]
+            json_model = {
+                "jsonrpc": "2.0",
+                "method": "call",
+                "params": {
+                    "model": "loyalty.reward",
+                    "domain": domain,
+                    "fields": fields,
+                    "context": {"lang": "es_PE", "tz": "America/Lima", "uid": uid},
+                },
+                "id": 98231,
+            }
+            reward_records = rpc.execute_json_model(json_model, uid, proxy=proxy)
+            for r in reward_records:
+                dlp = r.get("discount_line_product_id")
+                dlp_id = dlp[0] if isinstance(dlp, (list, tuple)) else dlp
+                if dlp_id:
+                    rewards_by_prod_id[dlp_id] = r
+        except Exception as e:
+            print(f"Advertencia al consultar loyalty.reward en Odoo: {e}")
+
+    # 3. Consultar información de los productos en la orden (tags, categoría)
+    prod_ids = []
+    for pl in product_lines:
+        prod = pl.get("product_id")
+        pid = prod[0] if isinstance(prod, (list, tuple)) else prod
+        if pid and pid not in prod_ids:
+            prod_ids.append(pid)
+
+    products_info = {}
+    if prod_ids:
+        try:
+            json_model_prod = {
+                "jsonrpc": "2.0",
+                "method": "call",
+                "params": {
+                    "args": [
+                        prod_ids,
+                        ["id", "product_tag_ids", "all_product_tag_ids", "categ_id"],
+                    ],
+                    "model": "product.product",
+                    "method": "read",
+                    "kwargs": {
+                        "context": {"lang": "es_PE", "tz": "America/Lima", "uid": uid}
+                    },
+                },
+                "id": 98232,
+            }
+            prod_records = rpc.execute_json_model(json_model_prod, uid, proxy=proxy)
+            for pr in prod_records:
+                products_info[pr["id"]] = pr
+        except Exception as e:
+            print(f"Advertencia al consultar product.product en Odoo: {e}")
+
+    # 4. Aplicar cada cupón a sus productos correspondientes
+    for cl in coupon_lines:
+        coupon_subtotal = float(cl.get("price_subtotal") or 0)
+        if coupon_subtotal >= -0.005:
+            continue
+
+        prod = cl.get("product_id")
+        pid = prod[0] if isinstance(prod, (list, tuple)) else prod
+        reward = rewards_by_prod_id.get(pid)
+
+        # Determinar productos aplicables según las reglas de Odoo
+        matched_lines = []
+        if reward:
+            applicability = reward.get("discount_applicability") or "order"
+            if applicability == "specific":
+                reward_prod_ids = reward.get("discount_product_ids") or []
+                reward_tag = reward.get("discount_product_tag_id")
+                reward_tag_id = (
+                    reward_tag[0]
+                    if isinstance(reward_tag, (list, tuple))
+                    else reward_tag
+                )
+                reward_categ = reward.get("discount_product_category_id")
+                reward_categ_id = (
+                    reward_categ[0]
+                    if isinstance(reward_categ, (list, tuple))
+                    else reward_categ
+                )
+
+                for pl in product_lines:
+                    p_id = pl.get("product_id")
+                    p_id_val = p_id[0] if isinstance(p_id, (list, tuple)) else p_id
+                    p_info = products_info.get(p_id_val, {})
+
+                    matched = False
+                    if reward_prod_ids and p_id_val in reward_prod_ids:
+                        matched = True
+                    if reward_tag_id:
+                        p_tags = set(p_info.get("product_tag_ids") or []) | set(
+                            p_info.get("all_product_tag_ids") or []
+                        )
+                        if reward_tag_id in p_tags:
+                            matched = True
+                    if reward_categ_id:
+                        p_categ = p_info.get("categ_id")
+                        p_categ_id = (
+                            p_categ[0]
+                            if isinstance(p_categ, (list, tuple))
+                            else p_categ
+                        )
+                        if reward_categ_id == p_categ_id:
+                            matched = True
+
+                    if matched and float(pl.get("price_subtotal") or 0) > 0:
+                        matched_lines.append(pl)
+
+            elif applicability == "cheapest":
+                sorted_lines = sorted(
+                    [
+                        pl
+                        for pl in product_lines
+                        if float(pl.get("price_subtotal") or 0) > 0
+                    ],
+                    key=lambda x: float(
+                        x.get("price_unit") or x.get("price_subtotal") or 0
+                    ),
+                )
+                if sorted_lines:
+                    matched_lines = [sorted_lines[0]]
+
+        # Si no hubo match específico o la regla es 'order', aplica a todos los productos
+        if not matched_lines:
+            matched_lines = [
+                pl for pl in product_lines if float(pl.get("price_subtotal") or 0) > 0
+            ]
+
+        matched_total = sum(
+            float(pl.get("price_subtotal") or 0) for pl in matched_lines
+        )
+        if matched_total <= 0:
+            continue
+
+        allocated = 0.0
+        for index, line in enumerate(matched_lines):
+            subtotal = float(line.get("price_subtotal") or 0)
+            if index == len(matched_lines) - 1:
+                line_adj = coupon_subtotal - allocated
+            else:
+                line_adj = round(coupon_subtotal * subtotal / matched_total, 2)
+                allocated += line_adj
+            line["price_subtotal"] = round(max(0.0, subtotal + line_adj), 2)
 
     return lines
 
@@ -304,7 +459,9 @@ def get_invoice(invoice_number, company_ids=None, uid=2):
         for line in invoice_lines
         if float(line.get("price_subtotal") or 0) < 0
     ]
-    _apply_global_discount(invoice_lines, invoice_details.get("amount_untaxed"))
+    _apply_global_discount(
+        invoice_lines, invoice_details.get("amount_untaxed"), uid=uid, proxy=proxy
+    )
 
     # GET REFUND INVOICES
     domain_refunds = [
@@ -708,7 +865,9 @@ def invoice_refund(invoice_details, accion):
     json_model_all_lines = json.loads(json_model)
     json_model_all_lines["params"]["args"][0] = line_ids
     all_lines_response = rpc.execute_json_model(json_model_all_lines, uid, proxy=proxy)
-    _apply_global_discount(all_lines_response, invoice_details.get("amount_untaxed"))
+    _apply_global_discount(
+        all_lines_response, invoice_details.get("amount_untaxed"), uid=uid, proxy=proxy
+    )
     selected_ids = set(selected_line_ids)
     lines_response = [
         line for line in all_lines_response if line.get("id") in selected_ids
@@ -751,7 +910,7 @@ def invoice_refund(invoice_details, accion):
             unit_price = round(f_subtotal_refund / refund_qty, 2)
         elif f_unit_refund is not None and f_unit_refund > 0:
             unit_price = round(f_unit_refund, 2)
-        elif discount > 0 and orig_qty:
+        elif orig_qty:
             unit_price = round(subtotal / orig_qty, 2)
         else:
             unit_price = line.get("price_unit", 0)
