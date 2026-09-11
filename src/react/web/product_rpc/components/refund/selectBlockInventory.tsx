@@ -4,14 +4,14 @@ import { selectInvoiceItem } from "../../app/slice/refund/invoiceSlice";
 
 const getStockLocationName = (invoiceNumber: string) => {
   const num = invoiceNumber.toUpperCase();
-  
+
   if (/^(B00[1-9]|F00[1-9])/.test(num)) {
     return "ABTAO-KDO1/TIENDA";
   }
   if (/^(B010|F010)/.test(num)) {
     return "SAN MARTIN-KDO2/TIENDA";
   }
-  if (/^(B01[1-3]|F01[1-3])/.test(num)) {
+  if (/^(B01[1-5]|F01[1-5])/.test(num)) {
     return "TINGO MARIA-KDO3/TIENDA";
   }
   return "Almacén no definido";
