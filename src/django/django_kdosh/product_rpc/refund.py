@@ -5,6 +5,47 @@ from .utils import utils, rpc
 from django.conf import settings
 
 
+def _apply_global_discount(lines, amount_untaxed):
+    """Distribuye descuentos globales sobre las líneas de productos.
+
+    Odoo puede guardar un cupón aplicado a toda la orden como una línea
+    negativa, en vez de llenar ``discount`` en cada producto. En ese caso
+    ``price_subtotal`` de la línea todavía puede representar el importe bruto.
+    El valor histórico de la devolución debe incluir también ese ajuste.
+    """
+    product_lines = [
+        line
+        for line in lines
+        if line.get("product_id")
+        and (line.get("display_type") or "product") == "product"
+        and float(line.get("price_subtotal") or 0) > 0
+    ]
+    if not product_lines:
+        return lines
+
+    product_subtotal = sum(float(line.get("price_subtotal") or 0) for line in product_lines)
+    global_adjustment = float(amount_untaxed or 0) - product_subtotal
+    if global_adjustment >= -0.005:
+        return lines
+
+    eligible = [line for line in product_lines if float(line.get("price_subtotal") or 0) > 0]
+    eligible_total = sum(float(line.get("price_subtotal") or 0) for line in eligible)
+    if not eligible_total:
+        return lines
+
+    allocated = 0.0
+    for index, line in enumerate(eligible):
+        subtotal = float(line.get("price_subtotal") or 0)
+        if index == len(eligible) - 1:
+            line_adjustment = global_adjustment - allocated
+        else:
+            line_adjustment = round(global_adjustment * subtotal / eligible_total, 2)
+            allocated += line_adjustment
+        line["price_subtotal"] = round(max(0, subtotal + line_adjustment), 2)
+
+    return lines
+
+
 def get_invoice(invoice_number, company_ids=None, uid=2):
     if company_ids is None:
         company_ids = [1, 2, 3]
@@ -183,7 +224,8 @@ def get_invoice(invoice_number, company_ids=None, uid=2):
                     "quantity",
                     "price_unit",
                     "price_subtotal",
-                    "discount"
+                    "discount",
+                    "display_type"
                 ]
             ],
             "model": "account.move.line",
@@ -213,6 +255,15 @@ def get_invoice(invoice_number, company_ids=None, uid=2):
     dict_model["params"]["args"][0] = invoice_details["invoice_line_ids"]
     dict_model["params"]["kwargs"]["context"]["default_invoice_id"] = invoice_id
     invoice_lines = rpc.execute_json_model(dict_model, uid, proxy=proxy)
+    adjustment_lines = [
+        {
+            "name": line.get("name") or "Ajuste de la operación",
+            "amount": round(abs(float(line.get("price_subtotal") or 0)), 2),
+        }
+        for line in invoice_lines
+        if float(line.get("price_subtotal") or 0) < 0
+    ]
+    _apply_global_discount(invoice_lines, invoice_details.get("amount_untaxed"))
 
     # GET REFUND INVOICES
     domain_refunds = [
@@ -438,7 +489,14 @@ def get_invoice(invoice_number, company_ids=None, uid=2):
     invoice_result["stock_moves"] = stock_moves
 
     invoice_result["lines"] = []
+    invoice_result["adjustments"] = adjustment_lines
     for line in invoice_lines:
+        if (
+            not line.get("product_id")
+            or (line.get("display_type") or "product") != "product"
+            or float(line.get("price_subtotal") or 0) <= 0
+        ):
+            continue
         match = re.search(r"(\[.*\]\s)?(.*)", line["name"])
         if not match:
             raise Exception(f"could not find regex pattern for: {line['name']}")
@@ -588,6 +646,7 @@ def invoice_refund(invoice_details, accion):
                         "price_subtotal",
                         "discount",
                         "tax_ids",
+                        "display_type",
                     ],
                 ],
                 "model": "account.move.line",
@@ -600,7 +659,18 @@ def invoice_refund(invoice_details, accion):
         }
     )
 
-    lines_response = rpc.execute_json_model(json.loads(json_model), uid, proxy=proxy)
+    # Leer todas las líneas permite detectar un descuento global aunque no
+    # haya sido guardado en la columna ``discount`` del producto.
+    json_model_all_lines = json.loads(json_model)
+    json_model_all_lines["params"]["args"][0] = line_ids
+    all_lines_response = rpc.execute_json_model(
+        json_model_all_lines, uid, proxy=proxy
+    )
+    _apply_global_discount(all_lines_response, invoice_details.get("amount_untaxed"))
+    selected_ids = set(selected_line_ids)
+    lines_response = [
+        line for line in all_lines_response if line.get("id") in selected_ids
+    ]
     if not lines_response:
         print(
             f"Error: No se pudieron recuperar las líneas de la factura {_invoice_id}."
@@ -616,6 +686,12 @@ def invoice_refund(invoice_details, accion):
 
     credit_note_lines = []
     for line in lines_response:
+        if (
+            not line.get("product_id")
+            or (line.get("display_type") or "product") != "product"
+            or float(line.get("price_subtotal") or 0) <= 0
+        ):
+            continue
         line_id = line.get("id")
         refund_qty = refund_qty_map.get(line_id, 0)
         if refund_qty <= 0:
@@ -1147,8 +1223,15 @@ def invoice_refund(invoice_details, accion):
     # 4. Crear los Stock Moves y asignarles el picking_id creado
     created_stock_moves = []
     for line in lines_response:
-        product_id = line["product_id"][0]
+        line_id = line.get("id")
+        product_id = (
+            line["product_id"][0]
+            if isinstance(line.get("product_id"), (list, tuple))
+            else line.get("product_id")
+        )
         quantity = refund_qty_map.get(line_id, 0)
+        if not product_id or quantity <= 0:
+            continue
 
         json_read_product = json.dumps(
             {
@@ -1247,7 +1330,34 @@ def invoice_refund(invoice_details, accion):
             "id": 100006,
         }
     )
-    rpc.execute_json_model(json.loads(json_validate), uid, proxy=proxy)
+    validation_result = rpc.execute_json_model(
+        json.loads(json_validate), uid, proxy=proxy
+    )
+
+    # Verificar que el movimiento realmente haya quedado aplicado. Crear el
+    # picking no modifica existencias hasta que su estado sea ``done``.
+    json_picking_state = json.dumps(
+        {
+            "jsonrpc": "2.0",
+            "method": "call",
+            "params": {
+                "args": [[picking_id], ["name", "state", "location_id", "location_dest_id"]],
+                "model": "stock.picking",
+                "method": "read",
+                "kwargs": {"context": {"lang": "es_PE", "tz": "America/Lima", "uid": uid}},
+            },
+            "id": 100007,
+        }
+    )
+    picking_state = rpc.execute_json_model(
+        json.loads(json_picking_state), uid, proxy=proxy
+    )
+    if not picking_state or picking_state[0].get("state") != "done":
+        print(
+            f"Advertencia: la devolución {picking_id} no quedó aplicada. "
+            f"Estado actual: {picking_state[0].get('state') if picking_state else 'desconocido'}. "
+            f"Respuesta: {validation_result}"
+        )
 
     refund_lines_result = [
         {

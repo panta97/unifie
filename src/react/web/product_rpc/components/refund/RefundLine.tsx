@@ -162,6 +162,7 @@ export const RefundLine = ({ isPaying }: { isPaying: boolean }) => {
             title="Nota de Crédito"
             invoiceSummaries={invoiceDetails.refund_invoices}
             showPrint={true}
+            showCopy={true}
           />
         )}
         {invoiceDetails.stock_moves.length > 0 && (
