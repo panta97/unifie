@@ -92,7 +92,7 @@ def get_attrs(attr_val_ids):
     left join attribute_value_sorted atvs
         on pav.id  = atvs.id
     where pav.id in ({})
-    order by atvs.sort;
+    order by ats.attr_order, atvs.sort;
     """.format(
         ",".join(map(str, attr_val_ids))
     )
@@ -141,7 +141,7 @@ def get_order_item(product_id, type):
     product_product = rpc.get_model(pp_table, pp_filter, pp_fields, proxy=proxy)
     product_template_attribute_value_list = rpc.get_model(
         "product.template.attribute.value",
-        [[["product_tmpl_id", "=", product_tmpl_id]]],
+        [[["product_tmpl_id", "=", product_tmpl_id], ["ptav_active", "=", True]]],
         ["product_attribute_value_id"],
         proxy=proxy,
     )
