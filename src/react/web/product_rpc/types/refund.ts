@@ -5,6 +5,11 @@ export interface Payment {
   amount: number;
 }
 
+export interface InvoiceAdjustment {
+  name: string;
+  amount: number;
+}
+
 export interface Partner {
   id: number;
   name: string;
@@ -75,6 +80,7 @@ export interface InvoiceDetails {
   currency: string;
   partner: Partner;
   lines: Line[];
+  adjustments: InvoiceAdjustment[];
 }
 
 export interface CreditDetails {
@@ -97,6 +103,7 @@ export interface CreditDetails {
   currency: string;
   partner: Partner;
   lines: Line[];
+  adjustments: InvoiceAdjustment[];
 }
 
 export interface StockLocation extends CatalogGeneric {

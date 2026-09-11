@@ -45,8 +45,25 @@ export const InvoiceTicketPrint = () => {
               Fecha: {invoiceDetails.create_date}
             </div>
             <br />
-            <div className="w-full text-center leading-4">
+            <div className="w-full text-center leading-4 mt-1 mb-2">
               moda & accesorios
+            </div>
+            <div className="w-full text-left leading-4 mt-1">
+              Usuario: {invoiceDetails.user || "-"}
+            </div>
+            <div className="w-full text-left leading-4">
+              Cliente:{" "}
+              <a
+                href={invoiceDetails.partner.odoo_link || "#"}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="cursor-pointer hover:underline"
+              >
+                {invoiceDetails.partner.name || "-"}
+              </a>
+            </div>
+            <div className="w-full text-left leading-4">
+              Número de doc.: {invoiceDetails.partner.doc_number || "-"}
             </div>
             <br />
             <table className="leading-[13px]">
@@ -136,25 +153,6 @@ export const InvoiceTicketPrint = () => {
               />
             </div>
             <div className="py-[20px] flex flex-col leading-[13px]">
-              <span>Usuario: {invoiceDetails.user}</span>
-              <span>
-                Cliente:{" "}
-                <a
-                  tabIndex={-1}
-                  className="cursor-pointer hover:underline"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  href={invoiceDetails.partner.odoo_link}
-                >
-                  {invoiceDetails.partner.name}
-                </a>
-              </span>
-              <span>
-                Número de doc.:{" "}
-                <span className="font-semibold">
-                  {invoiceDetails.partner.doc_number}
-                </span>
-              </span>
               <br />
               <br />
               <span>=========================================</span>
