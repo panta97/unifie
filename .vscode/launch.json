@@ -9,24 +9,26 @@
             "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/src/django/django_kdosh/manage.py",
-            "python": "${workspaceFolder}/src/django/venv/Scripts/python.exe",
+            "python": "${workspaceFolder}/src/django/venv/bin/python",
             "env": {
                 "DEBUG": "True",
                 "DEVELOPMENT_MODE": "True",
                 "PG_NAME_V11": "kdosh_analytics",
-                // "PG_NAME_V15": "kdosh_analytics_v15",
                 "PG_NAME_V15": "kdosh_v17",
                 "PG_NAME_V17": "kdosh_v17",
                 "PG_USER": "postgres",
                 "PG_HOST": "77.37.43.105",
                 "PG_PWD": "asAS12!@",
-                "ODOO_URL": "https://kdoshstore-dev-26661588.dev.odoo.com",
-                "ODOO_DB": "kdoshstore-dev-26661588",
-                "ODOO_PWD": "941154975cd263bda769d586a5c66c14c3d06474",
-                "ODOO_UID": "2",
+                "ODOO_URL": "http://localhost:8069",
+                "ODOO_DB": "odoo17_enterprise",
+                "ODOO_USERNAME": "corporacionkdosh@gmail.com",
+                "ODOO_PASSWORD": "5149fdffdad415056ecab5036eeff4189a86d565",
+                "ODOO_PWD": "5149fdffdad415056ecab5036eeff4189a86d565",
+                "ODOO_UID": "2"
             },
             "args": [
-                "runserver"
+                "runserver",
+                "8000"
             ],
             "django": true,
             "justMyCode": true

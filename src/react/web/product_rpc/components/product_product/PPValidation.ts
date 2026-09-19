@@ -1,4 +1,4 @@
-import { array, number, object, string } from "yup";
+import { array, boolean, number, object, string } from "yup";
 
 const catalogAttrSchema = object({
   id: number().positive("Debe seleccionar un atributo").required(),
@@ -37,6 +37,7 @@ const productSchema = object({
     .min(1)
     .required(),
   default_code: string().optional(),
+  x_studio_activo_ecommerce: boolean().optional(),
   // weight: number()
   //   .positive()
   //   .min(0.0001, "Peso en kg debe ser positivo")

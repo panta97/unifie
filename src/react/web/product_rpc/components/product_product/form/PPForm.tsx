@@ -10,9 +10,10 @@ import { NameField } from "./fields/NameField";
 import { PosCategoryField } from "./fields/PosCategoryField";
 import { PriceField } from "./fields/PriceField";
 import { DefaultCodeField } from "./fields/DefaultCodeField";
+import { ActivoEcommerceField } from "./fields/ActivoEcommerceField";
 import { Wrapper } from "../../shared/Wrapper";
 import { ListPriceTable } from "./ListPriceTable";
-import { WeightField } from './fields/WeightField';
+// import { WeightField } from './fields/WeightField';
 import { LotsField } from './fields/LotsField';
 
 export const PPForm = () => {
@@ -30,6 +31,7 @@ export const PPForm = () => {
           <PosCategoryField />
           <PriceField />
           <DefaultCodeField />
+          <ActivoEcommerceField />
           <LotsField />
           {/* <WeightField/> */}
         </div>

@@ -1,4 +1,3 @@
-import React from "react";
 import { useAppDispatch, useAppSelector } from "../../../app/hooks";
 import {
   deleteSelectedProduct,
@@ -11,6 +10,7 @@ import {
 } from "../../../app/slice/product/productSlice";
 import { ProductProductForm } from "../../../types/product";
 import { Svg } from "../../shared/Svg";
+import { Check, X } from "lucide-react";
 import { FetchStatus } from "../../../types/fetch";
 
 export const Table = () => {
@@ -40,6 +40,7 @@ export const Table = () => {
             {/* <th className="font-normal p-1">Peso</th> */}
             <th className="font-normal p-1">Atributos</th>
             <th className="font-normal p-1">Referencia Interna</th>
+            <th className="font-normal p-1">Ecommerce</th>
             <th className="font-normal p-1 text-center" colSpan={3}>
               -
             </th>
@@ -62,7 +63,7 @@ export const Table = () => {
                   product.category_line_name,
                   product.category_family_name,
                   product.category_brand_name,
-                  product.category_last_name
+                  product.category_last_name,
                 ]
                   .filter(Boolean)
                   .join(" / ")}
@@ -78,7 +79,7 @@ export const Table = () => {
                     >
                       {`${attr.attr_val_ids.reduce(
                         (acc, curr) => (acc += curr.name),
-                        ""
+                        "",
                       )} : ${attr.list_price.toFixed(2)}`}
                     </span>
                   ))
@@ -113,7 +114,7 @@ export const Table = () => {
                       >
                         {`${attr.attr_val_ids.reduce(
                           (acc, curr) => (acc += curr.name),
-                          ""
+                          "",
                         )} : ${attr.default_code}`}
                       </span>
                     ))
@@ -121,6 +122,23 @@ export const Table = () => {
                     <span>{product.default_code}</span>
                   )}
                 </div>
+              </td>
+              <td className="p-1">
+                {product.x_studio_activo_ecommerce ? (
+                  <>
+                    <span className="rounded px-1.5 py-0.5 bg-blue-100 text-blue-700 text-xs font-semibold inline-flex items-center gap-1">
+                      <Check className="h-3 w-3" />
+                      Sí
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <span className="rounded px-1.5 py-0.5 bg-gray-100 text-gray-400 text-xs inline-flex items-center gap-1">
+                      <X className="h-3 w-3" />
+                      No
+                    </span>
+                  </>
+                )}
               </td>
               {(() => {
                 if (product.fetch_status === FetchStatus.LOADING) {

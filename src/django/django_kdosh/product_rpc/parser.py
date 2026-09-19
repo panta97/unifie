@@ -52,6 +52,7 @@ def transform_product_json(data):
             "use_time": 75 if prod.get("lot", False) else 0,
             "removal_time": 85 if prod.get("lot", False) else 0,
             "alert_time": 90 if prod.get("lot", False) else 0,
+            "x_studio_activo_ecommerce": bool(prod.get("x_studio_activo_ecommerce", False)),
         }
         for attr in prod["attrs"]:
             product["attribute_line_ids"].append(

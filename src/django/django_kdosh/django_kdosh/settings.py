@@ -162,9 +162,11 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # ODOO_UID = os.getenv("ODOO_UID", "2")
 
 ODOO_URL = os.getenv("ODOO_URL", "http://localhost:8069")
-ODOO_DB = os.getenv("ODOO_DB", "odoo17_prod")
-ODOO_PWD = os.getenv("ODOO_PWD", "76e85116854d0f645a85a65b4a287c7aea425933")
+ODOO_DB = os.getenv("ODOO_DB", "odoo17_enterprise")
+ODOO_PWD = os.getenv("ODOO_PWD") or os.getenv("ODOO_PASSWORD", "5149fdffdad415056ecab5036eeff4189a86d565")
 ODOO_UID = os.getenv("ODOO_UID", "2")
+ODOO_USERNAME = os.getenv("ODOO_USERNAME", "corporacionkdosh@gmail.com")
+
 
 # ODOO_URL = os.getenv("ODOO_URL", "https://kdoshstore-dev-33243782.dev.odoo.com")
 # ODOO_DB = os.getenv("ODOO_DB", "kdoshstore-dev-33243782")

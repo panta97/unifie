@@ -71,6 +71,7 @@ export interface ProductProductForm {
   attr_list_price: AttributeListPrice[];
   weight: number;
   lot: boolean;
+  x_studio_activo_ecommerce?: boolean;
 }
 
 export interface ProductResult {
