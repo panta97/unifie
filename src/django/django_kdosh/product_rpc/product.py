@@ -63,6 +63,7 @@ class Product:
         self.message_follower_ids = []
         self.activity_ids = []
         self.message_ids = []
+        self.x_studio_activo_ecommerce = False
 
         # UNIQUE PROPERTIES
 
@@ -107,6 +108,7 @@ class Product:
         self.use_time = dict.get("use_time", 0)
         self.removal_time = dict.get("removal_time", 0)
         self.alert_time = dict.get("alert_time", 0)
+        self.x_studio_activo_ecommerce = dict.get("x_studio_activo_ecommerce", False)
         self.__set_attrs(dict["attribute_line_ids"])
 
     def clear_prod_vals(self):
@@ -116,6 +118,7 @@ class Product:
         self.categ_id = None
         self.pos_categ_ids = None
         self.attribute_line_ids = []
+        self.x_studio_activo_ecommerce = False
 
 
 def edit_product_default_code(

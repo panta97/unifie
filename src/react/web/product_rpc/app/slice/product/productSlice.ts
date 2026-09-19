@@ -24,6 +24,7 @@ const initialState: ProductState = {
   default_code: "",
   weight: 0,
   lot: false,
+  x_studio_activo_ecommerce: false,
   category_line_name: "",
   category_line_id: 0,
   category_family_name: "",
@@ -103,6 +104,16 @@ export const productSlice = createSlice({
       }>,
     ) => {
       state.lot = payload.lot;
+    },
+    updateActivoEcommerce: (
+      state,
+      {
+        payload,
+      }: PayloadAction<{
+        activoEcommerce: boolean;
+      }>,
+    ) => {
+      state.x_studio_activo_ecommerce = payload.activoEcommerce;
     },
     updateFamily: (
       state,
@@ -372,6 +383,8 @@ export const productSlice = createSlice({
       state.attrs = product.attrs;
       state.attr_default_code = product.attr_default_code;
       state.attr_list_price = product.attr_list_price;
+      state.x_studio_activo_ecommerce =
+        product.x_studio_activo_ecommerce ?? false;
     },
     reset: (state) => {
       state.id = new Date().getTime();
@@ -381,6 +394,7 @@ export const productSlice = createSlice({
       state.default_code = "";
       state.weight = 0;
       state.lot = false;
+      state.x_studio_activo_ecommerce = false;
       state.category_line_name = "";
       state.category_line_id = 0;
       state.category_family_name = "";
@@ -419,6 +433,7 @@ export const {
   reset,
   updateWeight,
   updateLot,
+  updateActivoEcommerce,
 } = productSlice.actions;
 
 export const selectProduct = (state: RootState) => state.product.product;
@@ -430,6 +445,8 @@ export const selectProductListPrice = (state: RootState) =>
 export const selectProductDefaultCode = (state: RootState) =>
   state.product.product.default_code;
 export const selectProductLot = (state: RootState) => state.product.product.lot;
+export const selectProductActivoEcommerce = (state: RootState) =>
+  state.product.product.x_studio_activo_ecommerce ?? false;
 export const selectProductLineId = (state: RootState) =>
   state.product.product.category_line_id;
 export const selectProductFamilyId = (state: RootState) =>
