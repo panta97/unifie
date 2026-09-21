@@ -12,7 +12,7 @@ export default defineConfig({
   plugins: [react()],
   base: "/react-static/",
   build: {
-    sourcemap: true,
+    sourcemap: false,
     manifest: true,
     // outDir: '../django/django_kdosh/static',
     emptyOutDir: true,

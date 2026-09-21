@@ -1,25 +1,19 @@
 import React, { useState, useEffect, useRef } from "react";
 import { 
   TextField, 
-  Card, 
-  CardContent, 
   Typography, 
   Box, 
   CircularProgress,
   IconButton,
-  Alert,
   Fade,
   Paper
 } from "@mui/material";
-import { 
-  Search as SearchIcon, 
-  QrCode as QrCodeIcon,
-  Refresh as RefreshIcon,
-  CheckCircle as CheckCircleIcon,
-  Error as ErrorIcon,
-  ContentCopy as CopyIcon,
-  CameraAlt as CameraIcon
-} from "@mui/icons-material";
+import SearchIcon from "@mui/icons-material/Search";
+import QrCodeIcon from "@mui/icons-material/QrCode";
+import RefreshIcon from "@mui/icons-material/Refresh";
+import ErrorIcon from "@mui/icons-material/Error";
+import CopyIcon from "@mui/icons-material/ContentCopy";
+import CameraIcon from "@mui/icons-material/CameraAlt";
 import { QRCodeCanvas } from "qrcode.react";
 import toast, { Toaster } from "react-hot-toast";
 import { Html5Qrcode } from "html5-qrcode";
