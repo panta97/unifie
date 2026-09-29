@@ -66,7 +66,8 @@ def analyze_sales(
             previous_start,
             previous_end,
             _product_rows(metrics),
-            f"Estos son los productos con mayor venta entre {current_start} y {current_end}.",
+            f"Estos son los productos con mayor venta en {store or 'Abtao y Tingo María'} entre {current_start} y {current_end}.",
+            store=store,
         )
 
     if intent in {"products_up", "products_down", "sales_drivers"}:
@@ -93,6 +94,7 @@ def analyze_sales(
             previous_end,
             _limit_change_rows(rows, limit),
             answer,
+            store=store,
         )
 
     current_totals = _totals_by_store(get_store_totals(current_start, current_end))
@@ -120,6 +122,7 @@ def analyze_sales(
         previous_end,
         _money_rows(rows),
         "Comparación de Abtao y Tingo María frente al periodo anterior.",
+        store=None,
     )
 
 
@@ -187,9 +190,12 @@ def _response(
     previous_end: date,
     rows: list[dict[str, object]],
     answer: str,
+    *,
+    store: str | None = None,
 ) -> dict[str, object]:
     response = {
         "intent": intent,
+        "store": store,
         "answer": answer,
         "period": {
             "current": {"start": current_start.isoformat(), "end": current_end.isoformat()},

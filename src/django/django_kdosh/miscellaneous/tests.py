@@ -85,6 +85,15 @@ class SalesMetricsTests(SimpleTestCase):
 
     @patch.dict("os.environ", {"OPENROUTER_API_KEY": "", "OPENROUTER_MODEL": ""}, clear=False)
     @patch("miscellaneous.sales_analysis.get_product_ranking")
+    def test_analysis_uses_store_from_question_context(self, get_product_ranking):
+        get_product_ranking.return_value = []
+
+        analyze_sales("top_products", date(2026, 9, 29), period="week", store="tingo maria")
+
+        self.assertEqual(get_product_ranking.call_args.kwargs["store"], "tingo maria")
+
+    @patch.dict("os.environ", {"OPENROUTER_API_KEY": "", "OPENROUTER_MODEL": ""}, clear=False)
+    @patch("miscellaneous.sales_analysis.get_product_ranking")
     def test_analysis_returns_equivalent_periods_and_table(self, get_product_ranking):
         get_product_ranking.return_value = [
             _line_metric(product_id=9, product_name="Polo azul - Talla M", subtotal="25")
