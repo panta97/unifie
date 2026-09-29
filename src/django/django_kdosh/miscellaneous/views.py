@@ -1,9 +1,17 @@
+import json
+import logging
+from datetime import date
+
 from django.http import JsonResponse
+from django.views.decorators.http import require_POST
 from .move_lines import move_lines as move_lines_func
 from .sales import sales as sales_func
 from .goals import goals as goals_func
 from django.contrib.auth.decorators import login_required
 from .constants import STORE_ABTAO, STORE_TINGO_MARIA
+from .sales_analysis import analyze_sales
+
+logger = logging.getLogger(__name__)
 
 
 def move_lines(request, invoice_number):
@@ -30,6 +38,31 @@ def sales(request, date):
         response = JsonResponse({"result": "ERROR", "message": str(e)}, status=400)
 
     return response
+
+
+@require_POST
+def sales_analysis(request):
+    try:
+        payload = json.loads(request.body or "{}")
+        selected_date = payload.get("date")
+        if not isinstance(selected_date, str):
+            raise ValueError("date is required and must use YYYY-MM-DD.")
+        result = analyze_sales(
+            payload.get("intent"),
+            date.fromisoformat(selected_date),
+            period=payload.get("period", "day"),
+            store=payload.get("store"),
+            limit=payload.get("limit", 10),
+        )
+        return JsonResponse({"body": result}, status=200)
+    except (json.JSONDecodeError, TypeError, ValueError) as error:
+        return JsonResponse({"result": "ERROR", "message": str(error)}, status=400)
+    except Exception:
+        logger.exception("Sales analysis failed")
+        return JsonResponse(
+            {"result": "ERROR", "message": "No se pudo completar el análisis de ventas."},
+            status=502,
+        )
 
 
 def goals_abtao(request, date):

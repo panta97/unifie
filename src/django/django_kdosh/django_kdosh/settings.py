@@ -167,7 +167,6 @@ ODOO_PWD = os.getenv("ODOO_PWD") or os.getenv("ODOO_PASSWORD", "5149fdffdad41505
 ODOO_UID = os.getenv("ODOO_UID", "2")
 ODOO_USERNAME = os.getenv("ODOO_USERNAME", "corporacionkdosh@gmail.com")
 
-
 # ODOO_URL = os.getenv("ODOO_URL", "https://kdoshstore-dev-33243782.dev.odoo.com")
 # ODOO_DB = os.getenv("ODOO_DB", "kdoshstore-dev-33243782")
 # ODOO_PWD = os.getenv("ODOO_PWD", "5909d8cb53d0a301cdd2bec8f3936c613f954143")

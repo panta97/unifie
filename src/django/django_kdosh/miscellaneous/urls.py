@@ -1,6 +1,6 @@
 from django.urls import path
 
-from .views import move_lines, sales, goals_abtao, goals_tingo
+from .views import move_lines, sales, sales_analysis, goals_abtao, goals_tingo
 
 urlpatterns = [
     path(
@@ -13,6 +13,7 @@ urlpatterns = [
         sales,
         name="sales",
     ),
+    path("api/miscellaneous/sales-analysis", sales_analysis, name="sales-analysis"),
     path("api/miscellaneous/goals/abtao/<str:date>", goals_abtao, name="goals_abtao"),
     path("api/miscellaneous/goals/tingo/<str:date>", goals_tingo, name="goals_tingo"),
 ]
