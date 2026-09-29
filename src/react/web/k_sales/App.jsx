@@ -9,6 +9,7 @@ import now from "./utils/now";
 import ViewGroup from "./ViewGroup/ViewGroup";
 import today from "./utils/date";
 import { DateTime } from "luxon";
+import { MessageCircle, Send, Sparkles, X } from "lucide-react";
 
 const todayDate = today();
 
@@ -23,6 +24,8 @@ function App() {
   const [analysis, setAnalysis] = useState(null);
   const [analysisError, setAnalysisError] = useState("");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [isAssistantOpen, setIsAssistantOpen] = useState(false);
+  const [question, setQuestion] = useState("");
 
   const analysisActions = [
     { intent: "top_products", label: "Productos más vendidos", detail: "esta semana" },
@@ -67,9 +70,10 @@ function App() {
     getDataFromAPI(iptDate);
   }, []);
 
-  const runAnalysis = async (action) => {
+  const runAnalysis = async (action = {}) => {
     setIsAnalyzing(true);
     setAnalysisError("");
+    setIsAssistantOpen(true);
     try {
       const result = await getSalesAnalysis({
         ...action,
@@ -83,6 +87,14 @@ function App() {
     } finally {
       setIsAnalyzing(false);
     }
+  };
+
+  const handleQuestionSubmit = (event) => {
+    event.preventDefault();
+    const trimmedQuestion = question.trim();
+    if (!trimmedQuestion || isAnalyzing) return;
+    runAnalysis({ question: trimmedQuestion });
+    setQuestion("");
   };
 
   return (
@@ -113,43 +125,75 @@ function App() {
       <ViewGroup view={view} updateView={updateView} />
       <Stores sales={sales} view={view} />
       <Line sales={sales} />
-      <section className="analysis-panel" aria-labelledby="analysis-title">
-        <div className="analysis-heading">
-          <div>
-            <p className="analysis-kicker">Lectura rápida</p>
-            <h2 id="analysis-title">Análisis de ventas</h2>
-            <p>Elige una pregunta y revisa las cifras que la explican.</p>
-          </div>
-          <span className="analysis-date">Semana hasta {iptDate}</span>
-        </div>
-        <div className="analysis-actions">
-          {analysisActions.map((action) => (
-            <button
-              type="button"
-              className={`analysis-action ${analysis?.intent === action.intent && analysis?.store === action.store ? "is-selected" : ""}`}
-              key={`${action.intent}-${action.store || "all"}`}
-              onClick={() => runAnalysis(action)}
-              disabled={isAnalyzing}
-            >
-              <span>{action.label}</span>
-              <small>{action.detail}</small>
-            </button>
-          ))}
-        </div>
-        {isAnalyzing && <p className="status-message">Consultando las ventas…</p>}
-        {analysisError && <p className="status-message status-error">{analysisError}</p>}
-        {analysis && !isAnalyzing && (
-          <div className="analysis-result">
-            <p className="analysis-answer">{analysis.answer}</p>
-            <div className="analysis-period">
-              <span>Actual: {analysis.period.current.start} al {analysis.period.current.end}</span>
-              <span>Anterior: {analysis.period.previous.start} al {analysis.period.previous.end}</span>
-            </div>
-            <AnalysisTable rows={analysis.rows} intent={analysis.intent} />
-          </div>
-        )}
-      </section>
-      </main>
+       </main>
+       {isAssistantOpen && (
+         <aside className="assistant-panel" aria-labelledby="analysis-title">
+           <div className="assistant-panel-header">
+             <div className="assistant-title">
+               <span className="assistant-icon"><Sparkles size={16} /></span>
+               <div>
+                 <p className="analysis-kicker">Lectura rápida</p>
+                 <h2 id="analysis-title">Asistente de ventas</h2>
+               </div>
+             </div>
+             <button className="assistant-close" type="button" onClick={() => setIsAssistantOpen(false)} aria-label="Cerrar asistente">
+               <X size={18} />
+             </button>
+           </div>
+           <p className="assistant-intro">Pregunta por productos, tiendas o cambios de la semana.</p>
+           <form className="assistant-form" onSubmit={handleQuestionSubmit}>
+             <label htmlFor="sales-question">Tu pregunta</label>
+             <div className="assistant-input-row">
+               <input
+                 id="sales-question"
+                 value={question}
+                 onChange={(event) => setQuestion(event.target.value)}
+                 placeholder="Ej.: ¿Qué productos subieron?"
+                 disabled={isAnalyzing}
+               />
+               <button type="submit" aria-label="Enviar pregunta" disabled={!question.trim() || isAnalyzing}>
+                 <Send size={16} />
+               </button>
+             </div>
+           </form>
+           <div className="analysis-actions">
+             {analysisActions.map((action) => (
+               <button
+                 type="button"
+                 className="analysis-action"
+                 key={`${action.intent}-${action.store || "all"}`}
+                 onClick={() => runAnalysis(action)}
+                 disabled={isAnalyzing}
+               >
+                 <span>{action.label}</span>
+                 <small>{action.detail}</small>
+               </button>
+             ))}
+           </div>
+           {isAnalyzing && <p className="status-message">Consultando las ventas…</p>}
+           {analysisError && <p className="status-message status-error">{analysisError}</p>}
+           {analysis && !isAnalyzing && (
+             <div className="analysis-result">
+               <p className="analysis-answer">{analysis.answer}</p>
+               <div className="analysis-period">
+                 <span>Actual: {analysis.period.current.start} al {analysis.period.current.end}</span>
+                 <span>Anterior: {analysis.period.previous.start} al {analysis.period.previous.end}</span>
+               </div>
+               <AnalysisTable rows={analysis.rows} intent={analysis.intent} />
+             </div>
+           )}
+         </aside>
+       )}
+       <button
+         type="button"
+         className={`assistant-fab ${isAssistantOpen ? "is-open" : ""}`}
+         onClick={() => setIsAssistantOpen((open) => !open)}
+         aria-label={isAssistantOpen ? "Cerrar asistente de ventas" : "Abrir asistente de ventas"}
+         aria-expanded={isAssistantOpen}
+       >
+         {isAssistantOpen ? <X size={22} /> : <MessageCircle size={22} />}
+         <span>{isAssistantOpen ? "Cerrar" : "Ayuda"}</span>
+       </button>
     </div>
   );
 }

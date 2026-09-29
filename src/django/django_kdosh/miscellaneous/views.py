@@ -9,7 +9,7 @@ from .sales import sales as sales_func
 from .goals import goals as goals_func
 from django.contrib.auth.decorators import login_required
 from .constants import STORE_ABTAO, STORE_TINGO_MARIA
-from .sales_analysis import analyze_sales
+from .sales_analysis import analyze_sales, intent_from_question
 
 logger = logging.getLogger(__name__)
 
@@ -47,11 +47,17 @@ def sales_analysis(request):
         selected_date = payload.get("date")
         if not isinstance(selected_date, str):
             raise ValueError("date is required and must use YYYY-MM-DD.")
+        intent = payload.get("intent")
+        store = payload.get("store")
+        question = str(payload.get("question") or "").strip()
+        if not intent and question:
+            intent, question_store = intent_from_question(question)
+            store = store or question_store
         result = analyze_sales(
-            payload.get("intent"),
+            intent,
             date.fromisoformat(selected_date),
             period=payload.get("period", "day"),
-            store=payload.get("store"),
+            store=store,
             limit=payload.get("limit", 10),
         )
         return JsonResponse({"body": result}, status=200)

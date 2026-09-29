@@ -25,6 +25,25 @@ SUPPORTED_INTENTS = {
 SUPPORTED_PERIODS = {"day", "week", "month"}
 
 
+def intent_from_question(question: str) -> tuple[str, str | None]:
+    normalized = " ".join(question.lower().split())
+    store = None
+    if "abtao" in normalized:
+        store = STORE_ABTAO
+    elif "tingo maría" in normalized or "tingo maria" in normalized:
+        store = STORE_TINGO_MARIA
+
+    if any(word in normalized for word in ("comparar", "comparación", "tiendas", "sucursal")):
+        return "store_comparison", None
+    if any(word in normalized for word in ("subieron", "crecieron", "aumentaron", "mejoraron")):
+        return "products_up", store
+    if any(word in normalized for word in ("bajaron", "cayeron", "disminuyeron", "empeoraron")):
+        return "products_down", store
+    if any(word in normalized for word in ("explica", "explicar", "cambio", "variación", "variacion", "por qué", "por que")):
+        return "sales_drivers", store
+    return "top_products", store
+
+
 def analyze_sales(
     intent: str,
     selected_date: date,

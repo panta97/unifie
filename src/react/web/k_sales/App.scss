@@ -59,13 +59,155 @@ main {
   color: var(--error-color);
 }
 
-.analysis-panel {
-  margin: 56px 40px 0;
-  padding: 28px;
+.assistant-fab {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 20;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 50px;
+  padding: 0 17px;
+  border: 0;
+  border-radius: 999px;
+  color: #ffffff;
+  background: var(--view-sq-active-bg-color);
+  box-shadow: 0 14px 30px rgba(0, 30, 39, 0.22);
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 800;
+  transition: transform 180ms ease, box-shadow 180ms ease, background 180ms ease;
+}
+
+.assistant-fab:hover,
+.assistant-fab:focus-visible {
+  transform: translateY(-3px);
+  box-shadow: 0 18px 34px rgba(0, 30, 39, 0.28);
+}
+
+.assistant-fab.is-open {
+  color: var(--font-color);
+  background: var(--background-color);
+  border: 1px solid var(--line-deco-color);
+}
+
+.assistant-panel {
+  position: fixed;
+  right: 24px;
+  bottom: 88px;
+  z-index: 19;
+  width: min(440px, calc(100vw - 40px));
+  max-height: min(700px, calc(100vh - 120px));
+  overflow-y: auto;
   border: 1px solid var(--line-deco-color);
   border-radius: 18px;
   background: color-mix(in srgb, var(--background-color) 92%, var(--ab-bg-color));
   box-shadow: 0 18px 50px rgba(0, 30, 39, 0.08);
+  padding: 22px;
+  animation: assistant-panel-in 180ms ease-out both;
+}
+
+@keyframes assistant-panel-in {
+  from { opacity: 0; transform: translateY(10px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.assistant-panel-header,
+.assistant-title {
+  display: flex;
+  align-items: center;
+}
+
+.assistant-panel-header {
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.assistant-title {
+  gap: 10px;
+}
+
+.assistant-icon {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border-radius: 10px;
+  color: #ffffff;
+  background: var(--ab-bg-color);
+}
+
+.assistant-panel h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  letter-spacing: -0.025em;
+}
+
+.assistant-close {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border: 1px solid var(--line-deco-color);
+  border-radius: 10px;
+  color: var(--muted-font-color);
+  background: transparent;
+  cursor: pointer;
+}
+
+.assistant-close:hover,
+.assistant-close:focus-visible {
+  color: var(--font-color);
+  border-color: var(--ab-bg-color);
+}
+
+.assistant-intro {
+  margin: 14px 0 20px;
+  color: var(--muted-font-color);
+  font-size: 0.9rem;
+}
+
+.assistant-form label {
+  display: block;
+  margin-bottom: 7px;
+  color: var(--muted-font-color);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.assistant-input-row {
+  display: flex;
+  gap: 8px;
+}
+
+.assistant-input-row input {
+  min-width: 0;
+  flex: 1;
+  min-height: 42px;
+  padding: 0 12px;
+  border: 1px solid var(--line-deco-color);
+  border-radius: 10px;
+  color: var(--font-color);
+  background: var(--background-color);
+}
+
+.assistant-input-row button {
+  display: grid;
+  width: 42px;
+  place-items: center;
+  border: 0;
+  border-radius: 10px;
+  color: #ffffff;
+  background: var(--ab-bg-color);
+  cursor: pointer;
+}
+
+.assistant-input-row button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
 }
 
 .analysis-heading {
@@ -108,8 +250,9 @@ main {
 
 .analysis-actions {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
+  margin-top: 20px;
 }
 
 .analysis-action {
@@ -158,6 +301,10 @@ main {
   margin-top: 28px;
   padding-top: 24px;
   border-top: 1px solid var(--line-deco-color);
+}
+
+.assistant-panel .status-message {
+  margin: 14px 0 0;
 }
 
 .analysis-answer {
@@ -233,14 +380,16 @@ main {
     box-sizing: border-box;
   }
 
-  .analysis-panel {
-    margin-right: 20px;
-    margin-left: 20px;
-    padding: 20px;
+  .assistant-fab {
+    right: 16px;
+    bottom: 16px;
   }
 
-  .analysis-heading {
-    flex-direction: column;
+  .assistant-panel {
+    right: 20px;
+    bottom: 82px;
+    width: calc(100vw - 40px);
+    padding: 18px;
   }
 
   .analysis-actions {
@@ -249,8 +398,21 @@ main {
 }
 
 @media (max-width: 430px) {
+  .assistant-panel {
+    max-height: calc(100vh - 105px);
+  }
+
   .analysis-actions {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .assistant-panel,
+  .assistant-fab,
+  .analysis-action {
+    animation: none;
+    transition: none;
   }
 }
 

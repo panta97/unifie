@@ -5,7 +5,7 @@ from unittest.mock import Mock, patch
 from django.test import SimpleTestCase
 from kdosh_odoo import SalesLine
 
-from .sales_analysis import analyze_sales
+from .sales_analysis import analyze_sales, intent_from_question
 from .openrouter import explain_analysis
 from .sales_metrics import get_product_ranking, get_store_totals, store_for_line
 
@@ -77,6 +77,13 @@ class SalesMetricsTests(SimpleTestCase):
         self.assertEqual(metric.quantity_net, Decimal("1"))
         self.assertEqual(metric.subtotal_net, Decimal("10"))
 
+    def test_question_is_mapped_to_supported_intent_and_store(self):
+        self.assertEqual(
+            intent_from_question("¿Qué productos subieron en Abtao?"),
+            ("products_up", "abtao"),
+        )
+
+    @patch.dict("os.environ", {"OPENROUTER_API_KEY": "", "OPENROUTER_MODEL": ""}, clear=False)
     @patch("miscellaneous.sales_analysis.get_product_ranking")
     def test_analysis_returns_equivalent_periods_and_table(self, get_product_ranking):
         get_product_ranking.return_value = [
