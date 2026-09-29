@@ -10,7 +10,7 @@ from .sales import sales as sales_func
 from .goals import goals as goals_func
 from django.contrib.auth.decorators import login_required
 from .constants import STORE_ABTAO, STORE_TINGO_MARIA
-from .sales_analysis import analyze_sales, intent_from_question
+from .sales_analysis import analyze_sales, date_range_from_question, intent_from_question
 
 logger = logging.getLogger(__name__)
 
@@ -52,15 +52,22 @@ def sales_analysis(request):
         intent = payload.get("intent")
         store = payload.get("store")
         question = str(payload.get("question") or "").strip()
+        analysis_period = payload.get("period", "day")
+        range_dates = None
         if not intent and question:
             intent, question_store = intent_from_question(question)
             store = store or question_store
+            range_dates = date_range_from_question(question, date.fromisoformat(selected_date))
+            if range_dates:
+                analysis_period = "range"
         result = analyze_sales(
             intent,
             date.fromisoformat(selected_date),
-            period=payload.get("period", "day"),
+            period=analysis_period,
             store=store,
             limit=payload.get("limit", 10),
+            start_date=range_dates[0] if range_dates else None,
+            end_date=range_dates[1] if range_dates else None,
         )
         return JsonResponse({"body": result}, status=200)
     except (json.JSONDecodeError, TypeError, ValueError) as error:

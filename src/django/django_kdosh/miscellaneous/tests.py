@@ -5,7 +5,7 @@ from unittest.mock import Mock, patch
 from django.test import SimpleTestCase
 from kdosh_odoo import SalesLine
 
-from .sales_analysis import analyze_sales, intent_from_question
+from .sales_analysis import analyze_sales, date_range_from_question, intent_from_question
 from .openrouter import explain_analysis
 from .sales_metrics import get_product_ranking, get_store_totals, store_for_line
 
@@ -81,6 +81,15 @@ class SalesMetricsTests(SimpleTestCase):
         self.assertEqual(
             intent_from_question("¿Qué productos subieron en Abtao?"),
             ("products_up", "abtao"),
+        )
+
+    def test_question_parses_spanish_date_range(self):
+        self.assertEqual(
+            date_range_from_question(
+                "¿Cuáles son los productos más vendidos del 3 de agosto al 3 de setiembre?",
+                date(2026, 9, 29),
+            ),
+            (date(2026, 8, 3), date(2026, 9, 3)),
         )
 
     @patch.dict("os.environ", {"OPENROUTER_API_KEY": "", "OPENROUTER_MODEL": ""}, clear=False)

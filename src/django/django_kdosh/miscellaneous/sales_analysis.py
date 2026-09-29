@@ -5,6 +5,7 @@ from __future__ import annotations
 from calendar import monthrange
 from datetime import date, timedelta
 from decimal import Decimal
+import re
 
 from .constants import STORE_ABTAO, STORE_TINGO_MARIA
 from .openrouter import explain_analysis
@@ -23,6 +24,11 @@ SUPPORTED_INTENTS = {
     "sales_drivers",
 }
 SUPPORTED_PERIODS = {"day", "week", "month"}
+MONTHS = {
+    "enero": 1, "febrero": 2, "marzo": 3, "abril": 4, "mayo": 5, "junio": 6,
+    "julio": 7, "agosto": 8, "setiembre": 9, "septiembre": 9, "octubre": 10,
+    "noviembre": 11, "diciembre": 12,
+}
 
 
 def intent_from_question(question: str) -> tuple[str, str | None]:
@@ -44,6 +50,20 @@ def intent_from_question(question: str) -> tuple[str, str | None]:
     return "top_products", store
 
 
+def date_range_from_question(question: str, reference_date: date) -> tuple[date, date] | None:
+    dates = re.findall(r"(\d{1,2})\s+de\s+([a-záéíóú]+)", question.lower())
+    if len(dates) < 2:
+        return None
+    try:
+        start = date(reference_date.year, MONTHS[dates[0][1]], int(dates[0][0]))
+        end = date(reference_date.year, MONTHS[dates[1][1]], int(dates[1][0]))
+    except (KeyError, ValueError):
+        return None
+    if start > end:
+        end = date(reference_date.year + 1, end.month, end.day)
+    return start, end
+
+
 def analyze_sales(
     intent: str,
     selected_date: date,
@@ -51,10 +71,14 @@ def analyze_sales(
     period: str = "day",
     store: str | None = None,
     limit: int = 10,
+    start_date: date | None = None,
+    end_date: date | None = None,
 ) -> dict[str, object]:
     """Calculate an analysis without delegating arithmetic to an AI model."""
     _validate_request(intent, period, store, limit)
-    current_start, current_end, previous_start, previous_end = _periods(selected_date, period)
+    current_start, current_end, previous_start, previous_end = _periods(
+        selected_date, period, start_date, end_date
+    )
 
     if intent == "top_products":
         metrics = get_product_ranking(current_start, current_end, store=store, limit=limit)
@@ -77,14 +101,14 @@ def analyze_sales(
         if intent == "products_up":
             rows = [row for row in rows if row["difference"] > 0]
             rows.sort(key=lambda row: row["difference"], reverse=True)
-            answer = "Estos son los productos que más crecieron frente al periodo anterior."
+            answer = f"Estos son los productos que más crecieron {f'en {store}' if store else ''} frente al periodo anterior."
         elif intent == "products_down":
             rows = [row for row in rows if row["difference"] < 0]
             rows.sort(key=lambda row: row["difference"])
-            answer = "Estos son los productos que más bajaron frente al periodo anterior."
+            answer = f"Estos son los productos que más bajaron {f'en {store}' if store else ''} frente al periodo anterior."
         else:
             rows.sort(key=lambda row: abs(row["difference"]), reverse=True)
-            answer = "Estos productos explican los principales cambios frente al periodo anterior."
+            answer = f"Estos productos explican los principales cambios {f'en {store}' if store else ''} frente al periodo anterior."
         return _response(
             intent,
             period,
@@ -126,7 +150,18 @@ def analyze_sales(
     )
 
 
-def _periods(selected_date: date, period: str) -> tuple[date, date, date, date]:
+def _periods(
+    selected_date: date,
+    period: str,
+    start_date: date | None = None,
+    end_date: date | None = None,
+) -> tuple[date, date, date, date]:
+    if period == "range":
+        if not start_date or not end_date or start_date > end_date:
+            raise ValueError("The date range is invalid.")
+        duration = end_date - start_date + timedelta(days=1)
+        previous_end = start_date - timedelta(days=1)
+        return start_date, end_date, previous_end - duration + timedelta(days=1), previous_end
     if period == "day":
         return selected_date, selected_date, selected_date - timedelta(days=7), selected_date - timedelta(days=7)
     if period == "week":
@@ -244,7 +279,7 @@ def _empty_metric(product_id: int) -> ProductSalesMetric:
 def _validate_request(intent: str, period: str, store: str | None, limit: int) -> None:
     if intent not in SUPPORTED_INTENTS:
         raise ValueError(f"intent must be one of: {', '.join(sorted(SUPPORTED_INTENTS))}.")
-    if period not in SUPPORTED_PERIODS:
+    if period not in (*SUPPORTED_PERIODS, "range"):
         raise ValueError("period must be day, week or month.")
     if store not in (*SUPPORTED_STORES, None):
         raise ValueError(f"store must be {STORE_ABTAO}, {STORE_TINGO_MARIA} or omitted.")

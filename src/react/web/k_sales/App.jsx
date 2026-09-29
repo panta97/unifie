@@ -206,22 +206,23 @@ function AnalysisTable({ rows, intent }) {
   }
 
   const isStore = intent === "store_comparison";
+  const isChange = ["products_up", "products_down", "sales_drivers"].includes(intent);
   return (
     <div className="analysis-table-wrap">
       <table className="analysis-table">
         <thead>
           <tr>
             <th>{isStore ? "Tienda" : "Producto"}</th>
-            <th>{isStore ? "Actual" : "Venta neta"}</th>
-            <th>{isStore ? "Variación" : "Unidades"}</th>
+             <th>{isStore ? "Actual" : isChange ? "Cambio" : "Venta neta"}</th>
+             <th>{isStore ? "Variación" : isChange ? "% cambio" : "Unidades"}</th>
           </tr>
         </thead>
         <tbody>
           {rows.map((row) => (
             <tr key={row.product_id || row.store}>
               <td>{row.product_name || row.store}</td>
-              <td>S/ {row.amount || row.current}</td>
-              <td>{isStore ? `${row.difference >= 0 ? "+" : ""}S/ ${row.difference}` : row.quantity_net}</td>
+               <td>{isStore || isChange ? `S/ ${row.difference ?? row.current}` : `S/ ${row.amount}`}</td>
+               <td>{isStore || isChange ? `${row.percentage_change == null ? "-" : `${row.percentage_change}%`}` : row.quantity_net}</td>
             </tr>
           ))}
         </tbody>
