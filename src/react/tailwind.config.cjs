@@ -11,6 +11,7 @@ module.exports = {
     "./web/k_abtao_goals/**/*.{js,ts,jsx,tsx}",
     "./web/k_tingo_goals/**/*.{js,ts,jsx,tsx}",
     "./web/prices_list/**/*.{js,ts,jsx,tsx}",
+    "./web/k_sales/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
     extend: {
