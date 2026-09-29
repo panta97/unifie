@@ -27,4 +27,4 @@ pyotp==2.10.0
 python-dotenv==1.2.2
 gunicorn==23.0.0
 qrcode[pil]==8.0
-kdosh-odoo-client @ git+ssh://git@github.com/Savage-22/kdosh-odoo-client.git@v0.2.2
+kdosh-odoo-client @ git+ssh://git@github.com/KdoshStoreSAC/kdosh-odoo-client.git@v0.2.2
