@@ -26,6 +26,8 @@ $view-btn-title-sep: 3px;
           justify-content: center;
           align-items: center;
           cursor: pointer;
+          border: 0;
+          color: var(--font-color);
         }
 
         .view-btn-active {

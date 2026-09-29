@@ -17,6 +17,8 @@ $sync-text-font-size: 12px;
     mask: url('./icons/sync.svg');
     background-color: var(--font-color);
     cursor: pointer;
+    border: 0;
+    padding: 0;
   }
 
   .sync-details {

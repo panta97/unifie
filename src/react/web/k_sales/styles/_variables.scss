@@ -4,6 +4,8 @@
 
   --background-color: #ffffff;
   --font-color: #001e27;
+  --muted-font-color: #53656a;
+  --error-color: #b42318;
   --view-sq-bg-color: #f5f7fa;
   --view-sq-active-bg-color: #141b26;
   --ab-bg-color: #0bbba9;
@@ -14,6 +16,8 @@
   @media (prefers-color-scheme: dark) {
     --background-color: #141b26;
     --font-color: #ffffff;
+    --muted-font-color: #c0cbd0;
+    --error-color: #ff9b9b;
     --view-sq-bg-color: #0a0805;
     --view-sq-active-bg-color: #ffffff;
     --ab-bg-color: #f44456;

@@ -7,7 +7,7 @@ function Line({sales}) {
       {sales.filter(({amount}) => amount > 0).map(({code, amount}) => (
         <div
           key={code}
-          style={{'width': `${amount/totalSales*100}%`}}
+          style={{'width': `${totalSales ? amount/totalSales*100 : 0}%`}}
           className={code}/>
       ))}
     </div>
