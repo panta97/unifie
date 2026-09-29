@@ -4,6 +4,7 @@ from datetime import date
 
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
+from django.views.decorators.csrf import ensure_csrf_cookie
 from .move_lines import move_lines as move_lines_func
 from .sales import sales as sales_func
 from .goals import goals as goals_func
@@ -27,6 +28,7 @@ def move_lines(request, invoice_number):
 
 
 # @login_required
+@ensure_csrf_cookie
 def sales(request, date):
     try:
         # authorized_user_ids = [1]
