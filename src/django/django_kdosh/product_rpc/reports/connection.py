@@ -42,11 +42,13 @@ def get_connstr(odoo_version):
         db_name = os.getenv("PG_NAME_V15")
     elif odoo_version == 17:
         db_name = os.getenv("PG_NAME_V17")
-    connstr = "dbname='{}' user='{}' host='{}' password='{}'".format(
+    port = os.getenv("PG_PORT", "5432")
+    connstr = "dbname='{}' user='{}' host='{}' password='{}' port='{}' connect_timeout='10'".format(
         db_name,
         os.getenv("PG_USER"),
         os.getenv("PG_HOST"),
         os.getenv("PG_PWD"),
+        port,
     )
     return connstr
 
