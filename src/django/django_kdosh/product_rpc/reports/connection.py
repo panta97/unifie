@@ -42,14 +42,41 @@ def get_connstr(odoo_version):
         db_name = os.getenv("PG_NAME_V15")
     elif odoo_version == 17:
         db_name = os.getenv("PG_NAME_V17")
-    port = os.getenv("PG_PORT", "5432")
-    connstr = "dbname='{}' user='{}' host='{}' password='{}' port='{}' connect_timeout='10'".format(
-        db_name,
-        os.getenv("PG_USER"),
-        os.getenv("PG_HOST"),
-        os.getenv("PG_PWD"),
-        port,
-    )
+
+    host = os.getenv("PG_HOST")
+    user = os.getenv("PG_USER")
+    pwd = os.getenv("PG_PWD") or os.getenv("PG_PASSWORD", "")
+    port = os.getenv("PG_PORT")
+    sslmode = os.getenv("PG_SSLMODE", "")
+
+    # Fallback to DATABASE_URL if PG_HOST is not explicitly configured
+    database_url = os.getenv("DATABASE_URL")
+    if not host and database_url:
+        try:
+            import dj_database_url
+            db_config = dj_database_url.parse(database_url)
+            host = db_config.get("HOST", "")
+            user = db_config.get("USER", "")
+            pwd = db_config.get("PASSWORD", "")
+            port = str(db_config.get("PORT", "5432"))
+            if not db_name:
+                db_name = db_config.get("NAME", "")
+            if not sslmode and "OPTIONS" in db_config and "sslmode" in db_config["OPTIONS"]:
+                sslmode = db_config["OPTIONS"]["sslmode"]
+        except Exception:
+            pass
+
+    if not port:
+        port = "5432"
+    if not db_name:
+        db_name = os.getenv("PG_NAME", os.getenv("PG_DATABASE", ""))
+
+    # Auto-enable sslmode for DigitalOcean managed databases if not explicitly set
+    if not sslmode and host and "ondigitalocean.com" in host:
+        sslmode = "require"
+
+    ssl_part = f" sslmode='{sslmode}'" if sslmode else ""
+    connstr = f"dbname='{db_name}' user='{user}' host='{host}' password='{pwd}' port='{port}' connect_timeout='10'{ssl_part}"
     return connstr
 
 
