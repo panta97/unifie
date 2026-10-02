@@ -50,8 +50,14 @@ export const EQReport = () => {
         const blob = await response.blob();
         saveAs(blob, getSheetFilename(response.headers));
       } else {
-        const json = await response.json();
-        if (json.result === fetchResult.ERROR) throw new Error(json.message);
+        const contentType = response.headers.get("Content-Type") || "";
+        if (contentType.includes("application/json")) {
+          const json = await response.json();
+          if (json.result === fetchResult.ERROR) throw new Error(json.message);
+        } else {
+          const text = await response.text();
+          throw new Error(`Error del servidor (${response.status}): ${text.slice(0, 150)}`);
+        }
       }
     } catch (error) {
       alert(error);
